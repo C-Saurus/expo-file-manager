@@ -7,8 +7,15 @@ export const styles = StyleSheet.create({
     backgroundColor: '#f8f5f8',
   },
   memoryContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    marginHorizontal: 8,
+    marginVertical: 30,
+    backgroundColor: '#999',
+    padding: 16,
+    borderRadius: 24
   },
   memoryText: {
     fontSize: 18,
@@ -19,6 +26,10 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     marginVertical: 10,
+  },
+  listItemContainer: {
+    marginHorizontal: 8,
+    marginVertical: 30,
   },
   itemContainer: {
     flex: 1,
@@ -43,5 +54,25 @@ export const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  listToolContainer: {
+    backgroundColor: '#999',
+    padding: 16,
+    borderRadius: 24,
+  },
+  toolItemContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 4
   },
 });

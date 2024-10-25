@@ -11,6 +11,7 @@ import Web from '../screens/Web';
 import FileTransfer from '../screens/FileTransfer';
 
 import { useAppSelector } from '../hooks/reduxHooks';
+import { Home } from '../screens/Home';
 
 const Tab = createBottomTabNavigator();
 
@@ -39,6 +40,8 @@ export const MainNavigator: React.FC = () => {
             iconName = 'ios-globe';
           } else if (route.name === 'FileTransfer') {
             iconName = 'ios-documents-outline';
+          } else if (route.name === 'Test') {
+            iconName = focused ? 'ios-home' : 'ios-home';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -46,7 +49,7 @@ export const MainNavigator: React.FC = () => {
         tabBarInactiveBackgroundColor: colors.background,
       })}
     >
-      <Tab.Screen name="Test" component={HomeStackNavigator} />
+      <Tab.Screen name="Test" component={Home} />
       <Tab.Screen name="Home" component={HomeStackNavigator} />
       <Tab.Screen name="Web" component={Web} />
       <Tab.Screen name="FileTransfer" component={FileTransfer} />
