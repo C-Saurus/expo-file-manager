@@ -82,49 +82,19 @@ const Browser = ({ route }: IBrowserProps) => {
   const [moveOrCopy, setMoveOrCopy] = useState('');
   const { multiSelect, allSelected } = useSelectionChange(files);
 
-  async function requestStoragePermission() {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          {
-            title: 'Quyền truy cập bộ nhớ',
-            message: 'Ứng dụng cần quyền truy cập bộ nhớ của bạn',
-            buttonNeutral: 'Hỏi lại sau',
-            buttonNegative: 'Hủy',
-            buttonPositive: 'OK',
-          },
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn(err);
-        return false;
-      }
-    } else {
-      return true;
-    }
-  }
-
   async function getAllFiles() {
-    const hasPermission = await requestStoragePermission();
+    // const directoryPath = RNFS.ExternalStorageDirectoryPath; // Thư mục chính trên Android
   
-    if (!hasPermission) {
-      console.log('Không có quyền truy cập bộ nhớ');
-      return;
-    }
-  
-    const directoryPath = RNFS.ExternalStorageDirectoryPath; // Thư mục chính trên Android
-  
-    RNFS.readDir(directoryPath) // Lấy danh sách các file và thư mục
-      .then((result) => {
-        console.log('Contents of directory:', result);
-        result.forEach((file) => {
-          console.log('File: ', file.name, 'Path: ', file.path);
-        });
-      })
-      .catch((err) => {
-        console.log(err.message, err.code);
-      });
+    // RNFS.readDir(directoryPath) // Lấy danh sách các file và thư mục
+    //   .then((result) => {
+    //     console.log('Contents of directory:', result);
+    //     result.forEach((file) => {
+    //       console.log('File: ', file.name, 'Path: ', file.path);
+    //     });
+    //   })
+    //   .catch((err) => {
+    //     console.log(err.message, err.code);
+    //   });
   }
 
   useEffect(() => {

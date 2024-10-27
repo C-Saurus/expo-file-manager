@@ -11,7 +11,7 @@ import Web from '../screens/Web';
 import FileTransfer from '../screens/FileTransfer';
 
 import { useAppSelector } from '../hooks/reduxHooks';
-import { Home } from '../screens/Home';
+import HomeStackNavigator1 from './HomeStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -49,7 +49,7 @@ export const MainNavigator: React.FC = () => {
         tabBarInactiveBackgroundColor: colors.background,
       })}
     >
-      <Tab.Screen name="Test" component={Home} />
+      <Tab.Screen name="Test" component={HomeStackNavigator1} />
       <Tab.Screen name="Home" component={HomeStackNavigator} />
       <Tab.Screen name="Web" component={Web} />
       <Tab.Screen name="FileTransfer" component={FileTransfer} />

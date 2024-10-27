@@ -3,12 +3,12 @@ export default function humanFileSize(bytes, si = false, dp = 1) {
   const thresh = si ? 1000 : 1024;
 
   if (Math.abs(bytes) < thresh) {
-    return bytes + " B";
+    return bytes + ' B';
   }
 
   const units = si
-    ? ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-    : ["KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+    : ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
   let u = -1;
   const r = 10 ** dp;
 
@@ -20,5 +20,9 @@ export default function humanFileSize(bytes, si = false, dp = 1) {
     u < units.length - 1
   );
 
-  return bytes.toFixed(dp) + " " + units[u];
+  return bytes.toFixed(dp) + ' ' + units[u];
 }
+
+export const bytesToGB = (bytes: number): string => (bytes / (1024 * 1024 * 1024)).toFixed(2);
+
+export const bytesToMB = (bytes: number): string => (bytes / (1024 * 1024)).toFixed(2);
