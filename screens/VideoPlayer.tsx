@@ -8,16 +8,16 @@ import { SIZE } from '../utils/Constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type VideoViewParamList = {
-  VideoPlayer: { prevDir: string; folderName: string };
+  VideoPlayer: { prevDir?: string; folderName?: string; uriValue?: string };
 };
 
 type Props = StackScreenProps<VideoViewParamList, 'VideoPlayer'>;
 
 export default function VideoPlayer({ route }: Props) {
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { prevDir, folderName } = route.params;
+  const { prevDir, folderName, uriValue } = route.params;
   const videoRef = useRef<Video | null>(null);
-
+  console.log("prevDir + folderName + uriValue", prevDir + folderName + uriValue)
   return (
     <SafeAreaView
       style={{ ...styles.container, backgroundColor: colors.background }}
@@ -29,7 +29,7 @@ export default function VideoPlayer({ route }: Props) {
           height: '100%',
         }}
         source={{
-          uri: prevDir + folderName,
+          uri: prevDir + folderName + uriValue,
         }}
         useNativeControls
         shouldPlay

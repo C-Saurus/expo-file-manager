@@ -1,8 +1,8 @@
 export const DATA = [
   { id: '0', title: 'Hình ảnh', icon: 'photo-library' },
-  { id: '1', title: 'PDF', icon: 'picture-as-pdf' },
-  { id: '2', title: 'Video', icon: 'videocam' },
-  { id: '3', title: 'Âm thanh', icon: 'audiotrack' },
+  { id: '1', title: 'Video', icon: 'videocam' },
+  { id: '2', title: 'Âm thanh', icon: 'audiotrack' },
+  { id: '3', title: 'PDF', icon: 'picture-as-pdf' },
   { id: '4', title: 'Ứng dụng', icon: 'apps' },
   { id: '5', title: 'Tệp zip', icon: 'archive' },
   { id: '6', title: 'Các tài liệu', icon: 'description' },

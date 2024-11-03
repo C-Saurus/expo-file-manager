@@ -15,6 +15,7 @@ type FileViewParamList = {
 type Props = StackScreenProps<FileViewParamList, 'ImageGalleryView'>;
 
 const ImageGalleryView = ({ route }: Props) => {
+  console.log("ImageGalleryViewwwwwwwwwwwwwwwwwwwwwwwwwwww")
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
   const { colors } = useAppSelector((state) => state.theme.theme);

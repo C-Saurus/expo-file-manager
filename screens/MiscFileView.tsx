@@ -14,6 +14,7 @@ type MiscFileViewParamList = {
 type Props = StackScreenProps<MiscFileViewParamList, 'MiscFileView'>;
 
 const MiscFileView = ({ route }: Props) => {
+  console.log("MiscFileViewwwwwwwwwwwwwwwwwwwwwwwww")
   const { colors } = useAppSelector((state) => state.theme.theme);
   const { prevDir, folderName } = route.params;
   const fileExt = folderName.split('/').pop().split('.').pop().toLowerCase();

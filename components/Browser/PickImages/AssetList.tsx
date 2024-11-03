@@ -1,15 +1,16 @@
 import React from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
 import { SIZE } from '../../../utils/Constants';
 import { AssetItem } from './AssetItem';
 import { ExtendedAsset } from '../../../types';
 
 type AssetListProps = {
   assets: ExtendedAsset[];
-  albumId: string;
+  albumId?: string;
   hasNextPage: boolean;
   endCursor: string;
   isSelecting: boolean;
+  loading?: boolean
   getAlbumAssets: (albumId: string, after?: string | undefined) => void;
   toggleSelect: (asset: ExtendedAsset) => void;
 };
@@ -20,9 +21,19 @@ export const AssetList = ({
   hasNextPage,
   endCursor,
   isSelecting,
+  loading,
   getAlbumAssets,
   toggleSelect,
 }: AssetListProps) => {
+  console.log("assets", assets)
+
+  const renderFooter = () => {
+    if (loading) {
+      return <ActivityIndicator size="large" color="#0000ff" />;
+    }
+    return null;
+  };
+
   return (
     <FlatList
       style={styles.albumList}
@@ -36,11 +47,12 @@ export const AssetList = ({
           isSelecting={isSelecting}
         />
       )}
-      keyExtractor={(item) => item.albumId}
+      keyExtractor={(item) => item.albumId + item.name}
       onEndReached={() => {
-        if (hasNextPage) getAlbumAssets(albumId, endCursor);
+        if (hasNextPage) getAlbumAssets(endCursor);
       }}
       onEndReachedThreshold={0.9}
+      ListFooterComponent={renderFooter}
     />
   );
 };

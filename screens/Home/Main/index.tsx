@@ -77,49 +77,24 @@ export const Home = () => {
     }
   };
 
-  const calculateStorageUsage = async (): Promise<any> => {
-    const storageUsage = {
-      images: 0,
-      videos: 0,
-      audio: 0,
-      docs: 0,
-    };
-  
-    const directories = [
-      `${RNFS.ExternalStorageDirectoryPath}/DCIM`,         // Hình ảnh
-      `${RNFS.ExternalStorageDirectoryPath}/Movies`,       // Video
-      `${RNFS.ExternalStorageDirectoryPath}/Music`,        // Âm thanh
-      `${RNFS.ExternalStorageDirectoryPath}/Documents`,    // Tài liệu
-      `${RNFS.ExternalStorageDirectoryPath}/Download`,     // Thư mục tải xuống
-    ];
-  
-    const scanDirectory = async (path: string) => {
-      try {
-        const items = await RNFS.readDir(path);
-        console.log("item", items)
-      } catch (error) {
-        console.error(`Error scanning directory ${path}:`, error);
-      }
-    };
-  
-    for (const dir of directories) {
-      await scanDirectory(dir);
-    }
-  
-    // Convert to MB
-    for (const category in storageUsage) {
-      storageUsage[category] = storageUsage[category] / (1024 * 1024);
-    }
-  
-    console.log('Storage Usage:', storageUsage);
-    return storageUsage;
-  };
-
   const handleFilePress = (item: any) => {
-    console.log("item", item.id)
     navigation.navigate('LargeFilesScanner', {
       mode: item?.id
     });
+  }
+
+  const handleFileCateogory = (item: any) => {
+    console.log("item", item.id)
+    switch (Number(item.id)) {
+      case ENFILETYPE.IMAGE:
+        navigation.navigate('ImageScreen')
+        break;
+      case ENFILETYPE.VIDEO:
+        navigation.navigate('VideoScreen')
+        break;
+      default:
+        break;
+    }
   }
 
   const DATATOOL = [
@@ -169,10 +144,12 @@ export const Home = () => {
 
   const renderItem = ({ item }) => {
     return (
-      <View style={styles.itemContainer}>
+      <TouchableOpacity onPress={() => handleFileCateogory(item)}>
+        <View style={styles.itemContainer}>
         <MaterialIcons name={item.icon} size={30} color="#6200ea" />
         <Text style={styles.title}>{item.title}</Text>
       </View>
+      </TouchableOpacity>
     );
   };
 

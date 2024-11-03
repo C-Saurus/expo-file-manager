@@ -33,6 +33,7 @@ export default function PickImages({
   onMultiSelectSubmit,
   onClose,
 }: PickImagesProps) {
+  console.log("PickImagessssssssssssssssss")
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [isMediaGranted, setIsMediaGranted] = useState<boolean | null>(null);
   const [albums, setAlbums] = useState<customAlbum[]>([]);

@@ -49,8 +49,6 @@ import { setImages } from '../features/files/imagesSlice';
 import { setSnack, snackActionPayload } from '../features/files/snackbarSlice';
 import { HEIGHT, imageFormats, reExt, SIZE } from '../utils/Constants';
 
-import RNFS from 'react-native-fs';
-
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
 };
@@ -58,6 +56,7 @@ type BrowserParamList = {
 type IBrowserProps = StackScreenProps<BrowserParamList, 'Browser'>;
 
 const Browser = ({ route }: IBrowserProps) => {
+  console.log("COME Browser")
   const dispatch = useAppDispatch();
   const navigation = useNavigation();
   const { colors } = useAppSelector((state) => state.theme.theme);
@@ -82,24 +81,8 @@ const Browser = ({ route }: IBrowserProps) => {
   const [moveOrCopy, setMoveOrCopy] = useState('');
   const { multiSelect, allSelected } = useSelectionChange(files);
 
-  async function getAllFiles() {
-    // const directoryPath = RNFS.ExternalStorageDirectoryPath; // Thư mục chính trên Android
-  
-    // RNFS.readDir(directoryPath) // Lấy danh sách các file và thư mục
-    //   .then((result) => {
-    //     console.log('Contents of directory:', result);
-    //     result.forEach((file) => {
-    //       console.log('File: ', file.name, 'Path: ', file.path);
-    //     });
-    //   })
-    //   .catch((err) => {
-    //     console.log(err.message, err.code);
-    //   });
-  }
-
   useEffect(() => {
     getFiles();
-    getAllFiles()
   }, [currentDir]);
 
   React.useEffect(() => {
