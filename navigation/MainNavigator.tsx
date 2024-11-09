@@ -49,8 +49,7 @@ export const MainNavigator: React.FC = () => {
         tabBarInactiveBackgroundColor: colors.background,
       })}
     >
-      <Tab.Screen name="Test" component={HomeStackNavigator1} />
-      <Tab.Screen name="Home" component={HomeStackNavigator} />
+      <Tab.Screen name="Home" component={HomeStackNavigator1} />
       <Tab.Screen name="Web" component={Web} />
       <Tab.Screen name="FileTransfer" component={FileTransfer} />
       <Tab.Screen name="Settings" component={SettingsStackNavigator} />

@@ -15,9 +15,10 @@ const App = () => {
       try {
         const granted = await PermissionsAndroid.requestMultiple([          
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          'android.permission.MANAGE_EXTERNAL_STORAGE' as Permission]
-
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          'android.permission.MANAGE_EXTERNAL_STORAGE' as Permission],
         );
+        console.log("granted", granted);
         return true;
       } catch (err) {
         console.warn(err);

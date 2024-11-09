@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Alert, Button } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Alert, Button, PermissionsAndroid, Platform, Permission } from 'react-native';
 import RNFS, { hash } from 'react-native-fs';
 import { styles } from './style';
-import { bytesToMB } from '../../../utils/Filesize';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Checkbox } from 'react-native-paper';
-import { FileItem } from '../../../constants/interface';
+import { FileItem } from '../../constants/interface';
+import { bytesToMB } from '../../utils/Filesize';
 
 const getFileExtension = (fileName: string): string => {
   const ext = fileName.split('.').pop(); // Tách phần mở rộng
@@ -17,18 +17,29 @@ const LargeFilesScanner = ({ route, navigation }) => {
   const [largeFiles, setLargeFiles] = useState<FileItem[]>([]);
   const [duplicateFiles, setDuplicateFiles] = useState<FileItem[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<FileItem[]>([]);
-  const [isScanning, setIsScanning] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
-    startScanning()
+    console.log("mode", mode);
+    try {
+      startScanning()
+    } catch (error) {
+      console.log("Scanning Error", error);
+    }
+    return () => {
+      setDuplicateFiles([])
+      setSelectedFiles([])
+      setLargeFiles([])
+    }
   }, [mode]);
 
   const startScanning = async () => {
+    setIsScanning(true)
     switch (mode) {
-      case '1':
+      case 0:
         await scanLargeFiles(RNFS.ExternalStorageDirectoryPath);
         break;
-      case '2':
+      case 1:
         await scanDuplicateFiles();
         break;
       default:
@@ -39,11 +50,16 @@ const LargeFilesScanner = ({ route, navigation }) => {
 
   const scanLargeFiles = async (path: string) => {
     try {
+      if (path.includes('/Android/data') || path.includes('/Android/obb')) {
+        console.warn(`Skipping restricted directory: ${path}`);
+        return;
+      }
+
       const items = await RNFS.readDir(path);
       for (const item of items) {
         if (item.isFile()) {
-          const stats = await RNFS.stat(item.path);
-          if (stats.size >= 50 * 1024 * 1024) { // 50MB
+          const stats = await RNFS.stat(item?.path);
+          if (stats && stats?.size >= 5 * 1024 * 1024) { // 50MB
             setLargeFiles(prev => [
               ...prev,
               { name: item.name, size: stats.size, path: item.path },
@@ -96,7 +112,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
     // So sánh các file cùng loại và cùng kích thước
     const duplicates: FileItem[] = [];
     for (const files of Object.values(fileMap)) {
-      if (files.length > 1) {
+      if (files?.length > 1) {
         const hashPromises = files.map(async (file) => {
           const fileHash = await hash(file.path, 'md5'); // Tính hash file
           return { ...file, hash: fileHash };
@@ -114,7 +130,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
 
         // Thêm vào danh sách trùng lặp
         for (const files of Object.values(hashMap)) {
-          if (files.length > 1) {
+          if (files?.length > 1) {
             duplicates.push(...files);
           }
         }
@@ -145,6 +161,33 @@ const LargeFilesScanner = ({ route, navigation }) => {
     }
   };
 
+  const requestExternalStoragePermission = async () => {
+    if (Platform.OS === 'android' && Platform.Version >= 30) {
+      try {
+        const granted = await PermissionsAndroid.request(
+          'android.permission.MANAGE_EXTERNAL_STORAGE' as Permission,
+          {
+            title: "Manage External Storage Permission",
+            message: "This app needs access to manage external storage to delete files.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+        console.log("granted", granted);
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('Permission Denied', 'You need to grant manage external storage permission to delete files.');
+          return false;
+        }
+        return true;
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleDeleteSelectedFiles = async (): Promise<void> => {
     Alert.alert(
       'Xóa tệp tin',
@@ -155,15 +198,50 @@ const LargeFilesScanner = ({ route, navigation }) => {
           text: 'Xóa', 
           onPress: async () => {
             try {
-              await Promise.all(selectedFiles.map(async (file) => {
-                await RNFS.unlink(file.path); // Xóa file bằng RNFS
-              }));
-              setLargeFiles(largeFiles.filter(file => !selectedFiles.includes(file)));
+              // const res = await Promise.all(selectedFiles.map(async (file) => {
+                  
+              // }));
+              return (
+                RNFS.unlink(
+                  `${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`
+                )
+                  .then(() => {
+                    console.log('FILE DELETED');
+                    RNFS.scanFile(
+                      `${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`
+                    )
+                      .then((res) => {
+                        console.log('scanned', res);
+                      })
+                      .catch((err) => {
+                        console.log(err);
+                      });
+                  })
+                  // `unlink` will throw an error, if the item to unlink does not exist
+                  .catch((err) => {
+                    console.log(err.message);
+                  })
+              );
+              try {
+                const res = await RNFS.unlink(`${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`);
+                //return { path: `${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`, success: true };
+                console.log("delete res", res);
+              } catch (error) {
+                //return { path: `${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`, success: false, error: error.message };
+              }
+              
+              // console.log("delete res", res);
+              
+              // Filter out successfully deleted files
+              const updatedLargeFiles = largeFiles.filter(file => !selectedFiles.some(selectedFile => selectedFile.path === file.path));
+              
+              setLargeFiles(updatedLargeFiles);
               setSelectedFiles([]);
+              
               Alert.alert('Thành công', 'Các tệp đã được xóa.');
-            } catch (error) {
+          } catch (error) {
               Alert.alert('Lỗi', 'Không thể xóa các tệp: ' + error.message);
-            }
+          }
           }
         },
       ]
@@ -179,13 +257,20 @@ const LargeFilesScanner = ({ route, navigation }) => {
     );
   }
 
+  const renderEmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <MaterialIcons name="folder-open" size={64} color="gray" />
+      <Text style={styles.emptyText}>Không tìm file { mode === 0 ? "lớn hơn 50MB" : "trùng lặp"}</Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.title}>Tệp tin lớn hơn 50MB</Text>
+        <Text style={styles.title}>{mode === 0 ? "Tệp tin lớn hơn 50MB" : "Tệp tin trùng lặp"}</Text>
         <TouchableOpacity>
           <Ionicons name="search" size={24} color="black" />
         </TouchableOpacity>
@@ -202,6 +287,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
             <Text style={styles.fileName}>{`${item.name} - ${bytesToMB(item.size)} MB`}</Text>
           </View>
         )}
+        ListEmptyComponent={renderEmptyComponent}
       />
       <Button title="Xóa các tệp đã chọn" disabled={selectedFiles.length <= 0} onPress={handleDeleteSelectedFiles} />
     </View>

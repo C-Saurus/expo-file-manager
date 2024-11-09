@@ -1,15 +1,15 @@
 import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
 import * as Progress from 'react-native-progress';
-import { styles } from './style';
-import { DATA, FILE_TYPES } from '../../../constants/const';
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import RNFS, { FSInfoResult, ReadDirItem } from 'react-native-fs';
-import { bytesToGB } from '../../../utils/Filesize';
-import { StorageData } from '../../../constants/interface';
-import { ENFILETYPE } from '../../../constants/enum';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
+import { StorageData } from '../../constants/interface';
+import { ENFILETYPE } from '../../constants/enum';
+import { styles } from './style';
+import { bytesToGB } from '../../utils/Filesize';
+import { DATA } from '../../constants/const';
 
 export const Home = () => {
   const navigation = useNavigation<StackNavigationProp<any>>();
@@ -78,9 +78,20 @@ export const Home = () => {
   };
 
   const handleFilePress = (item: any) => {
-    navigation.navigate('LargeFilesScanner', {
-      mode: item?.id
-    });
+    console.log("handleFilePress", item.id);
+    switch (item.id) {
+      case 0:
+      case 1:
+        navigation.navigate('LargeFilesScanner', {
+          mode: item?.id
+        });
+        break;
+      case 2:
+        navigation.navigate('TrashFiles');
+        break;
+      default:
+        break
+    }
   }
 
   const handleFileCateogory = (item: any) => {
@@ -99,21 +110,21 @@ export const Home = () => {
 
   const DATATOOL = [
     {
-      id: '1',
+      id: 0,
       title: 'Tệp lớn',
       icon: 'insert-drive-file',
       iconLib: 'MaterialIcons',
       color: '#bbdefb',
     },
     {
-      id: '2',
+      id: 1,
       title: 'Filter Duplicate',
       icon: 'filter',
       iconLib: 'MaterialIcons',
       color: '#b3e5fc',
     },
     {
-      id: '3',
+      id: 2,
       title: 'Trash',
       icon: 'trash',
       iconLib: 'FontAwesome5',

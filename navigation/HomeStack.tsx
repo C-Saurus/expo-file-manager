@@ -1,11 +1,13 @@
 import React from 'react';
 
 import { createStackNavigator } from '@react-navigation/stack';
-import { Home } from '../screens/Home/Main';
-import LargeFilesScanner from '../screens/Home/ScanLargeFile';
 import { ImageScreen } from '../screens/ImageScreen';
 import { VideoScreen } from '../screens/VideoScreen';
 import VideoPlayer from '../screens/VideoPlayer';
+import Browser from '../screens/Browser';
+import LargeFilesScanner from '../screens/ScanLargeFile';
+import { Home } from '../screens/Home';
+import PDFScreen from '../screens/PDFScreen';
 
 const HomeStack = createStackNavigator();
 
@@ -22,6 +24,10 @@ export const HomeStackNavigator1: React.FC = () => {
         name="LargeFilesScanner"
         component={LargeFilesScanner}
       />
+      <HomeStack.Screen
+        name="PDFScreen"
+        component={PDFScreen}
+      />
       <HomeStack.Screen name="ImageScreen" component={ImageScreen} />
       <HomeStack.Screen name="VideoScreen" component={VideoScreen} />
       <HomeStack.Screen
@@ -31,6 +37,13 @@ export const HomeStackNavigator1: React.FC = () => {
           presentation: 'transparentModal',
         })}
         component={VideoPlayer}
+      />
+      <HomeStack.Screen
+        name="Browser"
+        options={({ route }) => ({
+          title: 'File Manager',
+        })}
+        component={Browser}
       />
     </HomeStack.Navigator>
   );
