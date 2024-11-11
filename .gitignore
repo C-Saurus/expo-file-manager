@@ -1,5 +1,4 @@
 node_modules/
-android
 .expo/
 npm-debug.*
 *.jks
@@ -43,13 +42,22 @@ project.xcworkspace
 
 # Android/IntelliJ
 #
+.tmp/
 build/
+caches/
+daemon/
+kotlin-profile/
+native/
+wrapper/
+android.lock
 .idea
 .gradle
 local.properties
 *.iml
 *.hprof
 .cxx/
+*.keystore
+!debug.keystore
 
 # node.js
 #
