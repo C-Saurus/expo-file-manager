@@ -12,7 +12,7 @@ export const PDFViewer = ({ fileURI }: IPDFViewerProps) => {
   return (
     <PDFReader
       source={{
-        uri: "file:///data/user/0/com.martymfly.expofilemanager/files/D20CNPM.pdf",
+        uri: fileURI,
       }}
     />
   );

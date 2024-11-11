@@ -198,10 +198,12 @@ const LargeFilesScanner = ({ route, navigation }) => {
           text: 'Xóa', 
           onPress: async () => {
             try {
-              const { FileNativeModules } = NativeModules;
+              const { FileDeletionNativeModule } = NativeModules;
               await Promise.all(selectedFiles.map(async (file) => {
                 try {
-                  const result = await FileNativeModules.deleteFile(file.path);
+                  const result = await FileDeletionNativeModule.deleteMediaFile(file.path,(res: any) => {
+                    console.log("res", res);
+                  });
                   console.log(`Deleted successfully: ${file.path} with result: ${result}`);
                 } catch (error) {
                   console.error(`Failed to delete: ${file.path} - ${error.message}`);
