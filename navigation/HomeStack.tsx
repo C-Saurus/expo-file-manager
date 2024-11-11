@@ -8,6 +8,7 @@ import Browser from '../screens/Browser';
 import LargeFilesScanner from '../screens/ScanLargeFile';
 import { Home } from '../screens/Home';
 import PDFScreen from '../screens/PDFScreen';
+import MiscFileView from '../screens/MiscFileView';
 
 const HomeStack = createStackNavigator();
 
@@ -44,6 +45,14 @@ export const HomeStackNavigator1: React.FC = () => {
           title: 'File Manager',
         })}
         component={Browser}
+      />
+      <HomeStack.Screen
+        name="MiscFileView"
+        options={({ route }) => ({
+          title: 'File View',
+          presentation: 'transparentModal',
+        })}
+        component={MiscFileView}
       />
     </HomeStack.Navigator>
   );

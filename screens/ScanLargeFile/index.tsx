@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Alert, Button, PermissionsAndroid, Platform, Permission } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Alert, Button, PermissionsAndroid, Platform, Permission, NativeModules } from 'react-native';
 import RNFS, { hash } from 'react-native-fs';
 import { styles } from './style';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -198,41 +198,16 @@ const LargeFilesScanner = ({ route, navigation }) => {
           text: 'Xóa', 
           onPress: async () => {
             try {
-              // const res = await Promise.all(selectedFiles.map(async (file) => {
-                  
-              // }));
-              return (
-                RNFS.unlink(
-                  `${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`
-                )
-                  .then(() => {
-                    console.log('FILE DELETED');
-                    RNFS.scanFile(
-                      `${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`
-                    )
-                      .then((res) => {
-                        console.log('scanned', res);
-                      })
-                      .catch((err) => {
-                        console.log(err);
-                      });
-                  })
-                  // `unlink` will throw an error, if the item to unlink does not exist
-                  .catch((err) => {
-                    console.log(err.message);
-                  })
-              );
-              try {
-                const res = await RNFS.unlink(`${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`);
-                //return { path: `${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`, success: true };
-                console.log("delete res", res);
-              } catch (error) {
-                //return { path: `${RNFS.ExternalStorageDirectoryPath}/Movies/XRecorder0/schedule.mp4`, success: false, error: error.message };
-              }
-              
-              // console.log("delete res", res);
-              
-              // Filter out successfully deleted files
+              const { FileNativeModules } = NativeModules;
+              await Promise.all(selectedFiles.map(async (file) => {
+                try {
+                  const result = await FileNativeModules.deleteFile(file.path);
+                  console.log(`Deleted successfully: ${file.path} with result: ${result}`);
+                } catch (error) {
+                  console.error(`Failed to delete: ${file.path} - ${error.message}`);
+                }
+              }));
+
               const updatedLargeFiles = largeFiles.filter(file => !selectedFiles.some(selectedFile => selectedFile.path === file.path));
               
               setLargeFiles(updatedLargeFiles);

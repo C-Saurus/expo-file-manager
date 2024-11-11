@@ -103,6 +103,9 @@ export const Home = () => {
       case ENFILETYPE.VIDEO:
         navigation.navigate('VideoScreen')
         break;
+      case ENFILETYPE.PDF:
+        navigation.navigate('PDFScreen')
+        break;
       default:
         break;
     }

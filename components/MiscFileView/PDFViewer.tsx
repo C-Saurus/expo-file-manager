@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import Pdf from 'react-native-pdf';
+import PDFReader from 'rn-pdf-reader-js';
 import { HEIGHT, SIZE } from '../../utils/Constants';
 
 type IPDFViewerProps = {
@@ -8,26 +8,13 @@ type IPDFViewerProps = {
 };
 
 export const PDFViewer = ({ fileURI }: IPDFViewerProps) => {
-  const source = { uri: fileURI, cache: true };
+  console.log("fileURI", fileURI)
   return (
-    <View style={styles.container}>
-      <Pdf
-        source={source}
-        onLoadComplete={(numberOfPages, filePath) => {
-          console.log(`Number of pages: ${numberOfPages}`);
-        }}
-        onPageChanged={(page, numberOfPages) => {
-          console.log(`Current page: ${page}`);
-        }}
-        onError={(error) => {
-          console.log(error);
-        }}
-        onPressLink={(uri) => {
-          console.log(`Link pressed: ${uri}`);
-        }}
-        style={styles.pdf}
-      />
-    </View>
+    <PDFReader
+      source={{
+        uri: "file:///data/user/0/com.martymfly.expofilemanager/files/D20CNPM.pdf",
+      }}
+    />
   );
 };
 

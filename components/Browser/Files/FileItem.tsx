@@ -51,6 +51,8 @@ export default function FileItem({
   setRenameDialogVisible,
   setNewFileName,
 }: Props) {
+  console.log("item", item)
+  console.log("current", currentDir)
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
@@ -58,7 +60,7 @@ export default function FileItem({
   const itemMime = mime.lookup(item.uri) || ' ';
   const itemType: string = item.isDirectory ? 'dir' : itemMime.split('/')[0];
   const itemFormat: string = item.isDirectory ? 'dir' : itemMime.split('/')[1];
-
+  console.log("itemMime", itemMime)
   const ThumbnailImage = ({ uri }) => {
     return (
       <Image

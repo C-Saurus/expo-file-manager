@@ -1,5 +1,5 @@
 import { Constants } from "expo-barcode-scanner";
-import { SIZE } from "../../utils/Constants";
+import { HEIGHT, SIZE } from "../../utils/Constants";
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({

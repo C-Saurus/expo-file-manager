@@ -20,16 +20,6 @@ import {
 import { AntDesign, Feather } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import FileItem from '../components/Browser/Files/FileItem';
-import Pickimages from '../components/Browser/PickImages';
-import ActionSheet from '../components/ActionSheet';
-
-import useSelectionChange from '../hooks/useSelectionChange';
-import allProgress from '../utils/promiseProgress';
-
-import { NewFolderDialog } from '../components/Browser/NewFolderDialog';
-import { DownloadDialog } from '../components/Browser/DownloadDialog';
-import { FileTransferDialog } from '../components/Browser/FileTransferDialog';
 
 import axios, { AxiosError } from 'axios';
 import moment from 'moment';
@@ -43,12 +33,17 @@ import * as mime from 'react-native-mime-types';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { ImageInfo } from 'expo-image-picker/build/ImagePicker.types';
-import { ExtendedAsset, fileItem } from '../types';
-import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { setImages } from '../features/files/imagesSlice';
-import { setSnack, snackActionPayload } from '../features/files/snackbarSlice';
-import { HEIGHT, imageFormats, reExt, SIZE } from '../utils/Constants';
 import { styles } from './style';
+import useSelectionChange from '../../hooks/useSelectionChange';
+import FileItem from '../../components/Browser/Files/FileItem';
+import allProgress from '../../utils/promiseProgress';
+import ActionSheet from '../../components/ActionSheet';
+import { FileTransferDialog } from '../../components/Browser/FileTransferDialog';
+import { NewFolderDialog } from '../../components/Browser/NewFolderDialog';
+import { DownloadDialog } from '../../components/Browser/DownloadDialog';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
+import { fileItem } from '../../types';
+import { setSnack, snackActionPayload } from '../../features/files/snackbarSlice';
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -226,18 +221,6 @@ const PDFScreen = ({ route }: IBrowserProps) => {
               });
             });
             setFiles(tempfiles);
-            const tempImageFiles = results.filter((file) => {
-              let fileExtension = file.uri
-                .split('/')
-                .pop()
-                .split('.')
-                .pop()
-                .toLowerCase();
-              if (imageFormats.includes(fileExtension)) {
-                return file;
-              }
-            });
-            dispatch(setImages(tempImageFiles));
           });
         }
       })
@@ -256,47 +239,6 @@ const PDFScreen = ({ route }: IBrowserProps) => {
         });
       });
   }
-
-  const pickImage = async () => {
-    (async () => {
-      if (Platform.OS !== 'web') {
-        const { status } =
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          handleSetSnack({
-            message:
-              'Sorry, we need camera roll permissions to make this work!',
-          });
-        }
-        MediaLibrary.requestPermissionsAsync();
-      }
-    })();
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.cancelled) {
-      const { uri, type } = result as ImageInfo;
-      const filename: string = uri.replace(/^.*[\\\/]/, '');
-      const ext: string | null = reExt.exec(filename)![1];
-      const fileNamePrefix = type === 'image' ? 'IMG_' : 'VID_';
-      FileSystem.moveAsync({
-        from: uri,
-        to:
-          currentDir +
-          '/' +
-          fileNamePrefix +
-          moment().format('DDMMYHmmss') +
-          '.' +
-          ext,
-      })
-        .then((_) => getFiles())
-        .catch((err) => console.log(err));
-    }
-  };
 
   async function handleCopy(
     from: string,
@@ -359,19 +301,6 @@ const PDFScreen = ({ route }: IBrowserProps) => {
         );
       }
     }
-  };
-
-  const onMultiSelectSubmit = async (data: ExtendedAsset[]) => {
-    const transferPromises = data.map((file) =>
-      FileSystem.copyAsync({
-        from: file.uri,
-        to: currentDir + '/' + file.filename,
-      })
-    );
-    Promise.all(transferPromises).then(() => {
-      setMultiImageVisible(false);
-      getFiles();
-    });
   };
 
   const moveSelectedFiles = async (destination: string) => {
@@ -499,15 +428,11 @@ const PDFScreen = ({ route }: IBrowserProps) => {
         numberOfLinesTitle={undefined}
         visible={newFileActionSheet}
         actionItems={[
-          'Camera Roll',
-          'Multi Image Picker',
           'Import File from Storage',
           'Download',
           'Cancel',
         ]}
         itemIcons={[
-          'camera',
-          'image',
           'drive-file-move-outline',
           'file-download',
           'close',
@@ -515,16 +440,12 @@ const PDFScreen = ({ route }: IBrowserProps) => {
         onClose={setNewFileActionSheet}
         onItemPressed={(buttonIndex) => {
           if (buttonIndex === 0) {
-            pickImage();
-          } else if (buttonIndex === 1) {
-            setMultiImageVisible(true);
-          } else if (buttonIndex === 2) {
             pickDocument();
-          } else if (buttonIndex === 3) {
+          } else if (buttonIndex === 1) {
             setDownloadDialogVisible(true);
           }
         }}
-        cancelButtonIndex={4}
+        cancelButtonIndex={2}
         modalStyle={{ backgroundColor: colors.background2 }}
         itemTextStyle={{ color: colors.text }}
         titleStyle={{ color: colors.secondary }}
@@ -575,21 +496,6 @@ const PDFScreen = ({ route }: IBrowserProps) => {
         />
         <Dialog.Button label="Rename" onPress={() => onRename()} />
       </Dialog.Container>
-      <GalleryDialog
-        dialogStyle={{
-          backgroundColor: colors.background2,
-        }}
-        animationType="slide"
-        contentStyle={styles.contentStyle}
-        overlayStyle={styles.overlayStyle}
-        visible={multiImageVisible}
-        onTouchOutside={() => setMultiImageVisible(false)}
-      >
-        <Pickimages
-          onMultiSelectSubmit={onMultiSelectSubmit}
-          onClose={() => setMultiImageVisible(false)}
-        />
-      </GalleryDialog>
 
       <ProgressDialog
         visible={importProgressVisible}
