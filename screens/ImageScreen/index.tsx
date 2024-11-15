@@ -10,6 +10,10 @@ import {
   TouchableOpacity,
   Button,
   FlatList,
+  Touchable,
+  Modal,
+  Dimensions,
+  Image,
 } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
@@ -19,46 +23,27 @@ import { customAlbum, ExtendedAsset } from '../../types';
 import useMultiImageSelection from '../../hooks/useMultiImageSelection';
 import { AlbumList } from '../../components/Browser/PickImages/AlbumList';
 import { AssetList } from '../../components/Browser/PickImages/AssetList';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import moment from 'moment';
 import { AssetItem } from '../../components/Browser/PickImages/AssetItem';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
-const Tab = createBottomTabNavigator();
+const Tab = createMaterialTopTabNavigator();
 
-export const ImageScreen = ({ navigation }) => {
-  const [selectedTab, setSelectedTab] = useState('Hình ảnh');
+export const ImageScreen = () => {
+  const { colors } = useAppSelector((state) => state.theme.theme);
   return (
-    <View style={styles.containerNav}>
-      <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Hình ảnh</Text>
-      </View>
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            selectedTab === 'Hình ảnh' ? styles.activeTab : null,
-          ]}
-          onPress={() => setSelectedTab('Hình ảnh')}
-        >
-          <Text style={styles.tabText}>Hình ảnh</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            selectedTab === 'Album' ? styles.activeTab : null,
-          ]}
-          onPress={() => setSelectedTab('Album')}
-        >
-          <Text style={styles.tabText}>Album</Text>
-        </TouchableOpacity>
-      </View>
-      {selectedTab === 'Hình ảnh' ? <PhotosByDate /> : <PhotosByAlbum />}
-    </View>
+    <Tab.Navigator
+      screenOptions={{ 
+        swipeEnabled: true,
+        lazy: true,
+      }}
+    >
+    <Tab.Screen name="All" component={PhotosByDate} />
+    <Tab.Screen name="Your Album" component={PhotosByAlbum} />
+  </Tab.Navigator>
   );
 };
 
@@ -67,7 +52,7 @@ export type selectedAlbumType = {
   title: string;
 };
 
-export const PhotosByAlbum = () => {
+const PhotosByAlbum = () => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [isMediaGranted, setIsMediaGranted] = useState<boolean | null>(null);
   const [albums, setAlbums] = useState<customAlbum[]>([]);
@@ -190,6 +175,7 @@ export const PhotosByAlbum = () => {
         });
     };
     requestMediaPermission();
+    console.log("PhotosByAlbum");
   }, []);
 
   useEffect(() => {
@@ -280,18 +266,31 @@ export const PhotosByAlbum = () => {
   );
 };
 
-const PhotosByDate: React.FC = () => {
+const PhotosByDate = () => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [assets, setAssets] = useState<ExtendedAsset[]>([]);
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [selectedAssets, setSelectedAssets] = useState<ExtendedAsset[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [visible, setVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const isSelecting = useMultiImageSelection(assets);
   const [groupedPhotos, setGroupedPhotos] = useState<{
     [key: string]: ExtendedAsset[];
   }>({});
   const currentImageSize = useRef<number>(0);
+
+  const openModal = (item) => {
+    const indexImg = assets.findIndex(item)
+    if (indexImg) {
+      setSelectedIndex(indexImg);
+      setVisible(true);
+    } else {
+      console.log("IMG NOT FOUND");
+    }
+
+  };
 
   async function getAlbumAssets(after?: string) {
     console.log('Fetching assets...');
@@ -303,7 +302,7 @@ const PhotosByDate: React.FC = () => {
     };
     if (after) options['after'] = after;
     const albumAssets = await MediaLibrary.getAssetsAsync(options);
-    console.log('albumAssets', albumAssets);
+    console.log('albumAssets');
     // Cập nhật assets mới mà không cần nhóm lại
     setAssets((prev) => [...prev, ...albumAssets.assets]);
     setHasNextPage(albumAssets.hasNextPage);
@@ -312,7 +311,12 @@ const PhotosByDate: React.FC = () => {
   }
 
   useEffect(() => {
+    PhotosByDate
     getAlbumAssets();
+    return (() => {
+      setAssets([])
+      setGroupedPhotos({})
+    })
   }, []);
 
   useEffect(() => {
@@ -322,7 +326,6 @@ const PhotosByDate: React.FC = () => {
   }, [assets]);
 
   const groupPhotosByDate = () => {
-    console.log('currentImageSize', currentImageSize.current);
     const newImage = assets.length - currentImageSize.current;
     const newGroupedPhotos = { ...groupedPhotos }; // Tạo bản sao của groupedPhotos
     const newPhotos =
@@ -335,13 +338,6 @@ const PhotosByDate: React.FC = () => {
       }
       newGroupedPhotos[date].push(photo);
     });
-
-    Object.entries(groupedPhotos).map(([date, photos], index) => {
-      console.log('photos', photos);
-    });
-    const key = Object.keys(groupedPhotos);
-    console.log("groupedPhotos['02/11/2024']", groupedPhotos['02/11/2024']);
-    console.log('key', key);
     setGroupedPhotos(newGroupedPhotos);
   };
 
@@ -353,15 +349,19 @@ const PhotosByDate: React.FC = () => {
     } else {
       setSelectedAssets((prev) => prev.filter((asset) => asset.id !== item.id));
     }
-    setAssets((prev) =>
-      prev.map((i) => {
-        if (item.id === i.id) {
-          i.selected = !i.selected;
-        }
-        return i;
-      })
-    );
+    // setAssets((prev) =>
+    //   prev.map((i) => {
+    //     if (item.id === i.id) {
+    //       i.selected = !i.selected;
+    //     }
+    //     return i;
+    //   })
+    // );
   };
+
+  const showDetails = (item) => {
+
+  }
 
   const renderPhotoItem = useCallback(
     ({ item }) => (
@@ -418,6 +418,26 @@ const PhotosByDate: React.FC = () => {
         onEndReachedThreshold={0.9}
         ListFooterComponent={renderFooter}
       />
+      <Modal visible={visible} transparent={true} onRequestClose={() => setVisible(false)}>
+        <FlatList
+          data={assets}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.id}
+          initialScrollIndex={selectedIndex}
+          getItemLayout={(data, index) => ({
+            length: Dimensions.get('window').width,
+            offset: Dimensions.get('window').width * index,
+            index,
+          })}
+          renderItem={({ item }) => (
+            <View style={styles.fullScreenImageContainer}>
+              <Image source={{ uri: item.uri }} style={styles.fullScreenImage} />
+            </View>
+          )}
+        />
+      </Modal>
     </View>
   );
 };

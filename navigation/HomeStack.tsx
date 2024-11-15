@@ -17,10 +17,14 @@ export const HomeStackNavigator1: React.FC = () => {
     <HomeStack.Navigator
       initialRouteName="HomeMain"
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
       }}
     >
-      <HomeStack.Screen name="HomeMain" component={Home} />
+      <HomeStack.Screen name="HomeMain" component={Home} options={
+        {
+          headerShown: false
+        }
+      }/>
       <HomeStack.Screen
         name="LargeFilesScanner"
         component={LargeFilesScanner}
