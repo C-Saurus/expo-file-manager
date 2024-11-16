@@ -106,6 +106,9 @@ export const Home = () => {
       case ENFILETYPE.PDF:
         navigation.navigate('PDFScreen')
         break;
+      case ENFILETYPE.AUDIO:
+        navigation.navigate('AudioScreen')
+        break;
       default:
         break;
     }

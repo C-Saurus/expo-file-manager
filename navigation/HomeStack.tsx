@@ -9,6 +9,7 @@ import LargeFilesScanner from '../screens/ScanLargeFile';
 import { Home } from '../screens/Home';
 import PDFScreen from '../screens/PDFScreen';
 import MiscFileView from '../screens/MiscFileView';
+import { AudioScreen } from '../screens/Audio';
 
 const HomeStack = createStackNavigator();
 
@@ -35,6 +36,7 @@ export const HomeStackNavigator1: React.FC = () => {
       />
       <HomeStack.Screen name="ImageScreen" component={ImageScreen} />
       <HomeStack.Screen name="VideoScreen" component={VideoScreen} />
+      <HomeStack.Screen name="AudioScreen" component={AudioScreen} />
       <HomeStack.Screen
         name="VideoPlayer"
         options={({ route }) => ({

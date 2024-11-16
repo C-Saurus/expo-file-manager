@@ -59,6 +59,9 @@ local.properties
 *.keystore
 !debug.keystore
 
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
 # node.js
 #
 node_modules/
