@@ -3,13 +3,14 @@ import { StyleSheet, Image, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZE } from '../../../utils/Constants';
 import { ExtendedAsset } from '../../../types';
-
+import { MediaType } from 'expo-media-library';
+const audioThumbnails = require('~/../../assets/audio-thubnails.jpg')
 const ITEM_SIZE = SIZE / 3;
 
 type AssetProps = {
   item: ExtendedAsset;
   isSelecting: boolean;
-  toggleSelect: (asset: ExtendedAsset) => void;
+  toggleSelect: (asset: ExtendedAsset, multiSelect?: boolean) => void;
 };
 
 export const AssetItem = ({
@@ -17,17 +18,21 @@ export const AssetItem = ({
   isSelecting,
   toggleSelect,
 }: AssetProps) => {
+
   return (
     <TouchableOpacity
       key={asset.id}
       style={styles.assetContainer}
       activeOpacity={0.8}
-      onLongPress={() => toggleSelect(asset)}
+      onLongPress={() => toggleSelect(asset, true)}
       onPress={() => {
-        if (isSelecting) toggleSelect(asset);
+        isSelecting ? toggleSelect(asset, true) : toggleSelect(asset);
       }}
     >
-      <Image style={styles.assetImage} source={{ uri: asset.uri }} />
+      <Image
+        style={styles.assetImage}
+        source={asset.mediaType === MediaType.audio ? audioThumbnails : { uri: asset.uri }}
+      />
       {isSelecting && (
         <View style={styles.checkCircleContainer}>
           <View style={styles.checkCircleBG}></View>

@@ -10,7 +10,7 @@ import {
 import { selectedAlbumType } from '.';
 import { customAlbum } from '../../../types';
 import { useAppSelector } from '../../../hooks/reduxHooks';
-
+const folderThumbnails = require('~/../../assets/folder-thumbnails.jpg')
 const { width: SIZE } = Dimensions.get('window');
 const ITEM_SIZE = SIZE / 2;
 
@@ -27,7 +27,7 @@ export const AlbumItem = ({ item: album, setSelectedAlbum }: AlbumProps) => {
       activeOpacity={0.8}
       onPress={() => setSelectedAlbum({ id: album.id, title: album.title })}
     >
-      <Image style={styles.albumCover} source={{ uri: album.coverImage }} />
+      <Image style={styles.albumCover} source={album.coverImage ? { uri: album.coverImage } : folderThumbnails} />
       <View style={styles.albumDetailsContainer}>
         <Text
           style={{ ...styles.albumTitle, color: colors.primary }}

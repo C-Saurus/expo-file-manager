@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   Button,
   FlatList,
+  useWindowDimensions,
+  Dimensions,
 } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
@@ -19,46 +21,43 @@ import { customAlbum, ExtendedAsset } from '../../types';
 import useMultiImageSelection from '../../hooks/useMultiImageSelection';
 import { AlbumList } from '../../components/Browser/PickImages/AlbumList';
 import { AssetList } from '../../components/Browser/PickImages/AssetList';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
 import moment from 'moment';
 import { AssetItem } from '../../components/Browser/PickImages/AssetItem';
-
-const Tab = createBottomTabNavigator();
+import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
+import { SIZE } from '../../utils/Constants';
 
 export const AudioScreen = ({ navigation }) => {
-  const [selectedTab, setSelectedTab] = useState('Hình ảnh');
+  const { colors } = useAppSelector((state) => state.theme.theme);
+  const renderScene = SceneMap({
+    first: AudiosByDate,
+    second: AudiosByAlbum,
+  });
+  const layout = useWindowDimensions();
+
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: 'first', title: 'All' },
+    { key: 'second', title: 'Your Album' },
+  ]);
+
+  const renderTabBar = props => (
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: 'blue' }}
+      style={{ backgroundColor: 'white', }}
+      activeColor='blue'
+    />
+  );
+
   return (
-    <View style={styles.containerNav}>
-      <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Âm thanh</Text>
-      </View>
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            selectedTab === 'Âm thanh' ? styles.activeTab : null,
-          ]}
-          onPress={() => setSelectedTab('Âm thanh')}
-        >
-          <Text style={styles.tabText}>Âm thanh</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            selectedTab === 'Album' ? styles.activeTab : null,
-          ]}
-          onPress={() => setSelectedTab('Album')}
-        >
-          <Text style={styles.tabText}>Album</Text>
-        </TouchableOpacity>
-      </View>
-      {selectedTab === 'Âm thanh' ? <AudiosByDate /> : <AudiosByAlbum />}
-    </View>
+    <TabView
+      lazy
+      renderTabBar={renderTabBar}
+      navigationState={{ index, routes }}
+      renderScene={renderScene}
+      onIndexChange={setIndex}
+      initialLayout={{ width: layout.width }}
+    />
   );
 };
 
@@ -67,7 +66,7 @@ export type selectedAlbumType = {
   title: string;
 };
 
-export const AudiosByAlbum = () => {
+const AudiosByAlbum = () => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [isMediaGranted, setIsMediaGranted] = useState<boolean | null>(null);
   const [albums, setAlbums] = useState<customAlbum[]>([]);
@@ -88,6 +87,7 @@ export const AudiosByAlbum = () => {
       async (album) =>
         await MediaLibrary.getAssetsAsync({
           album: album,
+          mediaType: MediaLibrary.MediaType.audio,
           first: 10,
           sortBy: MediaLibrary.SortBy.default,
         })
@@ -102,7 +102,6 @@ export const AudiosByAlbum = () => {
             title: album?.title,
             assetCount: album?.assetCount,
             type: album?.type,
-            coverImage: item.assets[0].uri,
           };
           return albumObject;
         });
@@ -115,6 +114,7 @@ export const AudiosByAlbum = () => {
     setLoading(true);
     const options = {
       album: albumId,
+      mediaType: MediaLibrary.MediaType.audio,
       first: 25,
       sortBy: MediaLibrary.SortBy.creationTime,
     };
@@ -190,6 +190,7 @@ export const AudiosByAlbum = () => {
         });
     };
     requestMediaPermission();
+    console.log('AudiosByAlbum');
   }, []);
 
   useEffect(() => {
@@ -280,31 +281,43 @@ export const AudiosByAlbum = () => {
   );
 };
 
-const AudiosByDate: React.FC = () => {
+const AudiosByDate = () => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [assets, setAssets] = useState<ExtendedAsset[]>([]);
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [selectedAssets, setSelectedAssets] = useState<ExtendedAsset[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [visible, setVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const isSelecting = useMultiImageSelection(assets);
   const [groupedAudios, setGroupedAudios] = useState<{
     [key: string]: ExtendedAsset[];
   }>({});
   const currentImageSize = useRef<number>(0);
 
+  const openModal = (item) => {
+    const indexImg = assets.findIndex(item);
+    if (indexImg) {
+      setSelectedIndex(indexImg);
+      setVisible(true);
+    } else {
+      console.log('IMG NOT FOUND');
+    }
+  };
+
   async function getAlbumAssets(after?: string) {
     console.log('Fetching assets...');
     currentImageSize.current = assets.length;
     setLoading(true);
     const options = {
-      first: 25,
-      sortBy: MediaLibrary.SortBy.creationTime,
+      first: 4,
       mediaType: MediaLibrary.MediaType.audio,
+      sortBy: MediaLibrary.SortBy.creationTime,
     };
     if (after) options['after'] = after;
     const albumAssets = await MediaLibrary.getAssetsAsync(options);
-    console.log('albumAssets', albumAssets);
+    console.log('albumAssets');
     // Cập nhật assets mới mà không cần nhóm lại
     setAssets((prev) => [...prev, ...albumAssets.assets]);
     setHasNextPage(albumAssets.hasNextPage);
@@ -314,6 +327,10 @@ const AudiosByDate: React.FC = () => {
 
   useEffect(() => {
     getAlbumAssets();
+    return () => {
+      setAssets([]);
+      setGroupedAudios({});
+    };
   }, []);
 
   useEffect(() => {
@@ -323,26 +340,18 @@ const AudiosByDate: React.FC = () => {
   }, [assets]);
 
   const groupAudiosByDate = () => {
-    console.log('currentImageSize', currentImageSize.current);
     const newImage = assets.length - currentImageSize.current;
     const newGroupedAudios = { ...groupedAudios }; // Tạo bản sao của groupedAudios
     const newAudios =
       newImage > 0 ? assets.slice(currentImageSize.current) : assets;
 
-    newAudios.forEach((audio) => {
-      const date = moment(audio.creationTime).format('DD/MM/YYYY');
+    newAudios.forEach((photo) => {
+      const date = moment(photo.creationTime).format('DD/MM/YYYY');
       if (!newGroupedAudios[date]) {
         newGroupedAudios[date] = [];
       }
-      newGroupedAudios[date].push(audio);
+      newGroupedAudios[date].push(photo);
     });
-
-    Object.entries(groupedAudios).map(([date, photos], index) => {
-      console.log('photos', photos);
-    });
-    const key = Object.keys(groupedAudios);
-    console.log("groupedAudios['02/11/2024']", groupedAudios['02/11/2024']);
-    console.log('key', key);
     setGroupedAudios(newGroupedAudios);
   };
 
@@ -354,33 +363,40 @@ const AudiosByDate: React.FC = () => {
     } else {
       setSelectedAssets((prev) => prev.filter((asset) => asset.id !== item.id));
     }
-    setAssets((prev) =>
-      prev.map((i) => {
-        if (item.id === i.id) {
-          i.selected = !i.selected;
-        }
-        return i;
-      })
-    );
+    // setAssets((prev) =>
+    //   prev.map((i) => {
+    //     if (item.id === i.id) {
+    //       i.selected = !i.selected;
+    //     }
+    //     return i;
+    //   })
+    // );
   };
 
-  const renderAudioItem = useCallback(
-    ({ item }) => (
-      <AssetItem
-        item={item}
-        toggleSelect={toggleSelect}
-        isSelecting={selectedAssets.some((asset) => asset.id === item.id)}
-      />
-    ),
+  const showDetails = (item) => {};
+
+  const renderPhotoItem = useCallback(
+    ({ item }) =>
+      item?.id ? (
+        <AssetItem
+          item={item}
+          toggleSelect={toggleSelect}
+          isSelecting={selectedAssets.some((asset) => asset.id === item.id)}
+        />
+      ) : (
+        <View style={styles.emptyItem}></View>
+      ),
     [selectedAssets]
   );
-
+useEffect(() => {
+console.log("Math.min(audios.length, 3)", Math.min(2, 3));
+}, [])
   const renderGroup = ({ item: { date, audios } }) => (
     <View style={styles.dateGroup}>
       <Text style={styles.dateTitle}>{date}</Text>
       <FlatList
-        data={audios}
-        renderItem={renderAudioItem}
+        data={audios.length >= 3 ? audios : [...audios, {}, {}].slice(0, 3)}
+        renderItem={renderPhotoItem}
         keyExtractor={(item) => item.id + item.creationTime + item.name}
         numColumns={3}
       />
@@ -389,15 +405,19 @@ const AudiosByDate: React.FC = () => {
 
   const renderFooter = () => {
     if (loading) {
-      <View
+      return (
+        <View
         style={{
-          ...styles.container,
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
           backgroundColor: colors.background2,
           width: '100%',
         }}
       >
         <ActivityIndicator size="large" color={colors.primary} />
-      </View>;
+      </View>
+      )
     }
     return null;
   };
@@ -416,6 +436,7 @@ const AudiosByDate: React.FC = () => {
         onEndReached={() => {
           if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
         }}
+        fadingEdgeLength={3}
         onEndReachedThreshold={0.9}
         ListFooterComponent={renderFooter}
       />

@@ -47,7 +47,7 @@ export const AssetList = ({
           isSelecting={isSelecting}
         />
       )}
-      keyExtractor={(item) => item.albumId + item.name}
+      keyExtractor={(item) => albumId + item.name}
       onEndReached={() => {
         if (hasNextPage) getAlbumAssets(endCursor);
       }}

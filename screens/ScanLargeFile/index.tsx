@@ -59,7 +59,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
       for (const item of items) {
         if (item.isFile()) {
           const stats = await RNFS.stat(item?.path);
-          if (stats && stats?.size >= 5 * 1024 * 1024) { // 50MB
+          if (stats && stats?.size >= 50 * 1024 * 1024) { // 50MB
             setLargeFiles(prev => [
               ...prev,
               { name: item.name, size: stats.size, path: item.path },
@@ -244,9 +244,6 @@ const LargeFilesScanner = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
         <Text style={styles.title}>{mode === 0 ? "Tệp tin lớn hơn 50MB" : "Tệp tin trùng lặp"}</Text>
         <TouchableOpacity>
           <Ionicons name="search" size={24} color="black" />

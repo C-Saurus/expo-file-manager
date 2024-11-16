@@ -14,8 +14,10 @@ import {
   Modal,
   Dimensions,
   Image,
+  useWindowDimensions,
+  ImageBackground,
 } from 'react-native';
-import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import { styles } from './style';
 import { useAppSelector } from '../../hooks/reduxHooks';
@@ -23,27 +25,43 @@ import { customAlbum, ExtendedAsset } from '../../types';
 import useMultiImageSelection from '../../hooks/useMultiImageSelection';
 import { AlbumList } from '../../components/Browser/PickImages/AlbumList';
 import { AssetList } from '../../components/Browser/PickImages/AssetList';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
 import moment from 'moment';
 import { AssetItem } from '../../components/Browser/PickImages/AssetItem';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-
-const Tab = createMaterialTopTabNavigator();
+import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { SIZE } from '../../utils/Constants';
 
 export const ImageScreen = () => {
   const { colors } = useAppSelector((state) => state.theme.theme);
+  const renderScene = SceneMap({
+    first: PhotosByDate,
+    second: PhotosByAlbum,
+  });
+  const layout = useWindowDimensions();
+
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: 'first', title: 'All' },
+    { key: 'second', title: 'Your Album' },
+  ]);
+
+  const renderTabBar = props => (
+    <TabBar
+      {...props}
+      indicatorStyle={{ backgroundColor: 'blue' }}
+      style={{ backgroundColor: 'white', }}
+      activeColor='blue'
+    />
+  );
+
   return (
-    <Tab.Navigator
-      screenOptions={{ 
-        swipeEnabled: true,
-        lazy: true,
-      }}
-    >
-    <Tab.Screen name="All" component={PhotosByDate} />
-    <Tab.Screen name="Your Album" component={PhotosByAlbum} />
-  </Tab.Navigator>
+    <TabView
+      renderTabBar={renderTabBar}
+      navigationState={{ index, routes }}
+      renderScene={renderScene}
+      onIndexChange={setIndex}
+      initialLayout={{ width: layout.width }}
+    />
   );
 };
 
@@ -175,7 +193,7 @@ const PhotosByAlbum = () => {
         });
     };
     requestMediaPermission();
-    console.log("PhotosByAlbum");
+    console.log('PhotosByAlbum');
   }, []);
 
   useEffect(() => {
@@ -252,7 +270,7 @@ const PhotosByAlbum = () => {
         {selectedAlbum && (
           <AssetList
             assets={assets}
-            albumId={selectedAlbum.id}
+            albumId={selectedAlbum.id + "Tab Album"}
             getAlbumAssets={getAlbumAssets}
             hasNextPage={hasNextPage}
             endCursor={endCursor}
@@ -276,21 +294,11 @@ const PhotosByDate = () => {
   const [visible, setVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const isSelecting = useMultiImageSelection(assets);
+  const [multiSelect, setMultiSelect] = useState(false);
   const [groupedPhotos, setGroupedPhotos] = useState<{
     [key: string]: ExtendedAsset[];
   }>({});
   const currentImageSize = useRef<number>(0);
-
-  const openModal = (item) => {
-    const indexImg = assets.findIndex(item)
-    if (indexImg) {
-      setSelectedIndex(indexImg);
-      setVisible(true);
-    } else {
-      console.log("IMG NOT FOUND");
-    }
-
-  };
 
   async function getAlbumAssets(after?: string) {
     console.log('Fetching assets...');
@@ -311,12 +319,11 @@ const PhotosByDate = () => {
   }
 
   useEffect(() => {
-    PhotosByDate
     getAlbumAssets();
-    return (() => {
-      setAssets([])
-      setGroupedPhotos({})
-    })
+    return () => {
+      setAssets([]);
+      setGroupedPhotos({});
+    };
   }, []);
 
   useEffect(() => {
@@ -341,14 +348,24 @@ const PhotosByDate = () => {
     setGroupedPhotos(newGroupedPhotos);
   };
 
-  const toggleSelect = (item: ExtendedAsset) => {
-    const isSelected =
-      selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
-    if (!isSelected) {
-      setSelectedAssets((prev) => [...prev, item]);
-    } else {
-      setSelectedAssets((prev) => prev.filter((asset) => asset.id !== item.id));
+  const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
+    console.log("multiSelectEmit", multiSelectEmit);
+    if (multiSelect !== multiSelectEmit) {
+      setMultiSelect(multiSelectEmit)
     }
+
+    if (multiSelect || multiSelectEmit) {
+      const isSelected =
+      selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
+      if (!isSelected) {
+        setSelectedAssets((prev) => [...prev, item]);
+      } else {
+        setSelectedAssets((prev) => prev.filter((asset) => asset.id !== item.id));
+      }
+    } else {
+      openModal(item)
+    }
+    
     // setAssets((prev) =>
     //   prev.map((i) => {
     //     if (item.id === i.id) {
@@ -359,17 +376,30 @@ const PhotosByDate = () => {
     // );
   };
 
-  const showDetails = (item) => {
+  const showDetails = (item) => {};
 
-  }
+  const openModal = (item) => {
+    console.log("COME");
+    const indexImg = assets.findIndex((asset) => asset.id === item.id);
+    if (indexImg) {
+      setSelectedIndex(indexImg);
+      setVisible(true);
+    } else {
+      console.log('IMG NOT FOUND');
+    }
+  };
 
   const renderPhotoItem = useCallback(
     ({ item }) => (
-      <AssetItem
-        item={item}
-        toggleSelect={toggleSelect}
-        isSelecting={selectedAssets.some((asset) => asset.id === item.id)}
-      />
+      item?.id ? (
+        <AssetItem
+          item={item}
+          toggleSelect={toggleSelect}
+          isSelecting={multiSelect}
+        />
+      ) : (
+        <View style={styles.emptyItem}></View>
+      )
     ),
     [selectedAssets]
   );
@@ -378,7 +408,7 @@ const PhotosByDate = () => {
     <View style={styles.dateGroup}>
       <Text style={styles.dateTitle}>{date}</Text>
       <FlatList
-        data={photos}
+        data={photos.length >= 3 ? photos : [...photos, {}, {}].slice(0, 3)}
         renderItem={renderPhotoItem}
         keyExtractor={(item) => item.id + item.creationTime + item.name}
         numColumns={3}
@@ -388,7 +418,8 @@ const PhotosByDate = () => {
 
   const renderFooter = () => {
     if (loading) {
-      <View
+      return (
+        <View
         style={{
           ...styles.container,
           backgroundColor: colors.background2,
@@ -396,9 +427,20 @@ const PhotosByDate = () => {
         }}
       >
         <ActivityIndicator size="large" color={colors.primary} />
-      </View>;
+      </View>
+      )
     }
     return null;
+  };
+
+  const handleGestureEvent = ({ nativeEvent }) => {
+    console.log("nativeEvent", nativeEvent);
+    if (nativeEvent.state === State.END) {
+      const translationY = nativeEvent.translationY;
+      if (translationY > 100) {
+        setVisible(false);
+      }
+    }
   };
 
   const groupedData = Object.entries(groupedPhotos).map(([date, photos]) => ({
@@ -418,25 +460,56 @@ const PhotosByDate = () => {
         onEndReachedThreshold={0.9}
         ListFooterComponent={renderFooter}
       />
-      <Modal visible={visible} transparent={true} onRequestClose={() => setVisible(false)}>
-        <FlatList
-          data={assets}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.id}
-          initialScrollIndex={selectedIndex}
-          getItemLayout={(data, index) => ({
-            length: Dimensions.get('window').width,
-            offset: Dimensions.get('window').width * index,
-            index,
-          })}
-          renderItem={({ item }) => (
-            <View style={styles.fullScreenImageContainer}>
-              <Image source={{ uri: item.uri }} style={styles.fullScreenImage} />
-            </View>
-          )}
-        />
+      <Modal
+        visible={visible}
+        onRequestClose={() => setVisible(false)}
+        presentationStyle={'overFullScreen'}
+        animationType={'slide'}
+      >
+        <PanGestureHandler onGestureEvent={handleGestureEvent}>
+          <FlatList
+            data={assets}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            initialScrollIndex={selectedIndex}
+            getItemLayout={(data, index) => ({
+              length: SIZE,
+              offset: SIZE * index,
+              index,
+            })}
+            renderItem={({ item }) => (
+              <View style={styles.itemContainer}>
+                {/* Hiển thị thumbnail */}
+                <ImageBackground
+                  source={{ uri: item.uri }}
+                  style={styles.thumbnail}
+                >
+                  {/* Thanh công cụ */}
+                  <View style={styles.bottomBar}>
+                    <TouchableOpacity>
+                      <Ionicons name="heart-outline" size={24} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                      <MaterialIcons name="edit" size={24} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                      <Ionicons
+                        name="share-social-outline"
+                        size={24}
+                        color="white"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                      <Ionicons name="trash-outline" size={24} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                </ImageBackground>
+              </View>
+            )}
+          />
+        </PanGestureHandler>
       </Modal>
     </View>
   );

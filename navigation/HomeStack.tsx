@@ -10,6 +10,7 @@ import { Home } from '../screens/Home';
 import PDFScreen from '../screens/PDFScreen';
 import MiscFileView from '../screens/MiscFileView';
 import { AudioScreen } from '../screens/Audio';
+import { AudioDetail } from '../screens/Audio/details';
 
 const HomeStack = createStackNavigator();
 
@@ -36,15 +37,17 @@ export const HomeStackNavigator1: React.FC = () => {
       />
       <HomeStack.Screen name="ImageScreen" component={ImageScreen} />
       <HomeStack.Screen name="VideoScreen" component={VideoScreen} />
-      <HomeStack.Screen name="AudioScreen" component={AudioScreen} />
       <HomeStack.Screen
         name="VideoPlayer"
         options={({ route }) => ({
           title: 'Video',
+          headerShown: false,
           presentation: 'transparentModal',
         })}
         component={VideoPlayer}
       />
+      <HomeStack.Screen name="AudioScreen" component={AudioScreen} />
+      <HomeStack.Screen name="AudioDetail" component={AudioDetail} />
       <HomeStack.Screen
         name="Browser"
         options={({ route }) => ({

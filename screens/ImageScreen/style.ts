@@ -61,32 +61,16 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
-    marginTop: 40
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderBottomWidth: 2,
-  },
-  tab: {
-    padding: 15,
-    flex: 1,
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#4D739C',
-  },
-  tabText: {
-    fontSize: 16,
-  },
+
   dateGroup: {
     marginBottom: 20,
+  },
+  emptyItem: {
+    width: SIZE / 3,
+    height: SIZE / 3,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   dateTitle: {
     fontSize: 18,
@@ -112,5 +96,22 @@ export const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
+  },
+
+  itemContainer: {
+    marginBottom: 20, // Khoảng cách giữa các mục
+  },
+  thumbnail: {
+    width: '100%',
+    height: 200, // Chiều cao của thumbnail
+    justifyContent: 'flex-end', // Đẩy thanh công cụ xuống dưới
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Nền mờ cho thanh công cụ
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });
