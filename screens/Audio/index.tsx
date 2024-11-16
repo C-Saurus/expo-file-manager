@@ -25,6 +25,8 @@ import moment from 'moment';
 import { AssetItem } from '../../components/Browser/PickImages/AssetItem';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { SIZE } from '../../utils/Constants';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 export const AudioScreen = ({ navigation }) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
@@ -291,20 +293,11 @@ const AudiosByDate = () => {
   const [visible, setVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const isSelecting = useMultiImageSelection(assets);
+  const navigation = useNavigation<StackNavigationProp<any>>();
   const [groupedAudios, setGroupedAudios] = useState<{
     [key: string]: ExtendedAsset[];
   }>({});
   const currentImageSize = useRef<number>(0);
-
-  const openModal = (item) => {
-    const indexImg = assets.findIndex(item);
-    if (indexImg) {
-      setSelectedIndex(indexImg);
-      setVisible(true);
-    } else {
-      console.log('IMG NOT FOUND');
-    }
-  };
 
   async function getAlbumAssets(after?: string) {
     console.log('Fetching assets...');
@@ -355,13 +348,19 @@ const AudiosByDate = () => {
     setGroupedAudios(newGroupedAudios);
   };
 
-  const toggleSelect = (item: ExtendedAsset) => {
-    const isSelected =
-      selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
-    if (!isSelected) {
-      setSelectedAssets((prev) => [...prev, item]);
+  const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
+    if (multiSelectEmit) {
+      const isSelected =
+        selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
+      if (!isSelected) {
+        setSelectedAssets((prev) => [...prev, item]);
+      } else {
+        setSelectedAssets((prev) =>
+          prev.filter((asset) => asset.id !== item.id)
+        );
+      }
     } else {
-      setSelectedAssets((prev) => prev.filter((asset) => asset.id !== item.id));
+      openModal(item);
     }
     // setAssets((prev) =>
     //   prev.map((i) => {
@@ -373,7 +372,12 @@ const AudiosByDate = () => {
     // );
   };
 
-  const showDetails = (item) => {};
+  const openModal = (item) => {
+    navigation.push('AudioPlayer', {
+      filename: item.filename,
+      uri: item.uri
+    });
+  };
 
   const renderPhotoItem = useCallback(
     ({ item }) =>
@@ -388,9 +392,7 @@ const AudiosByDate = () => {
       ),
     [selectedAssets]
   );
-useEffect(() => {
-console.log("Math.min(audios.length, 3)", Math.min(2, 3));
-}, [])
+
   const renderGroup = ({ item: { date, audios } }) => (
     <View style={styles.dateGroup}>
       <Text style={styles.dateTitle}>{date}</Text>

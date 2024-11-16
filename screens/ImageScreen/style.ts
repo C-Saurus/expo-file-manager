@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { SIZE } from '../../utils/Constants';
+import { HEIGHT, SIZE } from '../../utils/Constants';
 
 export const styles = StyleSheet.create({
   container: {
@@ -99,19 +99,27 @@ export const styles = StyleSheet.create({
   },
 
   itemContainer: {
-    marginBottom: 20, // Khoảng cách giữa các mục
+    width: SIZE, // Chiều rộng của mỗi phần tử bằng chiều rộng màn hình
+    height: HEIGHT, // Chiều cao của mỗi phần tử bằng chiều cao màn hình
   },
   thumbnail: {
-    width: '100%',
-    height: 200, // Chiều cao của thumbnail
-    justifyContent: 'flex-end', // Đẩy thanh công cụ xuống dưới
+    width: '100%', // Chiếm toàn bộ chiều rộng
+    height: '100%', // Chiếm toàn bộ chiều cao
+    justifyContent: 'flex-end', // Đưa nội dung xuống phía dưới
   },
   bottomBar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Nền mờ cho thanh công cụ
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Nền mờ phía dưới
+    padding: 10,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40, // Căn chỉnh khoảng cách từ trên cùng màn hình
+    left: 20, // Căn chỉnh khoảng cách từ bên trái màn hình
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Nền mờ để nổi bật
+    borderRadius: 20, // Góc bo tròn
+    padding: 10,
   },
 });

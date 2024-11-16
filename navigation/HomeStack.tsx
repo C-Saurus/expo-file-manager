@@ -10,9 +10,11 @@ import { Home } from '../screens/Home';
 import PDFScreen from '../screens/PDFScreen';
 import MiscFileView from '../screens/MiscFileView';
 import { AudioScreen } from '../screens/Audio';
-import { AudioDetail } from '../screens/Audio/details';
+import AudioPlayer from '../screens/Audio/details';
+import { DocScanner } from '../screens/DocScanner';
 
 const HomeStack = createStackNavigator();
+
 
 export const HomeStackNavigator1: React.FC = () => {
   return (
@@ -22,20 +24,29 @@ export const HomeStackNavigator1: React.FC = () => {
         headerShown: true,
       }}
     >
-      <HomeStack.Screen name="HomeMain" component={Home} options={
-        {
-          headerShown: false
-        }
-      }/>
+      <HomeStack.Screen
+        name="HomeMain"
+        component={Home}
+        options={{
+          headerShown: false,
+        }}
+      />
       <HomeStack.Screen
         name="LargeFilesScanner"
         component={LargeFilesScanner}
       />
       <HomeStack.Screen
-        name="PDFScreen"
-        component={PDFScreen}
+        name="DocScanner"
+        component={DocScanner}
       />
-      <HomeStack.Screen name="ImageScreen" component={ImageScreen} />
+      <HomeStack.Screen name="PDFScreen" component={PDFScreen} />
+      <HomeStack.Screen
+        name="ImageScreen"
+        component={ImageScreen}
+        options={{
+          animationTypeForReplace: 'pop',
+        }}
+      />
       <HomeStack.Screen name="VideoScreen" component={VideoScreen} />
       <HomeStack.Screen
         name="VideoPlayer"
@@ -47,7 +58,15 @@ export const HomeStackNavigator1: React.FC = () => {
         component={VideoPlayer}
       />
       <HomeStack.Screen name="AudioScreen" component={AudioScreen} />
-      <HomeStack.Screen name="AudioDetail" component={AudioDetail} />
+      <HomeStack.Screen
+        name="AudioPlayer"
+        options={({ route }) => ({
+          title: 'Audio',
+          headerShown: false,
+          presentation: 'transparentModal',
+        })}
+        component={AudioPlayer}
+      />
       <HomeStack.Screen
         name="Browser"
         options={({ route }) => ({

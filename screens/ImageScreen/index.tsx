@@ -17,7 +17,12 @@ import {
   useWindowDimensions,
   ImageBackground,
 } from 'react-native';
-import { Feather, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import {
+  Feather,
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import { styles } from './style';
 import { useAppSelector } from '../../hooks/reduxHooks';
@@ -45,17 +50,18 @@ export const ImageScreen = () => {
     { key: 'second', title: 'Your Album' },
   ]);
 
-  const renderTabBar = props => (
+  const renderTabBar = (props) => (
     <TabBar
       {...props}
       indicatorStyle={{ backgroundColor: 'blue' }}
-      style={{ backgroundColor: 'white', }}
-      activeColor='blue'
+      style={{ backgroundColor: 'white' }}
+      activeColor="blue"
     />
   );
 
   return (
     <TabView
+      lazy
       renderTabBar={renderTabBar}
       navigationState={{ index, routes }}
       renderScene={renderScene}
@@ -270,7 +276,7 @@ const PhotosByAlbum = () => {
         {selectedAlbum && (
           <AssetList
             assets={assets}
-            albumId={selectedAlbum.id + "Tab Album"}
+            albumId={selectedAlbum.id + 'Tab Album'}
             getAlbumAssets={getAlbumAssets}
             hasNextPage={hasNextPage}
             endCursor={endCursor}
@@ -349,23 +355,24 @@ const PhotosByDate = () => {
   };
 
   const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
-    console.log("multiSelectEmit", multiSelectEmit);
     if (multiSelect !== multiSelectEmit) {
-      setMultiSelect(multiSelectEmit)
+      setMultiSelect(multiSelectEmit);
     }
 
     if (multiSelect || multiSelectEmit) {
       const isSelected =
-      selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
+        selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
       if (!isSelected) {
         setSelectedAssets((prev) => [...prev, item]);
       } else {
-        setSelectedAssets((prev) => prev.filter((asset) => asset.id !== item.id));
+        setSelectedAssets((prev) =>
+          prev.filter((asset) => asset.id !== item.id)
+        );
       }
     } else {
-      openModal(item)
+      openModal(item);
     }
-    
+
     // setAssets((prev) =>
     //   prev.map((i) => {
     //     if (item.id === i.id) {
@@ -379,7 +386,7 @@ const PhotosByDate = () => {
   const showDetails = (item) => {};
 
   const openModal = (item) => {
-    console.log("COME");
+    console.log('COME');
     const indexImg = assets.findIndex((asset) => asset.id === item.id);
     if (indexImg) {
       setSelectedIndex(indexImg);
@@ -390,7 +397,7 @@ const PhotosByDate = () => {
   };
 
   const renderPhotoItem = useCallback(
-    ({ item }) => (
+    ({ item }) =>
       item?.id ? (
         <AssetItem
           item={item}
@@ -399,8 +406,7 @@ const PhotosByDate = () => {
         />
       ) : (
         <View style={styles.emptyItem}></View>
-      )
-    ),
+      ),
     [selectedAssets]
   );
 
@@ -420,21 +426,21 @@ const PhotosByDate = () => {
     if (loading) {
       return (
         <View
-        style={{
-          ...styles.container,
-          backgroundColor: colors.background2,
-          width: '100%',
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-      )
+          style={{
+            ...styles.container,
+            backgroundColor: colors.background2,
+            width: '100%',
+          }}
+        >
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
     }
     return null;
   };
 
   const handleGestureEvent = ({ nativeEvent }) => {
-    console.log("nativeEvent", nativeEvent);
+    console.log('nativeEvent', nativeEvent);
     if (nativeEvent.state === State.END) {
       const translationY = nativeEvent.translationY;
       if (translationY > 100) {
@@ -481,11 +487,19 @@ const PhotosByDate = () => {
             })}
             renderItem={({ item }) => (
               <View style={styles.itemContainer}>
-                {/* Hiển thị thumbnail */}
+                {/* Hiển thị ảnh full màn */}
                 <ImageBackground
                   source={{ uri: item.uri }}
                   style={styles.thumbnail}
                 >
+                  {/* Nút "<" để đóng modal */}
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => setVisible(false)}
+                  >
+                    <Ionicons name="arrow-back" size={24} color="white" />
+                  </TouchableOpacity>
+
                   {/* Thanh công cụ */}
                   <View style={styles.bottomBar}>
                     <TouchableOpacity>

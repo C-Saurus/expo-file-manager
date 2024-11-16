@@ -136,6 +136,13 @@ export const Home = () => {
       iconLib: 'FontAwesome5',
       color: '#ffcdd2',
     },
+    {
+      id: 3,
+      title: 'DocScanner',
+      icon: 'expand',
+      iconLib: 'FontAwesome5',
+      color: '#ffcdd2',
+    },
   ];
 
   const renderIcon = (item) => {
