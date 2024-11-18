@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import Main from './screens/Main';
 import { Text } from 'react-native-paper';
 import { store } from './stores';
+import { cleanOldFiles } from './utils/Constants';
 
 LogBox.ignoreLogs(['componentWillMount', 'componentWillReceiveProps']);
 
@@ -36,6 +37,16 @@ const App = () => {
   useEffect(() => {
     requestPermission()
   }, [])
+
+  useEffect(() => {
+    const clearFileTrashInterval = setInterval(() => {
+      console.log('Checking for old files to delete...');
+      cleanOldFiles();
+    }, 24 * 60 * 60 * 1000);
+    return (() => {
+      clearInterval(clearFileTrashInterval)
+    })
+  }, []);
 
   return (
     <Provider store={store}>

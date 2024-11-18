@@ -19,3 +19,11 @@ export const FILE_TYPES = {
   document: ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'],
   download: [],
 };
+
+export const DATA_FOLDER = [
+  { id: '0', title: 'Hình ảnh', icon: 'photo-library' },
+  { id: '1', title: 'Video', icon: 'videocam' },
+  { id: '2', title: 'Âm thanh', icon: 'audiotrack' },
+  { id: '3', title: 'PDF', icon: 'picture-as-pdf' },
+  { id: '4', title: 'Các tài liệu', icon: 'description' },
+];

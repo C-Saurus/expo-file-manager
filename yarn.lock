@@ -6915,6 +6915,11 @@ react-native-document-picker@^9.3.1:
   dependencies:
     invariant "^2.2.4"
 
+react-native-document-scanner-plugin@0.9.1:
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/react-native-document-scanner-plugin/-/react-native-document-scanner-plugin-0.9.1.tgz#3aedc14e90f40b60096a3e7d3c6e028850624f1c"
+  integrity sha512-iHqd/ZEHmKnPsA0X2DoSZ7B324WSDQO45I22busHHfc2vSRMHozP9fcIP34YTuNvfbvjJFhziCIw66YcGWLotA==
+
 react-native-fs@^2.20.0:
   version "2.20.0"
   resolved "https://registry.npmjs.org/react-native-fs/-/react-native-fs-2.20.0.tgz"

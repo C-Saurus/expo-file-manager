@@ -28,8 +28,10 @@ export const styles = StyleSheet.create({
     marginVertical: 10,
   },
   listItemContainer: {
-    marginHorizontal: 8,
-    marginVertical: 30,
+    marginBottom: 30,
+    backgroundColor: '#777777',
+    padding: 16,
+    borderRadius: 24,
   },
   itemContainer: {
     flex: 1,
@@ -75,4 +77,10 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: 4
   },
+  listItemContainerFolder: {
+    marginBottom: 30,
+    backgroundColor: '#999',
+    padding: 16,
+    borderRadius: 24,
+  }
 });

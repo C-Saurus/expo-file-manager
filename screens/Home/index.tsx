@@ -9,7 +9,8 @@ import { StorageData } from '../../constants/interface';
 import { ENFILETYPE } from '../../constants/enum';
 import { styles } from './style';
 import { bytesToGB } from '../../utils/Filesize';
-import { DATA } from '../../constants/const';
+import { DATA, DATA_FOLDER } from '../../constants/const';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export const Home = () => {
   const navigation = useNavigation<StackNavigationProp<any>>();
@@ -21,7 +22,7 @@ export const Home = () => {
     usedSpace: 0,
   });
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const [storageData, setStorageData] = useState<StorageData>({
     image: 0,
@@ -48,7 +49,7 @@ export const Home = () => {
 
       for (const file of files) {
         if (file.isFile()) {
-          console.log("file", file)
+          console.log('file', file);
           const extension = file.name.split('.').pop()?.toLowerCase();
           if (extension && fileTypes.includes(extension)) {
             totalSize += file.size;
@@ -78,44 +79,67 @@ export const Home = () => {
   };
 
   const handleFilePress = (item: any) => {
-    console.log("handleFilePress", item.id);
+    console.log('handleFilePress', item.id);
     switch (item.id) {
       case 0:
       case 1:
         navigation.navigate('LargeFilesScanner', {
-          mode: item?.id
+          mode: item?.id,
         });
         break;
       case 2:
         navigation.navigate('TrashFiles');
         break;
       default:
-        break
+        break;
     }
-  }
+  };
 
   const handleFileCateogory = (item: any) => {
-    console.log("item", item.id)
+    console.log('item', item.id);
     switch (Number(item.id)) {
       case ENFILETYPE.IMAGE:
-        navigation.navigate('ImageScreen')
+        navigation.navigate('ImageScreen');
         break;
       case ENFILETYPE.VIDEO:
-        navigation.navigate('VideoScreen')
+        navigation.navigate('VideoScreen');
         break;
       case ENFILETYPE.PDF:
-        navigation.navigate('PDFScreen')
+        navigation.navigate('PDFScreen');
         break;
       case ENFILETYPE.AUDIO:
-        navigation.navigate('AudioScreen')
+        navigation.navigate('AudioScreen');
         break;
       case ENFILETYPE.DOCUMENT:
-        navigation.navigate('DocumentScreen')
+        navigation.navigate('DocumentScreen');
         break;
       default:
         break;
     }
-  }
+  };
+
+  const handleFolderCateogory = (item: any) => {
+    console.log('item', item.id);
+    switch (Number(item.id)) {
+      case ENFILETYPE.IMAGE:
+        navigation.navigate('ImageScreen');
+        break;
+      case ENFILETYPE.VIDEO:
+        navigation.navigate('VideoScreen');
+        break;
+      case ENFILETYPE.PDF:
+        navigation.navigate('PDFScreen');
+        break;
+      case ENFILETYPE.AUDIO:
+        navigation.navigate('AudioScreen');
+        break;
+      case ENFILETYPE.DOCUMENT:
+        navigation.navigate('DocumentScreen');
+        break;
+      default:
+        break;
+    }
+  };
 
   const DATATOOL = [
     {
@@ -173,63 +197,94 @@ export const Home = () => {
     return (
       <TouchableOpacity onPress={() => handleFileCateogory(item)}>
         <View style={styles.itemContainer}>
-        <MaterialIcons name={item.icon} size={30} color="#6200ea" />
-        <Text style={styles.title}>{item.title}</Text>
-      </View>
+          <MaterialIcons name={item.icon} size={30} color="#6200ea" />
+          <Text style={styles.title}>{item.title}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderItemFolder = ({ item }) => {
+    return (
+      <TouchableOpacity onPress={() => handleFolderCateogory(item)}>
+        <View style={styles.itemContainer}>
+          <MaterialIcons name={item.icon} size={30} color="#6200ea" />
+          <Text style={styles.title}>{item.title}</Text>
+        </View>
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.memoryContainer}>
-        <View>
-          <Text style={styles.memoryText}>Lưu trữ nội bộ</Text>
-          <Text style={styles.memoryUsage}>
-            {bytesToGB(storageInfo?.usedSpace)} /{' '}
-            {bytesToGB(storageInfo?.totalSpace)} GB
-          </Text>
+    <ScrollView nestedScrollEnabled={true}>
+      <View style={styles.container}>
+        <View style={styles.memoryContainer}>
+          <View>
+            <Text style={styles.memoryText}>Lưu trữ nội bộ</Text>
+            <Text style={styles.memoryUsage}>
+              {bytesToGB(storageInfo?.usedSpace)} /{' '}
+              {bytesToGB(storageInfo?.totalSpace)} GB
+            </Text>
+          </View>
+          <Progress.Circle
+            size={70}
+            progress={
+              storageInfo.totalSpace > 0
+                ? storageInfo?.usedSpace / storageInfo?.totalSpace
+                : 0
+            }
+            showsText={true}
+            formatText={() =>
+              `${(
+                (storageInfo?.usedSpace / storageInfo?.totalSpace) *
+                100
+              ).toFixed(0)}%`
+            }
+            color="#6c5ce7"
+            borderWidth={0}
+            thickness={8}
+          />
         </View>
-        <Progress.Circle
-          size={70}
-          progress={
-            storageInfo.totalSpace > 0
-              ? storageInfo?.usedSpace / storageInfo?.totalSpace
-              : 0
-          }
-          showsText={true}
-          formatText={() =>
-            `${(
-              (storageInfo?.usedSpace / storageInfo?.totalSpace) *
-              100
-            ).toFixed(0)}%`
-          }
-          color="#6c5ce7"
-          borderWidth={0}
-          thickness={8}
-        />
-      </View>
 
-      {/* Icon List */}
-      <View style={styles.listItemContainer}>
-        <FlatList
-          data={DATA}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          numColumns={4}
-          columnWrapperStyle={styles.row}
-        />
-      </View>
+        {/* Icon List */}
+        <View style={styles.listItemContainer}>
+          <FlatList
+            data={DATA}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            numColumns={4}
+            columnWrapperStyle={styles.row}
+            scrollEnabled={false}
+          />
+        </View>
 
-      {loading ? <Text>Loading...</Text> : (<View style={styles.listToolContainer}>
-        <Text style={styles.header}>Công cụ</Text>
-        <FlatList
-          data={DATATOOL}
-          renderItem={renderToolItem}
-          keyExtractor={(item) => item.id}
-          numColumns={1}
-        />
-      </View>)}
-    </View>
+        <View style={styles.listItemContainerFolder}>
+          <Text style={styles.header}>Folder của tôi</Text>
+          <FlatList
+            data={DATA_FOLDER}
+            renderItem={renderItemFolder}
+            keyExtractor={(item) => item.id}
+            numColumns={4}
+            columnWrapperStyle={styles.row}
+            scrollEnabled={false}
+          />
+        </View>
+
+        {loading ? (
+          <Text>Loading...</Text>
+        ) : (
+          <View style={styles.listToolContainer}>
+            <Text style={styles.header}>Công cụ</Text>
+            <FlatList
+              data={DATATOOL}
+              renderItem={renderToolItem}
+              keyExtractor={(item) => item.id}
+              numColumns={1}
+              scrollEnabled={false}
+            />
+          </View>
+        )}
+      </View>
+    </ScrollView>
   );
 };
