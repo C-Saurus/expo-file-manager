@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { LogBox, Permission, PermissionsAndroid, Platform } from 'react-native';
 import { Provider } from 'react-redux';
 import Main from './screens/Main';
-import { store } from './store';
 import { Text } from 'react-native-paper';
+import { store } from './stores';
 
 LogBox.ignoreLogs(['componentWillMount', 'componentWillReceiveProps']);
 
@@ -15,8 +15,7 @@ const App = () => {
       try {
         const granted = await PermissionsAndroid.requestMultiple([          
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          'android.permission.MANAGE_EXTERNAL_STORAGE' as Permission],
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE],
         );
         console.log("granted", granted);
         return true;
@@ -41,7 +40,7 @@ const App = () => {
   return (
     <Provider store={store}>
       {
-        permissionsAllow ? <Main /> : <Text>Có cái nịt</Text>
+        permissionsAllow ? <Main /> : <Text>Allow Please</Text>
       }
     </Provider>
   );
