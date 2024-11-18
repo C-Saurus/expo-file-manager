@@ -1,28 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Slider, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Audio } from 'expo-av';
 
-const AudioPlayer = ({ route }) => {
-  console.log("route", route)
+const audioThumbnails = require('~/../../assets/audio-thubnails.jpg')
+export default function AudioPlayer({ route }) {
   const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [sliderWidth, setSliderWidth] = useState(0);
+  const [position, setPosition] = useState(0);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (evt, gestureState) => {
-        const newPosition = Math.max(0, Math.min(sliderWidth, gestureState.dx));
-        const newTime = Math.round((newPosition / sliderWidth) * duration);
-        setCurrentTime(newTime);
-        sound && sound.setPositionAsync(newTime * 1000);
-      },
-    })
-  ).current;
-
-  // Load âm thanh
   useEffect(() => {
     const loadSound = async () => {
       try {
@@ -31,149 +17,139 @@ const AudioPlayer = ({ route }) => {
           { shouldPlay: false }
         );
         setSound(sound);
-  
-        // Lấy thông tin âm thanh
+
         const status = await sound.getStatusAsync();
         if (status.isLoaded) {
-          setDuration(status.durationMillis / 1000); // Thời gian phát (giây)
-        } else {
-          console.warn('Sound not loaded successfully');
+          setDuration(status.durationMillis);
         }
       } catch (error) {
         console.error('Error loading sound:', error);
       }
     };
-  
+
     loadSound();
-  
+
     return () => {
-      sound && sound.unloadAsync();
+      if (sound) {
+        sound.unloadAsync();
+      }
     };
   }, [route.params.uri]);
 
-  // Cập nhật trạng thái
-  useEffect(() => {
+  const playPauseHandler = async () => {
     if (!sound) return;
 
-    const updateStatus = async () => {
-      const status = await sound.getStatusAsync();
-      setCurrentTime(status.positionMillis / 1000); // Thời gian hiện tại (giây)
-    };
-
-    const interval = setInterval(updateStatus, 500); // Cập nhật trạng thái mỗi 500ms
-    return () => clearInterval(interval);
-  }, [sound]);
-
-  const togglePlayPause = async () => {
-    if (!sound) return;
     if (isPlaying) {
       await sound.pauseAsync();
+      setIsPlaying(false);
     } else {
       await sound.playAsync();
+      setIsPlaying(true);
+
+      // Cập nhật vị trí khi phát
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded) {
+          setPosition(status.positionMillis);
+        }
+      });
     }
-    setIsPlaying(!isPlaying);
   };
 
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  const onSlidingComplete = async (value) => {
+    if (sound) {
+      const newPosition = value * duration; // Giá trị thanh trượt tỉ lệ (0 - 1) nhân với tổng thời gian
+      await sound.setPositionAsync(newPosition);
+      setPosition(newPosition);
+    }
   };
 
   return (
     <View style={styles.container}>
-      {/* Hiển thị tên file */}
-      <Text style={styles.fileName}>{route.params.filename || 'Unknown File'}</Text>
+      {/* Hình ảnh trung tâm */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={audioThumbnails} // Thay bằng hình ảnh của bạn
+          style={styles.image}
+        />
+      </View>
+
+      {/* Tên file */}
+      <Text style={styles.fileName}>{route.params.filename}</Text>
 
       {/* Thanh trượt */}
-      <View
+      <Slider
         style={styles.slider}
-        onLayout={(event) => setSliderWidth(event.nativeEvent.layout.width)}
-      >
-        <View
-          style={[
-            styles.progress,
-            { width: `${(currentTime / duration) * 100}%` },
-          ]}
-        />
-        <View
-          style={[
-            styles.thumb,
-            { left: `${(currentTime / duration) * 100}%` },
-          ]}
-          {...panResponder.panHandlers}
-        />
-      </View>
+        value={position / duration || 0} // Giá trị từ 0 - 1
+        onSlidingComplete={onSlidingComplete}
+        minimumValue={0}
+        maximumValue={1}
+        thumbTintColor="#fff"
+        minimumTrackTintColor="#ff5722"
+        maximumTrackTintColor="#757575"
+      />
 
-      {/* Hiển thị thời gian */}
+      {/* Thời gian */}
       <View style={styles.timeContainer}>
-        <Text style={styles.timeText}>{formatTime(currentTime)}</Text>
-        <Text style={styles.timeText}>{formatTime(duration)}</Text>
+        <Text style={styles.time}>{formatTime(position)}</Text>
+        <Text style={styles.time}>{formatTime(duration)}</Text>
       </View>
 
-      {/* Nút Play / Pause */}
-      <TouchableOpacity style={styles.playButton} onPress={togglePlayPause}>
-        <Text style={styles.playButtonText}>
-          {isPlaying ? 'Pause' : 'Play'}
-        </Text>
+      {/* Nút điều khiển */}
+      <TouchableOpacity style={styles.controlButton} onPress={playPauseHandler}>
+        <Text style={styles.controlText}>{isPlaying ? 'Pause' : 'Play'}</Text>
       </TouchableOpacity>
     </View>
   );
+}
+
+const formatTime = (millis) => {
+  const totalSeconds = Math.floor(millis / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#121212',
     flex: 1,
+    backgroundColor: '#1f1f1f',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageContainer: {
+    marginBottom: 20,
+  },
+  image: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
   },
   fileName: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#fff',
-    textAlign: 'center',
     marginBottom: 10,
   },
   slider: {
-    height: 10,
-    backgroundColor: '#ccc',
-    borderRadius: 5,
-    position: 'relative',
-    overflow: 'hidden',
-    marginBottom: 10,
-  },
-  progress: {
-    height: '100%',
-    backgroundColor: '#fff',
-  },
-  thumb: {
-    position: 'absolute',
-    top: -5,
-    width: 20,
-    height: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    elevation: 3,
+    width: '80%',
+    height: 40,
   },
   timeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    width: '80%',
+    marginBottom: 20,
   },
-  timeText: {
-    color: 'white',
+  time: {
     fontSize: 14,
+    color: '#fff',
   },
-  playButton: {
-    backgroundColor: '#b3e5fc',
+  controlButton: {
     padding: 10,
+    backgroundColor: '#ff5722',
     borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
   },
-  playButtonText: {
-    color: 'white',
+  controlText: {
+    color: '#fff',
     fontSize: 16,
   },
 });
-
-export default AudioPlayer;

@@ -109,6 +109,9 @@ export const Home = () => {
       case ENFILETYPE.AUDIO:
         navigation.navigate('AudioScreen')
         break;
+      case ENFILETYPE.DOCUMENT:
+        navigation.navigate('DocumentScreen')
+        break;
       default:
         break;
     }
