@@ -36,14 +36,14 @@ const TrashScreen = () => {
 
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
-      <Image source={require('./assets/trash.png')} style={styles.emptyIcon} />
+      <Image source={require('~/../../assets/trash.jpg')} style={styles.emptyIcon} />
       <Text style={styles.emptyText}>Thùng rác trống</Text>
     </View>
   );
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
-      <Image source={require('./assets/file.png')} style={styles.avatar} />
+      <Image source={require('~/../../assets/trash.jpg')} style={styles.avatar} />
       <View style={styles.infoContainer}>
         <Text style={styles.fileName}>{item.name}</Text>
         <Text style={styles.timeLeft}>{item.timeLeft}</Text>

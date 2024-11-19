@@ -1,4 +1,4 @@
-import { FlatList, Image, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, LogBox, Text, TouchableOpacity, View } from 'react-native';
 import * as Progress from 'react-native-progress';
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
@@ -38,6 +38,10 @@ export const Home = () => {
   useEffect(() => {
     getStorageInfo();
   }, []);
+
+  useEffect(() => {
+    LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+ }, []); 
 
   const getDirectorySize = async (
     directoryPath: string,
@@ -88,7 +92,10 @@ export const Home = () => {
         });
         break;
       case 2:
-        navigation.navigate('TrashFiles');
+        navigation.navigate('TrashScreen');
+        break;
+      case 3:
+        navigation.navigate('DocScanner');
         break;
       default:
         break;
@@ -158,7 +165,7 @@ export const Home = () => {
     },
     {
       id: 2,
-      title: 'Trash',
+      title: 'TrashScreen',
       icon: 'trash',
       iconLib: 'FontAwesome5',
       color: '#ffcdd2',
@@ -255,6 +262,9 @@ export const Home = () => {
             numColumns={4}
             columnWrapperStyle={styles.row}
             scrollEnabled={false}
+            horizontal={false}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
           />
         </View>
 
@@ -267,6 +277,9 @@ export const Home = () => {
             numColumns={4}
             columnWrapperStyle={styles.row}
             scrollEnabled={false}
+            horizontal={false}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
           />
         </View>
 
@@ -281,6 +294,9 @@ export const Home = () => {
               keyExtractor={(item) => item.id}
               numColumns={1}
               scrollEnabled={false}
+              horizontal={false}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
             />
           </View>
         )}

@@ -15,6 +15,10 @@ import { fetchFiles } from '../../stores/document/action';
 import { bytesToMB } from '../../utils/Filesize';
 import { ReadDirItem } from 'react-native-fs';
 import { ActivityIndicator } from 'react-native-paper';
+import FileItemCommon from '../../components/Browser/Files/FileItemCommon';
+import { setSnack, snackActionPayload } from '../../features/files/snackbarSlice';
+import useSelectionChange from '../../hooks/useSelectionChange';
+import useNewSelectionChange from '../../hooks/newUseSelectedChange';
 
 export const DocumentScreen = () => {
   const dispatch = useAppDispatch();
@@ -24,8 +28,10 @@ export const DocumentScreen = () => {
   const layout = useWindowDimensions();
 
   useEffect(() => {
-    dispatch(fetchFiles());
-  }, [dispatch]);
+    if (!docFiles.length) {
+        dispatch(fetchFiles());
+    }
+  }, [dispatch, docFiles]);
 
 //   const TabTxtFiles = () => (
 //     <FlatList
@@ -53,7 +59,7 @@ export const DocumentScreen = () => {
 
   const renderScene = SceneMap({
     doc: TabDocFiles,
-    // txt: TabTxtFiles,
+    txt: TabTxtFiles,
     // csvExcel: TabCsvExcelFiles,
     // others: TabOtherFiles,
   });
@@ -62,8 +68,8 @@ export const DocumentScreen = () => {
   const [routes] = useState([
     { key: 'doc', title: 'DOC' },
     { key: 'txt', title: 'TXT' },
-    { key: 'csvExcel', title: 'CSV/Excel' },
-    { key: 'others', title: 'Others' },
+    // { key: 'csvExcel', title: 'CSV/Excel' },
+    // { key: 'others', title: 'Others' },
   ]);
 
   const renderTabBar = (props) => (
@@ -125,7 +131,36 @@ export async function getFilesByType(fileType) {
 const TabDocFiles = () => {
     const { docFiles, loading, error } =
     useAppSelector((state) => state.documentFile);
+    const dispatch = useAppDispatch()
     const [selectedFiles, setSelectedFiles] = useState<ReadDirItem[]>([]);
+    const [renameDialogVisible, setRenameDialogVisible] = useState(false);
+    const [newFileName, setNewFileName] = useState('');
+    const [renamingFile, setRenamingFile] = useState<ReadDirItem>();
+    const [destinationDialogVisible, setDestinationDialogVisible] =
+      useState(false);
+    const [moveOrCopy, setMoveOrCopy] = useState('');
+    const { multiSelect, allSelected } = useNewSelectionChange(docFiles, selectedFiles);
+
+    const handleSetSnack = (data: snackActionPayload) => {
+        dispatch(setSnack(data));
+      };
+
+    const deleteSelectedFiles = async (file?: ReadDirItem) => {
+        const filestoBeDeleted = file ? [file] : selectedFiles;
+        // const deleteProms = filestoBeDeleted.map((file) =>
+        //   FileSystem.deleteAsync(file.path)
+        // );
+        // Promise.all(deleteProms)
+        //   .then((_) => {
+        //     handleSetSnack({
+        //       message: 'Files deleted!',
+        //     });
+        //     setSelectedFiles([]);
+        //   })
+        //   .catch((err) => {
+        //     console.log(err);
+        //   });
+      };
 
     const toggleSelect = (item: ReadDirItem) => {
       const isSelected =
@@ -140,32 +175,98 @@ const TabDocFiles = () => {
     };
 
     const renderFileItemDoc = ({ item }) => (
-      <TouchableOpacity
-        style={styles.fileItem}
-        onPress={() => toggleSelect(item.name)}
-      >
-        <Image
-          source={require('~/../../assets/folder-thumbnails.jpg')}
-          style={styles.avatar}
-        />
-        <Text style={styles.fileName}>{item.name}</Text>
-        <View style={styles.fileInfo}>
-          <Text style={styles.fileSize}>{bytesToMB(item.size)} MB</Text>
-          <Ionicons
-            name={selectedFiles[item.path] ? 'checkbox' : 'checkbox-outline'}
-            size={20}
-            color="#000"
-          />
-        </View>
-      </TouchableOpacity>
+        <FileItemCommon
+        item={item}
+        toggleSelect={toggleSelect}
+        multiSelect={multiSelect}
+        setTransferDialog={setDestinationDialogVisible}
+        setMoveOrCopy={setMoveOrCopy}
+        deleteSelectedFiles={deleteSelectedFiles}
+        setRenamingFile={setRenamingFile}
+        setRenameDialogVisible={setRenameDialogVisible}
+        setNewFileName={setNewFileName}
+      ></FileItemCommon>
     );
 
     return (
-      <FlatList
+      <View style={{ backgroundColor: 'white' }}>
+        <FlatList
         data={docFiles}
         keyExtractor={(item) => item.path}
         renderItem={renderFileItemDoc}
       />
+      </View>
+    );
+  };
+
+  const TabTxtFiles = () => {
+    const { txtFiles, loading, error } =
+    useAppSelector((state) => state.documentFile);
+    const dispatch = useAppDispatch()
+    const [selectedFiles, setSelectedFiles] = useState<ReadDirItem[]>([]);
+    const [renameDialogVisible, setRenameDialogVisible] = useState(false);
+    const [newFileName, setNewFileName] = useState('');
+    const [renamingFile, setRenamingFile] = useState<ReadDirItem>();
+    const [destinationDialogVisible, setDestinationDialogVisible] =
+      useState(false);
+    const [moveOrCopy, setMoveOrCopy] = useState('');
+    const { multiSelect, allSelected } = useNewSelectionChange(txtFiles, selectedFiles);
+
+    const handleSetSnack = (data: snackActionPayload) => {
+        dispatch(setSnack(data));
+      };
+
+    const deleteSelectedFiles = async (file?: ReadDirItem) => {
+        const filestoBeDeleted = file ? [file] : selectedFiles;
+        // const deleteProms = filestoBeDeleted.map((file) =>
+        //   FileSystem.deleteAsync(file.path)
+        // );
+        // Promise.all(deleteProms)
+        //   .then((_) => {
+        //     handleSetSnack({
+        //       message: 'Files deleted!',
+        //     });
+        //     setSelectedFiles([]);
+        //   })
+        //   .catch((err) => {
+        //     console.log(err);
+        //   });
+      };
+
+    const toggleSelect = (item: ReadDirItem) => {
+      const isSelected =
+        selectedFiles.findIndex((file) => file.path === item.path) !== -1;
+      if (!isSelected) {
+        setSelectedFiles((prev) => [...prev, item]);
+      } else {
+        setSelectedFiles((prev) =>
+          prev.filter((file) => file.path !== item.path)
+        );
+      }
+    };
+
+    const renderFileItemDoc = ({ item }) => (
+        <FileItemCommon
+        item={item}
+        toggleSelect={toggleSelect}
+        multiSelect={multiSelect}
+        setTransferDialog={setDestinationDialogVisible}
+        setMoveOrCopy={setMoveOrCopy}
+        deleteSelectedFiles={deleteSelectedFiles}
+        setRenamingFile={setRenamingFile}
+        setRenameDialogVisible={setRenameDialogVisible}
+        setNewFileName={setNewFileName}
+      ></FileItemCommon>
+    );
+
+    return (
+      <View style={{ backgroundColor: 'white' }}>
+        <FlatList
+        data={txtFiles}
+        keyExtractor={(item) => item.path}
+        renderItem={renderFileItemDoc}
+      />
+      </View>
     );
   };
 

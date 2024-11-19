@@ -12,6 +12,8 @@ import MiscFileView from '../screens/MiscFileView';
 import { AudioScreen } from '../screens/Audio';
 import AudioPlayer from '../screens/Audio/details';
 import { DocumentScreen } from '../screens/Document';
+import { DocScanner } from '../screens/DocScanner';
+import TrashScreen from '../screens/Trash';
 
 
 const HomeStack = createStackNavigator();
@@ -36,10 +38,14 @@ export const HomeStackNavigator1: React.FC = () => {
         name="LargeFilesScanner"
         component={LargeFilesScanner}
       />
-      {/* <HomeStack.Screen
+      <HomeStack.Screen
+        name="TrashScreen"
+        component={TrashScreen}
+      />
+      <HomeStack.Screen
         name="DocScanner"
         component={DocScanner}
-      /> */}
+      />
       <HomeStack.Screen name="PDFScreen" component={PDFScreen} />
       <HomeStack.Screen
         name="ImageScreen"
