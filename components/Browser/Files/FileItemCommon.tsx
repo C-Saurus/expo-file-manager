@@ -50,14 +50,13 @@ export default function FileItemCommon({
   setRenameDialogVisible,
   setNewFileName,
 }: Props) {
-  console.log("item", item)
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
   const itemMime = mime.lookup(item.path) || ' ';
   const itemType: string = item.isDirectory ? 'dir' : itemMime.split('/')[0];
   const itemFormat: string = item.isDirectory ? 'dir' : itemMime.split('/')[1];
-  console.log("itemMime", itemMime)
+
   const ThumbnailImage = ({ uri }) => {
     return (
       <Image
@@ -211,9 +210,6 @@ export default function FileItemCommon({
             </Text>
             <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
               {humanFileSize(item.size)}
-            </Text>
-            <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
-              {moment(item.mtime).fromNow()}
             </Text>
           </View>
         </TouchableOpacity>

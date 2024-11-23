@@ -1,7 +1,7 @@
 import RNFS from 'react-native-fs';
 import { ENFILETYPE } from '../constants/enum';
 
-const documentExtensions = {
+const documentExtensionCategorys = {
   doc: ['doc', 'docx'],
   txt: ['txt'],
   csvExcel: ['csv', 'xls', 'xlsx'],
@@ -28,6 +28,16 @@ const isNotDocument = (ext: string) => {
   return !documentExtensions.includes(ext); 
 }
 
+export const getCategoryByExtension = (extension) => {
+  for (const [category, extensions] of Object.entries(documentExtensionCategorys)) {
+    if (extensions.includes(extension.toLowerCase())) {
+      return category;
+    }
+  }
+  return 'others';
+};
+
+
 export const getDocumentFiles = async () => {
   const categorizedFiles = {
     docFiles: [],
@@ -36,38 +46,43 @@ export const getDocumentFiles = async () => {
     otherFiles: [],
   };
 
-  const rootPath = '/storage/emulated/0'; // Thư mục gốc trên Android
+  const rootPath = RNFS.ExternalStorageDirectoryPath; // Thư mục gốc trên Android
   const directoriesToScan = [rootPath];
 
   try {
     while (directoriesToScan.length > 0) {
       const currentDir = directoriesToScan.pop();
-      const items = await RNFS.readDir(currentDir); // Đọc nội dung thư mục
-
+      let items = [];
+      try {
+        items = await RNFS.readDir(currentDir);
+      } catch (error) {
+        console.warn(`Cannot read directory: ${currentDir}`, error);
+        continue; // Nếu không thể đọc thư mục, bỏ qua và tiếp tục
+      }
       for (const item of items) {
         if (item.isFile()) {
           const extension = item.name.split('.').pop().toLowerCase();
           if (isNotDocument(extension)) continue
           // Phân loại file theo định dạng
-          if (documentExtensions.doc.includes(extension)) {
+          if (documentExtensionCategorys.doc.includes(extension)) {
             categorizedFiles.docFiles.push({
               name: item.name,
               path: item.path,
               size: item.size,
             });
-          } else if (documentExtensions.txt.includes(extension)) {
+          } else if (documentExtensionCategorys.txt.includes(extension)) {
             categorizedFiles.txtFiles.push({
               name: item.name,
               path: item.path,
               size: item.size,
             });
-          } else if (documentExtensions.csvExcel.includes(extension)) {
+          } else if (documentExtensionCategorys.csvExcel.includes(extension)) {
             categorizedFiles.csvExcelFiles.push({
               name: item.name,
               path: item.path,
               size: item.size,
             });
-          } else if (documentExtensions.others.includes(extension)) {
+          } else if (documentExtensionCategorys.others.includes(extension)) {
             categorizedFiles.otherFiles.push({
               name: item.name,
               path: item.path,
@@ -87,3 +102,23 @@ export const getDocumentFiles = async () => {
     return categorizedFiles; // Trả về danh sách rỗng nếu có lỗi
   }
 };
+
+
+// export const getDocumentFiles = async () => {
+
+//   const categorizedFiles = {
+//     docFiles: [],
+//     txtFiles: [],
+//     csvExcelFiles: [],
+//     otherFiles: [],
+//   };
+  
+//   const rootPath = RNFS.ExternalStorageDirectoryPath;
+//   try {
+//     scanFile(rootPath, categorizedFiles)
+//     return categorizedFiles;
+//   } catch (error) {
+//     console.error('Error while scanning files:', error);
+//     return categorizedFiles; // Trả về danh sách rỗng nếu có lỗi
+//   }
+// };

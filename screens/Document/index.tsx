@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Image,
+  Platform,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
-import { fetchFiles } from '../../stores/document/action';
+import { fetchFiles, renameFiles } from '../../stores/document/action';
 import { bytesToMB } from '../../utils/Filesize';
 import { ReadDirItem } from 'react-native-fs';
 import { ActivityIndicator } from 'react-native-paper';
@@ -19,17 +21,28 @@ import FileItemCommon from '../../components/Browser/Files/FileItemCommon';
 import { setSnack, snackActionPayload } from '../../features/files/snackbarSlice';
 import useSelectionChange from '../../hooks/useSelectionChange';
 import useNewSelectionChange from '../../hooks/newUseSelectedChange';
+import { ProgressDialog } from 'react-native-simple-dialogs';
+import { DownloadDialog } from '../../components/Browser/DownloadDialog';
+import { NewFolderDialog } from '../../components/Browser/NewFolderDialog';
+import { FileTransferDialog } from '../../components/Browser/FileTransferDialog';
+import Dialog from 'react-native-dialog';
+import axios, { AxiosError } from 'axios';
+import moment from 'moment';
+import * as mime from 'react-native-mime-types';
 
 export const DocumentScreen = () => {
   const dispatch = useAppDispatch();
+  const hasFetchFile = useRef(false)
   const { colors } = useAppSelector((state) => state.theme.theme);
   const { docFiles, txtFiles, csvExcelFiles, otherFiles, loading, error } =
     useAppSelector((state) => state.documentFile);
   const layout = useWindowDimensions();
 
   useEffect(() => {
-    if (!docFiles.length) {
+    if (hasFetchFile.current) return
+    if (!docFiles.length && !hasFetchFile.current) {
         dispatch(fetchFiles());
+        hasFetchFile.current = true
     }
   }, [dispatch, docFiles]);
 
@@ -108,26 +121,6 @@ export const DocumentScreen = () => {
   );
 };
 
-export async function getFilesByType(fileType) {
-  const files = [];
-  const directory = FileSystem.documentDirectory;
-
-  const items = await FileSystem.readDirectoryAsync(directory);
-  for (const item of items) {
-    console.log('item', item);
-    if (item.endsWith(fileType)) {
-      const fileInfo = await FileSystem.getInfoAsync(directory + item);
-      files.push({
-        name: item,
-        size: (fileInfo.size / 1024).toFixed(2) + ' KB', // Dung lượng file
-        uri: fileInfo.uri,
-        type: fileType,
-      });
-    }
-  }
-  return files;
-}
-
 const TabDocFiles = () => {
     const { docFiles, loading, error } =
     useAppSelector((state) => state.documentFile);
@@ -140,10 +133,17 @@ const TabDocFiles = () => {
       useState(false);
     const [moveOrCopy, setMoveOrCopy] = useState('');
     const { multiSelect, allSelected } = useNewSelectionChange(docFiles, selectedFiles);
-
+    const [moveDir, setMoveDir] = useState('');
+    const [folderDialogVisible, setFolderDialogVisible] = useState(false);
+    const [downloadDialogVisible, setDownloadDialogVisible] = useState(false);
+    const renameInputRef = useRef<TextInput>(null);
+    const [multiImageVisible, setMultiImageVisible] = useState(false);
+    const [importProgressVisible, setImportProgressVisible] = useState(false);
+    const [newFileActionSheet, setNewFileActionSheet] = useState(false);
     const handleSetSnack = (data: snackActionPayload) => {
         dispatch(setSnack(data));
       };
+
 
     const deleteSelectedFiles = async (file?: ReadDirItem) => {
         const filestoBeDeleted = file ? [file] : selectedFiles;
@@ -174,6 +174,65 @@ const TabDocFiles = () => {
       }
     };
 
+    const [initialSelectionDone, setInitialSelectionDone] = useState(false);
+
+    useEffect(() => {
+      if (renameDialogVisible && Platform.OS === 'android') {
+        setTimeout(() => {
+          renameInputRef.current?.focus();
+        }, 100);
+      }
+      if (!renameDialogVisible)
+        setTimeout(() => {
+          setInitialSelectionDone(false);
+        }, 500);
+    }, [renameDialogVisible]);
+
+    useEffect(() => {
+      if (error) {
+        handleSetSnack({
+          message: `Error ${error}`,
+        })
+      }
+    }, [error])
+
+    const onRename = async () => {
+      const directoryPath = renamingFile.path.substring(
+        0,
+        renamingFile.path.lastIndexOf('/')
+      );
+      const newPath = `${directoryPath}/${newFileName}`;
+      dispatch(renameFiles({ oldPath: renamingFile.path, newPath }));
+    };
+
+    const handleDownload = (downloadUrl: string) => {
+      axios
+        .get(downloadUrl)
+        .then((res) => {
+          const fileExt = mime.extension(res.headers['content-type']);
+          FileSystem.downloadAsync(
+            downloadUrl,
+            '/DL_' + moment().format('DDMMYHmmss') + '.' + fileExt
+          )
+            .then(() => {
+              setDownloadDialogVisible(false);
+              handleSetSnack({
+                message: 'Download complete',
+              });
+            })
+            .catch((_) => {
+              handleSetSnack({
+                message: 'Please provide a correct url',
+              });
+            });
+        })
+        .catch((error: AxiosError) =>
+          handleSetSnack({
+            message: error.message,
+          })
+        );
+    };
+
     const renderFileItemDoc = ({ item }) => (
         <FileItemCommon
         item={item}
@@ -188,12 +247,71 @@ const TabDocFiles = () => {
       ></FileItemCommon>
     );
 
+    const renderEmptyComponent = () => (
+      <View style={styles.emptyContainer}>
+        <MaterialIcons name="folder-open" size={64} color="gray" />
+        <Text style={styles.emptyText}>Document file do not exist</Text>
+      </View>
+    );
+
     return (
       <View style={{ backgroundColor: 'white' }}>
         <FlatList
         data={docFiles}
         keyExtractor={(item) => item.path}
         renderItem={renderFileItemDoc}
+        ListEmptyComponent={renderEmptyComponent}
+      />
+      {/* <FileTransferDialog
+        isVisible={destinationDialogVisible}
+        setIsVisible={setDestinationDialogVisible}
+        moveDir={moveDir}
+        setMoveDir={setMoveDir}
+        moveSelectedFiles={moveSelectedFiles}
+        moveOrCopy={moveOrCopy}
+        setMoveOrCopy={setMoveOrCopy}
+      /> */}
+      {/* <NewFolderDialog
+        visible={folderDialogVisible}
+        createDirectory={createDirectory}
+        setFolderDialogVisible={setFolderDialogVisible}
+      /> */}
+      <DownloadDialog
+        visible={downloadDialogVisible}
+        handleDownload={handleDownload}
+        setDownloadDialog={setDownloadDialogVisible}
+      />
+      <Dialog.Container visible={renameDialogVisible}>
+        <Dialog.Title style={{ color: 'black' }}>Rename file</Dialog.Title>
+        <Dialog.Input
+          textInputRef={renameInputRef}
+          value={decodeURI(newFileName)}
+          onChangeText={(text) => {
+            setNewFileName(text);
+          }}
+          onKeyPress={() => {
+            setInitialSelectionDone(true);
+          }}
+          selection={
+            !initialSelectionDone
+              ? { start: 0, end: decodeURI(newFileName).split('.')[0].length }
+              : undefined
+          }
+          style={{ color: 'black' }}
+        ></Dialog.Input>
+        <Dialog.Button
+          label="Cancel"
+          onPress={() => {
+            setRenameDialogVisible(false);
+          }}
+        />
+        <Dialog.Button label="Rename" onPress={() => onRename()} />
+      </Dialog.Container>
+
+      <ProgressDialog
+        visible={importProgressVisible}
+        title="Importing Assets"
+        message="Please, wait..."
       />
       </View>
     );
@@ -277,4 +395,15 @@ const styles = StyleSheet.create({
   fileName: { flex: 1 },
   fileInfo: { flexDirection: 'row', alignItems: 'center' },
   fileSize: { marginRight: 10 },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: 'gray',
+    marginTop: 10,
+  },
 });

@@ -16,6 +16,8 @@ import {
   Image,
   useWindowDimensions,
   ImageBackground,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import {
   Feather,
@@ -33,7 +35,7 @@ import { AssetList } from '../../components/Browser/PickImages/AssetList';
 import moment from 'moment';
 import { AssetItem } from '../../components/Browser/PickImages/AssetItem';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
 import { SIZE } from '../../utils/Constants';
 
 export const ImageScreen = () => {
@@ -305,6 +307,47 @@ const PhotosByDate = () => {
     [key: string]: ExtendedAsset[];
   }>({});
   const currentImageSize = useRef<number>(0);
+  const flatListRef = useRef(null);
+
+  // Animated value for dragging
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return Math.abs(gestureState.dy) > Math.abs(gestureState.dx); // Chỉ xử lý vuốt dọc
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      if (gestureState.dy > 0) {
+        translateY.setValue(gestureState.dy); // Di chuyển theo cử chỉ vuốt
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (gestureState.dy > 100) {
+        // Nếu vuốt đủ xa, đóng modal
+        Animated.timing(translateY, {
+          toValue: Dimensions.get('window').height,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => setVisible(false));
+      } else {
+        // Nếu vuốt không đủ xa, trả lại vị trí ban đầu
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  });
+
+    // Scroll to selectedIndex initially
+    const handleModalShow = () => {
+      if (flatListRef.current) {
+        // Đảm bảo chỉ số hợp lệ
+        const validIndex = Math.max(0, Math.min(selectedIndex, assets.length - 1));
+        flatListRef.current.scrollToIndex({ index: validIndex, animated: false });
+      }
+    };
+  
 
   async function getAlbumAssets(after?: string) {
     console.log('Fetching assets...');
@@ -316,7 +359,7 @@ const PhotosByDate = () => {
     };
     if (after) options['after'] = after;
     const albumAssets = await MediaLibrary.getAssetsAsync(options);
-    console.log('albumAssets');
+    
     // Cập nhật assets mới mà không cần nhóm lại
     setAssets((prev) => [...prev, ...albumAssets.assets]);
     setHasNextPage(albumAssets.hasNextPage);
@@ -386,14 +429,14 @@ const PhotosByDate = () => {
   const showDetails = (item) => {};
 
   const openModal = (item) => {
-    console.log('COME');
-    const indexImg = assets.findIndex((asset) => asset.id === item.id);
-    if (indexImg) {
-      setSelectedIndex(indexImg);
-      setVisible(true);
-    } else {
-      console.log('IMG NOT FOUND');
-    }
+    const res = assets.filter((asset) => {
+      return asset.id === item.id;
+    })
+    const indexImg = assets.findIndex((asset) => {
+      return asset.id === item.id
+    });
+    setSelectedIndex(indexImg);
+    setVisible(true);
   };
 
   const renderPhotoItem = useCallback(
@@ -407,7 +450,7 @@ const PhotosByDate = () => {
       ) : (
         <View style={styles.emptyItem}></View>
       ),
-    [selectedAssets]
+    [selectedAssets, assets]
   );
 
   const renderGroup = ({ item: { date, photos } }) => (
@@ -440,19 +483,96 @@ const PhotosByDate = () => {
   };
 
   const handleGestureEvent = ({ nativeEvent }) => {
-    console.log('nativeEvent', nativeEvent);
-    if (nativeEvent.state === State.END) {
-      const translationY = nativeEvent.translationY;
-      if (translationY > 100) {
+    const { translationY, velocityY, state } = nativeEvent;
+    console.log('translationY:', nativeEvent.translationY);
+    if (state === State.END) {
+      // Vuốt xuống
+      if (translationY > 100 && velocityY > 500) {
+        setVisible(false);
+      }
+
+      // Vuốt lên
+      if (translationY < -100 && velocityY < -500) {
         setVisible(false);
       }
     }
   };
 
+  const handleStateChange = ({ nativeEvent }) => {
+    console.log('translationY:', nativeEvent.translationY);
+    if (nativeEvent.state === State.END) {
+      const { translationY } = nativeEvent;
+      if (translationY > 100 || translationY < -100) {
+        setVisible(false);
+      }
+    }
+  };
   const groupedData = Object.entries(groupedPhotos).map(([date, photos]) => ({
     date,
     photos,
   }));
+
+  const renderImageDetailItem = useCallback(
+    ({ item }) => (
+      <View style={styles.itemContainer}>
+        {/* Hiển thị ảnh full màn */}
+        <ImageBackground source={{ uri: item.uri }} style={styles.thumbnail}>
+          {/* Nút "<" để đóng modal */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setVisible(false)}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+
+          {/* Thanh công cụ */}
+          <View style={styles.bottomBar}>
+            <TouchableOpacity>
+              <Ionicons name="heart-outline" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <MaterialIcons name="edit" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Ionicons name="share-social-outline" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Ionicons name="trash-outline" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
+      </View>
+    ),
+    []
+  );
+
+  const renderModal = useCallback(() => {
+    return (
+      <Modal
+        visible={visible}
+        onRequestClose={() => setVisible(false)}
+        presentationStyle={'overFullScreen'}
+        animationType={'slide'}
+      >
+        <PanGestureHandler onGestureEvent={handleGestureEvent} onHandlerStateChange={handleStateChange}>
+          <FlatList
+            data={assets}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={true}
+            keyExtractor={(item) => item.id}
+            initialScrollIndex={selectedIndex}
+            getItemLayout={(data, index) => ({
+              length: SIZE,
+              offset: SIZE * index,
+              index,
+            })}
+            renderItem={renderImageDetailItem}
+          />
+        </PanGestureHandler>
+      </Modal>
+    )
+  }, [selectedIndex, assets, visible])
 
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background2 }}>
@@ -466,65 +586,7 @@ const PhotosByDate = () => {
         onEndReachedThreshold={0.9}
         ListFooterComponent={renderFooter}
       />
-      <Modal
-        visible={visible}
-        onRequestClose={() => setVisible(false)}
-        presentationStyle={'overFullScreen'}
-        animationType={'slide'}
-      >
-        <PanGestureHandler onGestureEvent={handleGestureEvent}>
-          <FlatList
-            data={assets}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id}
-            initialScrollIndex={selectedIndex}
-            getItemLayout={(data, index) => ({
-              length: SIZE,
-              offset: SIZE * index,
-              index,
-            })}
-            renderItem={({ item }) => (
-              <View style={styles.itemContainer}>
-                {/* Hiển thị ảnh full màn */}
-                <ImageBackground
-                  source={{ uri: item.uri }}
-                  style={styles.thumbnail}
-                >
-                  {/* Nút "<" để đóng modal */}
-                  <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => setVisible(false)}
-                  >
-                    <Ionicons name="arrow-back" size={24} color="white" />
-                  </TouchableOpacity>
-
-                  {/* Thanh công cụ */}
-                  <View style={styles.bottomBar}>
-                    <TouchableOpacity>
-                      <Ionicons name="heart-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-                      <MaterialIcons name="edit" size={24} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-                      <Ionicons
-                        name="share-social-outline"
-                        size={24}
-                        color="white"
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-                      <Ionicons name="trash-outline" size={24} color="white" />
-                    </TouchableOpacity>
-                  </View>
-                </ImageBackground>
-              </View>
-            )}
-          />
-        </PanGestureHandler>
-      </Modal>
+      {renderModal()}
     </View>
   );
 };
