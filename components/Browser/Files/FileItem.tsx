@@ -51,7 +51,7 @@ export default function FileItem({
   setRenameDialogVisible,
   setNewFileName,
 }: Props) {
-  console.log("item", item)
+  console.log("item", item.name)
   console.log("current", currentDir)
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();

@@ -109,8 +109,9 @@ export default function FileItemCommon({
           folderName: item.name,
         });
       } else {
+        console.log("onPressHandler")
         navigation.push('MiscFileView', {
-          folderName: item.name,
+          folderName: item.path,
         });
       }
     } else {

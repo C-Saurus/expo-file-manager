@@ -66,6 +66,8 @@ public class MainApplication extends Application implements ReactApplication {
 
     initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
     ApplicationLifecycleDispatcher.onApplicationCreate(this);
+
+
   }
 
   @Override

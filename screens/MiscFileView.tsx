@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import { useAppSelector } from '../hooks/reduxHooks';
 import { StackScreenProps } from '@react-navigation/stack';
 import { PDFViewer } from '../components/MiscFileView/PDFViewer';
+import DocViewer from '../components/MiscFileView/DocViewer';
 
 type MiscFileViewParamList = {
   MiscFileView: { prevDir: string; folderName: string };
@@ -21,6 +22,10 @@ const MiscFileView = ({ route }: Props) => {
 
   if (fileExt === 'pdf')
     return <PDFViewer fileURI={prevDir + '/' + folderName} />;
+
+  else if (['doc', "docx"].includes(fileExt)) {
+    return <DocViewer filePath={folderName} />
+  }
 
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background }}>
