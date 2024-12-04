@@ -25,14 +25,12 @@ import axios, { AxiosError } from 'axios';
 import moment from 'moment';
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system';
-import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as MediaLibrary from 'expo-media-library';
 import * as mime from 'react-native-mime-types';
 
 import { StackScreenProps } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
-import { ImageInfo } from 'expo-image-picker/build/ImagePicker.types';
 import { styles } from './style';
 import useSelectionChange from '../../hooks/useSelectionChange';
 import FileItem from '../../components/Browser/Files/FileItem';

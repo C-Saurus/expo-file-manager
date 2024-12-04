@@ -1,23 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Image } from 'react-native';
 import RNFS from 'react-native-fs';
-import { cleanOldFiles, TRASH_FOLDER } from '../../utils/Constants';
+import { cleanOldFiles, restoreFile, TRASH_FOLDER } from '../../utils/Constants';
 import { Checkbox } from 'react-native-paper';
+import { setSnack, snackActionPayload } from '../../features/files/snackbarSlice';
+import { useAppDispatch } from '../../hooks/reduxHooks';
 
 const TrashScreen = () => {
+  const dispatch = useAppDispatch();
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState({});
 
   useEffect(() => {
     const loadTrashFiles = async () => {
-      await cleanOldFiles();
-      const trashFiles = await RNFS.readDir(TRASH_FOLDER);
-      setFiles(trashFiles.map((file) => ({
-        path: file.path,
-        name: file.name,
-        size: (file.size / (1024 ** 3)).toFixed(2) + ' GB',
-        timeLeft: calculateDaysLeft(file.mtime),
-      })));
+      try {
+        await cleanOldFiles();
+        const trashFiles = await RNFS.readDir(TRASH_FOLDER);
+        console.log("trashFiles", trashFiles)
+        setFiles(trashFiles.map((file) => ({
+          path: file.path,
+          name: file.name,
+          size: (file.size / (1024 ** 3)).toFixed(2) + ' GB',
+          timeLeft: calculateDaysLeft(file.mtime),
+        })));
+      } catch (error) {
+        console.error("[ERROR] failed to load trash folder", error)
+      }
     };
     loadTrashFiles();
   }, []);
@@ -32,6 +40,27 @@ const TrashScreen = () => {
       ...prev,
       [path]: !prev[path],
     }));
+  };
+
+  const handleSetSnack = (data: snackActionPayload) => {
+    dispatch(setSnack(data));
+  };
+
+  const restoreSelectedFiles = async (selectedFileNames) => {
+    try {
+      const promises = selectedFileNames.map((fileName) => restoreFile(fileName));
+      await Promise.all(promises);
+  
+      handleSetSnack({
+        message: 'Selected files restored!',
+      });
+    } catch (error) {
+      console.error('Lỗi khi khôi phục nhiều file:', error);
+      handleSetSnack({
+        message: 'Failed to restore selected files!',
+        label: 'error',
+      });
+    }
   };
 
   const renderEmptyComponent = () => (

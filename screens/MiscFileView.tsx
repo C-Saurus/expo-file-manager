@@ -7,6 +7,8 @@ import { useAppSelector } from '../hooks/reduxHooks';
 import { StackScreenProps } from '@react-navigation/stack';
 import { PDFViewer } from '../components/MiscFileView/PDFViewer';
 import DocViewer from '../components/MiscFileView/DocViewer';
+import TxtViewer from '../components/MiscFileView/TxtViewer';
+import ExcelViewer from '../components/MiscFileView/ExcelViewer';
 
 type MiscFileViewParamList = {
   MiscFileView: { prevDir: string; folderName: string };
@@ -24,7 +26,12 @@ const MiscFileView = ({ route }: Props) => {
     return <PDFViewer fileURI={prevDir + '/' + folderName} />;
 
   else if (['doc', "docx"].includes(fileExt)) {
+    console.log("come", folderName)
     return <DocViewer filePath={folderName} />
+  } else if (fileExt === 'txt') {
+    return <TxtViewer filePath={folderName} />
+  } else if (['csv', "xlsx"].includes(fileExt)) {
+    return <ExcelViewer filePath={folderName} />
   }
 
   return (

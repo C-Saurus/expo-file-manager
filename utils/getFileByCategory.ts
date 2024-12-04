@@ -1,35 +1,19 @@
 import RNFS from 'react-native-fs';
-import { ENFILETYPE } from '../constants/enum';
 
-const documentExtensionCategorys = {
+const fileExtensionCategorys = {
   doc: ['doc', 'docx'],
+  pdf: ['pdf'],
   txt: ['txt'],
   csvExcel: ['csv', 'xls', 'xlsx'],
-  others: ['ppt', 'pptx', 'rtf', 'odt', 'ods', 'odp'], // Bất kỳ định dạng tài liệu nào khác
+  others: ['ppt', 'pptx', 'rtf', 'odt', 'ods', 'odp'],
+  app: ['apk'],
+  zip: ['zip', 'rar']
 };
 
-const appExtensions = ['apk']
-
-const zipExtensions = ['zip', 'rar']
-
-const isNotDocument = (ext: string) => {
-  const documentExtensions = [
-    'doc', 'docx', // Word
-    'txt',         // Plain text
-    'pdf',         // PDF
-    'xls', 'xlsx', // Excel
-    'csv',         // CSV
-    'ppt', 'pptx', // PowerPoint
-    'rtf',         // Rich Text Format
-    'odt', 'ods', 'odp', // OpenDocument formats
-    //'xml', 'json', 'yaml', 'js', // Program
-  ];
-
-  return !documentExtensions.includes(ext); 
-}
-
-export const getCategoryByExtension = (extension) => {
-  for (const [category, extensions] of Object.entries(documentExtensionCategorys)) {
+export const getCategoryByExtension = (extension: string) => {
+  for (const [category, extensions] of Object.entries(
+    fileExtensionCategorys
+  )) {
     if (extensions.includes(extension.toLowerCase())) {
       return category;
     }
@@ -37,12 +21,14 @@ export const getCategoryByExtension = (extension) => {
   return 'others';
 };
 
-
-export const getDocumentFiles = async () => {
+export const getAllFiles = async () => {
   const categorizedFiles = {
     docFiles: [],
     txtFiles: [],
     csvExcelFiles: [],
+    pdfFiles: [],
+    zipFiles: [],
+    apkFile: [],
     otherFiles: [],
   };
 
@@ -57,40 +43,55 @@ export const getDocumentFiles = async () => {
         items = await RNFS.readDir(currentDir);
       } catch (error) {
         console.warn(`Cannot read directory: ${currentDir}`, error);
-        continue; // Nếu không thể đọc thư mục, bỏ qua và tiếp tục
+        continue;
       }
       for (const item of items) {
         if (item.isFile()) {
           const extension = item.name.split('.').pop().toLowerCase();
-          if (isNotDocument(extension)) continue
-          // Phân loại file theo định dạng
-          if (documentExtensionCategorys.doc.includes(extension)) {
+          if (fileExtensionCategorys.doc.includes(extension)) {
             categorizedFiles.docFiles.push({
               name: item.name,
               path: item.path,
               size: item.size,
             });
-          } else if (documentExtensionCategorys.txt.includes(extension)) {
+          } else if (fileExtensionCategorys.txt.includes(extension)) {
             categorizedFiles.txtFiles.push({
               name: item.name,
               path: item.path,
               size: item.size,
             });
-          } else if (documentExtensionCategorys.csvExcel.includes(extension)) {
+          } else if (fileExtensionCategorys.csvExcel.includes(extension)) {
             categorizedFiles.csvExcelFiles.push({
               name: item.name,
               path: item.path,
               size: item.size,
             });
-          } else if (documentExtensionCategorys.others.includes(extension)) {
+          } else if (fileExtensionCategorys.others.includes(extension)) {
             categorizedFiles.otherFiles.push({
+              name: item.name,
+              path: item.path,
+              size: item.size,
+            });
+          } else if (fileExtensionCategorys.pdf.includes(extension)) {
+            categorizedFiles.otherFiles.push({
+              name: item.name,
+              path: item.path,
+              size: item.size,
+            });
+          } else if (fileExtensionCategorys.zip.includes(extension)) {
+            categorizedFiles.zipFiles.push({
+              name: item.name,
+              path: item.path,
+              size: item.size,
+            });
+          } else if (fileExtensionCategorys.app.includes(extension)) {
+            categorizedFiles.apkFile.push({
               name: item.name,
               path: item.path,
               size: item.size,
             });
           }
         } else if (item.isDirectory()) {
-          // Nếu là thư mục, thêm vào danh sách để tiếp tục quét
           directoriesToScan.push(item.path);
         }
       }
@@ -99,26 +100,6 @@ export const getDocumentFiles = async () => {
     return categorizedFiles;
   } catch (error) {
     console.error('Error while scanning files:', error);
-    return categorizedFiles; // Trả về danh sách rỗng nếu có lỗi
+    return categorizedFiles;
   }
 };
-
-
-// export const getDocumentFiles = async () => {
-
-//   const categorizedFiles = {
-//     docFiles: [],
-//     txtFiles: [],
-//     csvExcelFiles: [],
-//     otherFiles: [],
-//   };
-  
-//   const rootPath = RNFS.ExternalStorageDirectoryPath;
-//   try {
-//     scanFile(rootPath, categorizedFiles)
-//     return categorizedFiles;
-//   } catch (error) {
-//     console.error('Error while scanning files:', error);
-//     return categorizedFiles; // Trả về danh sách rỗng nếu có lỗi
-//   }
-// };
