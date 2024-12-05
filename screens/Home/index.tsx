@@ -41,7 +41,7 @@ export const Home = () => {
 
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
- }, []); 
+  }, []);
 
   const getDirectorySize = async (
     directoryPath: string,
@@ -154,48 +154,52 @@ export const Home = () => {
       title: 'Tệp lớn',
       icon: 'insert-drive-file',
       iconLib: 'MaterialIcons',
-      color: '#bbdefb',
+      background: '#f0f2f7',
+      color: '#537ad4',
     },
     {
       id: 1,
       title: 'Filter Duplicate',
       icon: 'filter',
       iconLib: 'MaterialIcons',
-      color: '#b3e5fc',
+      background: '#ebf7f7',
+      color: '#5ff0f0',
     },
     {
       id: 2,
       title: 'TrashScreen',
       icon: 'trash',
       iconLib: 'FontAwesome5',
-      color: '#ffcdd2',
+      background: '#f7f0f4',
+      color: '#d85090',
     },
     {
       id: 3,
       title: 'DocScanner',
       icon: 'expand',
       iconLib: 'FontAwesome5',
-      color: '#ffcdd2',
+      background: '#faf5ed',
+      color: '#d69c31',
     },
   ];
 
   const renderIcon = (item) => {
     switch (item.iconLib) {
       case 'MaterialIcons':
-        return <MaterialIcons name={item.icon} size={40} color="#6200ea" />;
+        return <MaterialIcons name={item.icon} size={40} color={item.color} />;
       case 'FontAwesome5':
-        return <FontAwesome5 name={item.icon} size={40} color="#6200ea" />;
+        return <FontAwesome5 name={item.icon} size={40} color={item.color} />;
       case 'Ionicons':
-        return <Ionicons name={item.icon} size={40} color="#6200ea" />;
+        return <Ionicons name={item.icon} size={40} color={item.color} />;
       default:
         return null;
     }
   };
   const renderToolItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleFilePress(item)}>
-      <View style={[styles.toolItemContainer, { backgroundColor: item.color }]}>
+      <View style={[styles.toolItemContainer, { backgroundColor: item.background }]}>
         {renderIcon(item)}
-        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.toolTitle}>{item.title}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -204,7 +208,9 @@ export const Home = () => {
     return (
       <TouchableOpacity onPress={() => handleFileCateogory(item)}>
         <View style={styles.itemContainer}>
-          <MaterialIcons name={item.icon} size={30} color="#6200ea" />
+          <View style={styles.iconContainer}>
+            <MaterialIcons name={item.icon} size={35} color={item.color} />
+          </View>
           <Text style={styles.title}>{item.title}</Text>
         </View>
       </TouchableOpacity>
@@ -223,7 +229,7 @@ export const Home = () => {
   };
 
   return (
-    <ScrollView nestedScrollEnabled={true}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#f8f8f8' }} nestedScrollEnabled={true}>
       <View style={styles.container}>
         <View style={styles.memoryContainer}>
           <View>
@@ -247,27 +253,45 @@ export const Home = () => {
                 100
               ).toFixed(0)}%`
             }
-            color="#6c5ce7"
+            color='black'
+            unfilledColor='#ecedee'
             borderWidth={0}
-            thickness={8}
+            thickness={5}
           />
         </View>
 
-        {/* Icon List */}
-        <View style={styles.listItemContainer}>
-          <FlatList
-            data={DATA}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            numColumns={4}
-            columnWrapperStyle={styles.row}
-            scrollEnabled={false}
-            horizontal={false}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
+        <FlatList style={{ padding: 8 }}
+          data={DATA}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          numColumns={4}
+          columnWrapperStyle={styles.row}
+          scrollEnabled={false}
+          horizontal={false}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+        />
 
+        {loading ? (
+          <Text>Loading...</Text>
+        ) : (
+          <View style={styles.listToolContainer}>
+            <Text style={styles.header}>Công cụ</Text>
+            <FlatList
+              data={DATATOOL}
+              renderItem={renderToolItem}
+              keyExtractor={(item) => item.id}
+              numColumns={3}
+              columnWrapperStyle={styles.row}
+              scrollEnabled={false}
+              horizontal={false}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+        )}
+        {/* TODO: impliment in another tab */}
+        {/* 
         <View style={styles.listItemContainerFolder}>
           <Text style={styles.header}>Folder của tôi</Text>
           <FlatList
@@ -281,25 +305,7 @@ export const Home = () => {
             showsVerticalScrollIndicator={false}
             showsHorizontalScrollIndicator={false}
           />
-        </View>
-
-        {loading ? (
-          <Text>Loading...</Text>
-        ) : (
-          <View style={styles.listToolContainer}>
-            <Text style={styles.header}>Công cụ</Text>
-            <FlatList
-              data={DATATOOL}
-              renderItem={renderToolItem}
-              keyExtractor={(item) => item.id}
-              numColumns={1}
-              scrollEnabled={false}
-              horizontal={false}
-              showsVerticalScrollIndicator={false}
-              showsHorizontalScrollIndicator={false}
-            />
-          </View>
-        )}
+        </View> */}
       </View>
     </ScrollView>
   );
