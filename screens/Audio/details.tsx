@@ -3,9 +3,11 @@ import { View, Text, Slider, StyleSheet, Image, TouchableOpacity } from 'react-n
 import { Audio } from 'expo-av';
 
 const audioThumbnails = require('~/../../assets/audio-thubnails.jpg')
+
 export default function AudioPlayer({ route }) {
-  const [sound, setSound] = useState(null);
+  const [sound, setSound] = useState<Audio.Sound>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isRepeat, setIsRepeat] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
 
@@ -35,6 +37,16 @@ export default function AudioPlayer({ route }) {
       }
     };
   }, [route.params.uri]);
+
+  const handleRepeat = () => {
+    if (isRepeat) {
+      sound.setIsLoopingAsync(false);
+      setIsRepeat(false);
+    } else {
+      sound.setIsLoopingAsync(true);
+      setIsRepeat(true);
+    }
+  };
 
   const playPauseHandler = async () => {
     if (!sound) return;
@@ -68,7 +80,7 @@ export default function AudioPlayer({ route }) {
       {/* Hình ảnh trung tâm */}
       <View style={styles.imageContainer}>
         <Image
-          source={audioThumbnails} // Thay bằng hình ảnh của bạn
+          source={require('../../assets/ic_pause.png')}
           style={styles.image}
         />
       </View>
@@ -76,28 +88,44 @@ export default function AudioPlayer({ route }) {
       {/* Tên file */}
       <Text style={styles.fileName}>{route.params.filename}</Text>
 
-      {/* Thanh trượt */}
-      <Slider
-        style={styles.slider}
-        value={position / duration || 0} // Giá trị từ 0 - 1
-        onSlidingComplete={onSlidingComplete}
-        minimumValue={0}
-        maximumValue={1}
-        thumbTintColor="#fff"
-        minimumTrackTintColor="#ff5722"
-        maximumTrackTintColor="#757575"
-      />
-
-      {/* Thời gian */}
-      <View style={styles.timeContainer}>
+      <View style={styles.progressBarContainer}>
         <Text style={styles.time}>{formatTime(position)}</Text>
+        {/* Thanh trượt */}
+        <Slider
+          style={styles.slider}
+          value={position / duration || 0} // Giá trị từ 0 - 1
+          onSlidingComplete={onSlidingComplete}
+          minimumValue={0}
+          maximumValue={1}
+          thumbTintColor="#fff"
+          minimumTrackTintColor="#ff5722"
+          maximumTrackTintColor="#757575"
+        />
         <Text style={styles.time}>{formatTime(duration)}</Text>
       </View>
 
-      {/* Nút điều khiển */}
-      <TouchableOpacity style={styles.controlButton} onPress={playPauseHandler}>
-        <Text style={styles.controlText}>{isPlaying ? 'Pause' : 'Play'}</Text>
-      </TouchableOpacity>
+      <View style={styles.controlContainer}>
+        <TouchableOpacity onPress={handleRepeat}>
+          <Image
+            source={isRepeat ? require('../../assets/ic_not_repeat.png') : require('../../assets/ic_repeat.png')}
+            style={styles.iconRepeat}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={playPauseHandler}>
+          <Image
+            source={isPlaying ? require('../../assets/ic_pause.png') : require('../../assets/ic_play.png')}
+            style={styles.controlButton}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity >
+          <Image
+            source={require('../../assets/ic_option.png')}
+            style={styles.iconRepeat}
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -113,43 +141,52 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1f1f1f',
-    justifyContent: 'center',
     alignItems: 'center',
+    padding: 16
   },
   imageContainer: {
-    marginBottom: 20,
+    marginTop: 150,
+    marginBottom: 20
+  },
+  progressBarContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 160
+  },
+  controlContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    marginTop: 20
   },
   image: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+    width: 250,
+    height: 250,
+    borderRadius: 175,
+    backgroundColor: 'red'
   },
   fileName: {
     fontSize: 18,
     color: '#fff',
-    marginBottom: 10,
+    marginTop: 20
   },
   slider: {
     width: '80%',
     height: 40,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
-    marginBottom: 20,
   },
   time: {
     fontSize: 14,
     color: '#fff',
   },
   controlButton: {
-    padding: 10,
-    backgroundColor: '#ff5722',
-    borderRadius: 5,
+    width: 55,
+    height: 55
   },
-  controlText: {
-    color: '#fff',
-    fontSize: 16,
-  },
+  iconRepeat: {
+    width: 25,
+    height: 25
+  }
 });

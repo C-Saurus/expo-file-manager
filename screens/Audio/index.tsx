@@ -170,7 +170,7 @@ const AudiosByAlbum = () => {
               },
               {
                 text: 'Nevermind',
-                onPress: () => {},
+                onPress: () => { },
                 style: 'cancel',
               },
             ];
@@ -409,16 +409,16 @@ const AudiosByDate = () => {
     if (loading) {
       return (
         <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: colors.background2,
-          width: '100%',
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.background2,
+            width: '100%',
+          }}
+        >
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       )
     }
     return null;
