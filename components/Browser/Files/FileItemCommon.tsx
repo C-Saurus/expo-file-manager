@@ -7,21 +7,14 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
 import { useNavigation } from '@react-navigation/native';
-
 import * as Sharing from 'expo-sharing';
 import * as mime from 'react-native-mime-types';
-import moment from 'moment';
-
 import humanFileSize from '../../../utils/Filesize';
 import ActionSheet from '../../ActionSheet';
-
-import { fileItem } from '../../../types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAppSelector } from '../../../hooks/reduxHooks';
 import { fileIcons } from '../../../utils/Constants';
@@ -129,18 +122,17 @@ export default function FileItemCommon({
         }
         numberOfLinesTitle={multiSelect ? undefined : 1}
         visible={itemActionsOpen}
-        actionItems={['Rename', 'Move', 'Copy', 'Share', 'Delete', 'Cancel']}
+        actionItems={['Rename', 'Move', 'Share', 'Delete', 'Cancel']}
         itemIcons={[
           'edit',
           'drive-file-move',
-          'file-copy',
           'share',
           'delete',
           'close',
         ]}
         onClose={setItemActionsOpen}
         onItemPressed={(buttonIndex) => {
-          if (buttonIndex === 4) {
+          if (buttonIndex === 3) {
             setTimeout(() => {
               Alert.alert(
                 'Confirm Delete',
@@ -163,16 +155,12 @@ export default function FileItemCommon({
                 ]
               );
             }, 300);
-          } else if (buttonIndex === 3) {
+          } else if (buttonIndex === 2) {
             Sharing.isAvailableAsync().then((canShare) => {
               if (canShare) {
-                Sharing.shareAsync(item.path);
+                Sharing.shareAsync(`file://${item.path}`);
               }
-            });
-          } else if (buttonIndex === 2) {
-            setMoveOrCopy('Copy');
-            if (!multiSelect) toggleSelect(item);
-            setTransferDialog(true);
+            }).catch((error) => console.log("[Error] share failed with err:", error));
           } else if (buttonIndex === 1) {
             setMoveOrCopy('Move');
             if (!multiSelect) toggleSelect(item);

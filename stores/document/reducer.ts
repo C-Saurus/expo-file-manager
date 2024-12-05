@@ -1,10 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchFiles, renameFiles } from './action';
+import { fetchFiles, removeFileToTrash, renameFiles } from './action';
 import { RootState } from '..';
-import * as mime from 'react-native-mime-types';
 import { getCategoryByExtension } from '../../utils/getFileByCategory';
 
-// Slice quản lý trạng thái file
 export const documentSlice = createSlice({
   name: 'files',
   initialState: {
@@ -12,6 +10,9 @@ export const documentSlice = createSlice({
     txtFiles: [],
     csvExcelFiles: [],
     otherFiles: [],
+    pdfFiles: [],
+    zipFiles: [],
+    apkFile: [],
     loading: false,
     error: null,
   },
@@ -28,6 +29,9 @@ export const documentSlice = createSlice({
         state.txtFiles = action.payload.txtFiles;
         state.csvExcelFiles = action.payload.csvExcelFiles;
         state.otherFiles = action.payload.otherFiles;
+        state.pdfFiles = action.payload.pdfFiles;
+        state.apkFile = action.payload.apkFile;
+        state.zipFiles = action.payload.zipFiles;
       })
       .addCase(fetchFiles.rejected, (state, action) => {
         state.loading = false;
@@ -40,9 +44,7 @@ export const documentSlice = createSlice({
       .addCase(renameFiles.fulfilled, (state, action) => {
         state.loading = false;
         const {oldPath, newPath} = action.payload
-        console.log("action", action.payload);
         const ext = newPath.split('.').pop();
-        console.log("ext", ext);
         const category = getCategoryByExtension(ext);
         const fileName = newPath.split('/').pop();
 
@@ -59,6 +61,18 @@ export const documentSlice = createSlice({
           state.csvExcelFiles = state.csvExcelFiles.map((file) =>
             file.path === oldPath ? { ...file, path: newPath, name: fileName } : file
           );
+        } else if (category === 'pdf') {
+          state.csvExcelFiles = state.pdfFiles.map((file) =>
+            file.path === oldPath ? { ...file, path: newPath, name: fileName } : file
+          );
+        } else if (category === 'zip') {
+          state.zipFiles = state.csvExcelFiles.map((file) =>
+            file.path === oldPath ? { ...file, path: newPath, name: fileName } : file
+          );
+        } else if (category === 'app') {
+          state.apkFile = state.csvExcelFiles.map((file) =>
+            file.path === oldPath ? { ...file, path: newPath, name: fileName } : file
+          );
         } else {
           state.otherFiles = state.otherFiles.map((file) =>
             file.path === oldPath ? { ...file, path: newPath, name: fileName } : file
@@ -66,6 +80,51 @@ export const documentSlice = createSlice({
         }
       })
       .addCase(renameFiles.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(removeFileToTrash.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removeFileToTrash.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log(action)
+        const { filestoBeDeletedRes, fileType } = action.payload
+        const category = getCategoryByExtension(fileType);
+
+        // Update the corresponding list
+        if (category === 'doc') {
+          state.docFiles = state.docFiles.filter((file) =>
+            filestoBeDeletedRes.findIndex((fileDeleted) => fileDeleted.oldPath === file.path) === -1
+          );
+        } else if (category === 'txt') {
+          state.txtFiles = state.txtFiles.map((file) =>
+            filestoBeDeletedRes.findIndex((fileDeleted) => fileDeleted.oldPath === file.path) === -1
+          );
+        } else if (category === 'csvExcel') {
+          state.csvExcelFiles = state.csvExcelFiles.map((file) =>
+            filestoBeDeletedRes.findIndex((fileDeleted) => fileDeleted.oldPath === file.path) === -1
+          );
+        } else if (category === 'pdf') {
+          state.csvExcelFiles = state.pdfFiles.map((file) =>
+            filestoBeDeletedRes.findIndex((fileDeleted) => fileDeleted.oldPath === file.path) === -1
+          );
+        } else if (category === 'zip') {
+          state.zipFiles = state.csvExcelFiles.map((file) =>
+            filestoBeDeletedRes.findIndex((fileDeleted) => fileDeleted.oldPath === file.path) === -1
+          );
+        } else if (category === 'app') {
+          state.apkFile = state.csvExcelFiles.map((file) =>
+            filestoBeDeletedRes.findIndex((fileDeleted) => fileDeleted.oldPath === file.path) === -1
+          );
+        } else {
+          state.otherFiles = state.otherFiles.map((file) =>
+            filestoBeDeletedRes.findIndex((fileDeleted) => fileDeleted.oldPath === file.path) === -1
+          );
+        }
+      })
+      .addCase(removeFileToTrash.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       });

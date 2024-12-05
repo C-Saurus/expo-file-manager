@@ -42,7 +42,6 @@ import * as mime from 'react-native-mime-types';
 
 import { StackScreenProps } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
-import { ImageInfo } from 'expo-image-picker/build/ImagePicker.types';
 import { ExtendedAsset, fileItem } from '../types';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { setImages } from '../features/files/imagesSlice';
@@ -278,7 +277,7 @@ const Browser = ({ route }: IBrowserProps) => {
     });
 
     if (!result.cancelled) {
-      const { uri, type } = result as ImageInfo;
+      const { uri, type } = result;
       const filename: string = uri.replace(/^.*[\\\/]/, '');
       const ext: string | null = reExt.exec(filename)![1];
       const fileNamePrefix = type === 'image' ? 'IMG_' : 'VID_';

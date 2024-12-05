@@ -4,10 +4,26 @@ export const { width: SIZE, height: HEIGHT } = Dimensions.get('window');
 
 export const reExt = new RegExp(/(?:\.([^.]+))?$/);
 export const base64reg = /data:image\/[^;]+;base64,/;
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
 
-export const TRASH_FOLDER = `${RNFS.DocumentDirectoryPath}/trash`;
+export const TRASH_FOLDER = `${RNFS.DocumentDirectoryPath}/Trash`;
+
+
+
+const saveOriginalPath = async (fileName, originalPath) => {
+  try {
+    const trashData = await AsyncStorage.getItem('trashData');
+    const parsedData = trashData ? JSON.parse(trashData) : {};
+
+    parsedData[fileName] = originalPath;
+
+    await AsyncStorage.setItem('trashData', JSON.stringify(parsedData));
+  } catch (error) {
+    console.error('Lỗi khi lưu đường dẫn gốc:', error);
+  }
+};
+
 export const ensureTrashFolderExists = async () => {
   const exists = await RNFS.exists(TRASH_FOLDER);
   if (!exists) {
@@ -15,12 +31,44 @@ export const ensureTrashFolderExists = async () => {
   }
 };
 
+export const restoreFile = async (fileName) => {
+  try {
+    const trashData = await AsyncStorage.getItem('trashData');
+    const parsedData = trashData ? JSON.parse(trashData) : {};
+
+    const originalPath = parsedData[fileName];
+    if (!originalPath) {
+      console.warn(`Không tìm thấy đường dẫn gốc cho file ${fileName}`);
+      return false;
+    }
+
+    const trashFilePath = `${TRASH_FOLDER}/${fileName}`;
+    await RNFS.moveFile(trashFilePath, originalPath);
+
+    // Xóa thông tin file khỏi trashData sau khi khôi phục thành công
+    delete parsedData[fileName];
+    await AsyncStorage.setItem('trashData', JSON.stringify(parsedData));
+    return true;
+  } catch (error) {
+    console.error('Lỗi khi khôi phục file:', error);
+    return false;
+  }
+};
+
 export const moveFileToTrash = async (filePath) => {
-  await ensureTrashFolderExists();
-  const fileName = filePath.split('/').pop();
-  const destination = `${TRASH_FOLDER}/${fileName}`;
-  await RNFS.moveFile(filePath, destination);
-  return destination;
+  try {
+    await ensureTrashFolderExists();
+    const fileName = filePath.split('/').pop();
+    const destination = `${TRASH_FOLDER}/${fileName}`;
+    await RNFS.moveFile(filePath, destination);
+    return {
+      destination: destination,
+      oldPath: filePath
+    };
+  } catch (error) {
+    console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);
+    return undefined
+  }
 };
 
 export const cleanOldFiles = async () => {
