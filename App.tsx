@@ -5,7 +5,7 @@ import { Provider } from 'react-redux';
 import Main from './screens/Main';
 import { Text } from 'react-native-paper';
 import { store } from './stores';
-import { cleanOldFiles } from './utils/Constants';
+import { cleanOldFiles, createInAppFolder } from './utils/Constants';
 
 LogBox.ignoreLogs(['componentWillMount', 'componentWillReceiveProps']);
 
@@ -29,13 +29,14 @@ const App = () => {
     }
   }
 
-  const requestPermission = async () => {
+  const setUpApp = async () => {
     const storagePermission =  await requestStoragePermission()
     setPermissionAllow(storagePermission)
+    // await createInAppFolder()
   }
 
   useEffect(() => {
-    requestPermission()
+    setUpApp()
   }, [])
 
   useEffect(() => {

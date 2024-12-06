@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "expo-file-manager",
-    "slug": "expo-file-manager",
+    "name": "file-manager",
+    "slug": "file-manager",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFF"
       },
-      "package": "com.martymfly.expofilemanager"
+      "package": "com.datvh.filemanager"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { fileItem } from "../types";
-import { ReadDirItem } from "react-native-fs";
+import { useState, useEffect } from 'react';
+import { ReadDirItem } from 'react-native-fs';
 
-export default function useNewSelectionChange(items: ReadDirItem[], selectedFile: ReadDirItem[]) {
+export default function useNewSelectionChange(
+  items: ReadDirItem[],
+  selectedFile: ReadDirItem[]
+) {
   const [multiSelect, setMultiSelect] = useState(false);
   const [allSelected, setAllSelected] = useState(false);
 

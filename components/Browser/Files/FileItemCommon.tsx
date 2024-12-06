@@ -97,16 +97,9 @@ export default function FileItemCommon({
 
   const onPressHandler = () => {
     if (!multiSelect) {
-      if (item.isDirectory) {
-        navigation.push('Browser', {
-          folderName: item.name,
-        });
-      } else {
-        console.log("onPressHandler")
-        navigation.push('MiscFileView', {
-          folderName: item.path,
-        });
-      }
+      navigation.push('MiscFileView', {
+        folderName: item.path,
+      });
     } else {
       toggleSelect(item);
     }

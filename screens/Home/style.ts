@@ -87,15 +87,15 @@ export const styles = StyleSheet.create({
   },
   toolItemContainer: {
     display: 'flex',
-    width: 105,
-    height: 105,
+    aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 10,
+    padding: 16,
     borderRadius: 15,
-    marginVertical: 4
+    marginVertical: 2,
   },
   listItemContainerFolder: {
+
     marginBottom: 30,
     backgroundColor: '#999',
     padding: 16,

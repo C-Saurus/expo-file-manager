@@ -1,16 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Modal,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { FlatList } from 'react-native-gesture-handler';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Entypo, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import { fetchFiles, removeFileToTrash, renameFiles } from '../../stores/document/action';
 import { ReadDirItem } from 'react-native-fs';
@@ -30,13 +33,34 @@ import * as mime from 'react-native-mime-types';
 import { TRASH_FOLDER } from '../../utils/Constants';
 import RNFS from 'react-native-fs';
 
-export const DocumentScreen = () => {
+export const DocumentScreen = ({ navigation  }) => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
+  const [openOption, setOpenOption] = useState(false)
+  const [selectAll, setSelectAll] = useState(false);
+  const [sortType, setSortType] = useState(0);
   const { colors } = useAppSelector((state) => state.theme.theme);
   const { docFiles, txtFiles, csvExcelFiles, otherFiles, loading, error } =
     useAppSelector((state) => state.documentFile);
   const layout = useWindowDimensions();
+
+  const handleChooseOption = () => {
+    setOpenOption(!openOption)
+  }
+
+  useEffect(() => {
+    // Cập nhật headerRight khi màn hình này được render
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={handleChooseOption} >
+          <Entypo name="dots-three-vertical" size={24} color="black" />
+        </TouchableOpacity>
+      ),
+      headerRightContainerStyle: {
+        marginRight: 15,
+      },
+    });
+  }, [navigation, openOption]);
 
   useEffect(() => {
     if (hasFetchFile.current) return;
@@ -46,43 +70,19 @@ export const DocumentScreen = () => {
     }
   }, [dispatch, docFiles]);
 
-  //   const TabTxtFiles = () => (
-  //     <FlatList
-  //       data={txtFiles}
-  //       keyExtractor={(item) => item.path}
-  //       renderItem={renderFileItem}
-  //     />
-  //   );
-
-  //   const TabCsvExcelFiles = () => (
-  //     <FlatList
-  //       data={csvExcelFiles}
-  //       keyExtractor={(item) => item.path}
-  //       renderItem={renderFileItem}
-  //     />
-  //   );
-
-  //   const TabOtherFiles = () => (
-  //     <FlatList
-  //       data={otherFiles}
-  //       keyExtractor={(item) => item.path}
-  //       renderItem={renderFileItem}
-  //     />
-  //   );
-
   const renderScene = SceneMap({
-    doc: TabDocFiles,
-    txt: TabTxtFiles,
-    // csvExcel: TabCsvExcelFiles,
-    // others: TabOtherFiles,
+    doc: () => <TabDocFiles data={docFiles} selectAll={selectAll} sortType={sortType} />,
+    txt: () => <TabDocFiles data={txtFiles} selectAll={selectAll} sortType={sortType} />,
+    csvExcel: () => <TabDocFiles data={csvExcelFiles} selectAll={selectAll} sortType={sortType} />,
+    others: () => <TabDocFiles data={otherFiles} selectAll={selectAll} sortType={sortType} />,
   });
 
   const [index, setIndex] = useState(0); // Tab index
   const [routes] = useState([
     { key: 'doc', title: 'DOC' },
     { key: 'txt', title: 'TXT' },
-    // { key: 'csvExcel', title: 'CSV/Excel' },
-    // { key: 'others', title: 'Others' },
+    { key: 'csvExcel', title: 'CSV/Excel' },
+    { key: 'others', title: 'Others' },
   ]);
 
   const renderTabBar = (props) => (
@@ -110,19 +110,66 @@ export const DocumentScreen = () => {
   }
 
   return (
+    <>
     <TabView
-      lazy
+      lazy={true}
+      lazyPreloadDistance={1}
       renderTabBar={renderTabBar}
       navigationState={{ index, routes }}
       renderScene={renderScene}
       onIndexChange={setIndex}
       initialLayout={{ width: layout.width }}
     />
+    <Modal
+    animationType="fade"
+    transparent={true}
+    visible={openOption}
+    onRequestClose={() => setOpenOption(false)}
+  >
+    <Pressable
+      style={styles.overlay}
+      onPress={() => setOpenOption(false)}
+    >
+      <View style={styles.modalContainer}>
+        <TouchableOpacity style={styles.modalItem} onPress={() => setSortType(1)}>
+          <Text style={styles.modalText}>Sắp xếp theo tên</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.modalItem} onPress={() => setSortType(2)}>
+          <Text style={styles.modalText}>Sắp xếp theo dung lượng</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.modalItem} onPress={() => setSortType(3)}>
+          <Text style={styles.modalText}>Sắp xếp theo thời gian tạo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.modalItem}
+          onPress={() => setSelectAll(!selectAll)}
+        >
+          <View style={styles.checkboxContainer}>
+            <Ionicons
+              name={
+                selectAll ? 'checkbox-outline' : 'square-outline'
+              }
+              size={20}
+              color="#fff"
+            />
+            <Text style={styles.modalText}>Chọn tất cả</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </Pressable>
+  </Modal></>
+    
   );
 };
 
-const TabDocFiles = ({ fileType }) => {
-  const { docFiles, loading, error } = useAppSelector(
+type TabDocFilesProps = {
+  data: ReadDirItem[]; // Mảng các object với thuộc tính 'name'
+  selectAll: boolean;      // Trạng thái Select All
+  sortType: number;        // Loại sắp xếp
+};
+
+const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(({ data, selectAll, sortType }) => {
+  const { loading, error } = useAppSelector(
     (state) => state.documentFile
   );
   const dispatch = useAppDispatch();
@@ -134,12 +181,11 @@ const TabDocFiles = ({ fileType }) => {
     useState(false);
   const [moveOrCopy, setMoveOrCopy] = useState('');
   const { multiSelect, allSelected } = useNewSelectionChange(
-    docFiles,
+    data,
     selectedFiles
   );
   const [moveDir, setMoveDir] = useState('');
-  const [downloadDialogVisible, setDownloadDialogVisible] = useState(false);
-  const [importProgressVisible, setImportProgressVisible] = useState(false);
+  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const renameInputRef = useRef<TextInput>(null);
 
   const handleSetSnack = (data: snackActionPayload) => {
@@ -185,8 +231,6 @@ const TabDocFiles = ({ fileType }) => {
     }
   };
 
-  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
-
   useEffect(() => {
     if (renameDialogVisible && Platform.OS === 'android') {
       setTimeout(() => {
@@ -217,34 +261,6 @@ const TabDocFiles = ({ fileType }) => {
     dispatch(renameFiles({ oldPath: renamingFile.path, newPath }));
   };
 
-  const handleDownload = (downloadUrl: string) => {
-    axios
-      .get(downloadUrl)
-      .then((res) => {
-        const fileExt = mime.extension(res.headers['content-type']);
-        FileSystem.downloadAsync(
-          downloadUrl,
-          '/DL_' + moment().format('DDMMYHmmss') + '.' + fileExt
-        )
-          .then(() => {
-            setDownloadDialogVisible(false);
-            handleSetSnack({
-              message: 'Download complete',
-            });
-          })
-          .catch((_) => {
-            handleSetSnack({
-              message: 'Please provide a correct url',
-            });
-          });
-      })
-      .catch((error: AxiosError) =>
-        handleSetSnack({
-          message: error.message,
-        })
-      );
-  };
-
   const renderFileItemDoc = ({ item }) => (
     <FileItemCommon
       item={item}
@@ -269,9 +285,11 @@ const TabDocFiles = ({ fileType }) => {
   return (
     <View style={{ backgroundColor: 'white' }}>
       <FlatList
-        data={docFiles}
+        data={data}
         keyExtractor={(item) => item.path}
         renderItem={renderFileItemDoc}
+        initialNumToRender={10} // Render một số lượng item ban đầu
+        windowSize={5}
         ListEmptyComponent={renderEmptyComponent}
       />
       {/* <FileTransferDialog
@@ -283,16 +301,6 @@ const TabDocFiles = ({ fileType }) => {
         moveOrCopy={moveOrCopy}
         setMoveOrCopy={setMoveOrCopy}
       /> */}
-      {/* <NewFolderDialog
-        visible={folderDialogVisible}
-        createDirectory={createDirectory}
-        setFolderDialogVisible={setFolderDialogVisible}
-      /> */}
-      <DownloadDialog
-        visible={downloadDialogVisible}
-        handleDownload={handleDownload}
-        setDownloadDialog={setDownloadDialogVisible}
-      />
       <Dialog.Container visible={renameDialogVisible}>
         <Dialog.Title style={{ color: 'black' }}>Rename file</Dialog.Title>
         <Dialog.Input
@@ -319,90 +327,9 @@ const TabDocFiles = ({ fileType }) => {
         />
         <Dialog.Button label="Rename" onPress={() => onRename()} />
       </Dialog.Container>
-
-      <ProgressDialog
-        visible={importProgressVisible}
-        title="Importing Assets"
-        message="Please, wait..."
-      />
     </View>
   );
-};
-
-const TabTxtFiles = () => {
-  const { txtFiles, loading, error } = useAppSelector(
-    (state) => state.documentFile
-  );
-  const dispatch = useAppDispatch();
-  const [selectedFiles, setSelectedFiles] = useState<ReadDirItem[]>([]);
-  const [renameDialogVisible, setRenameDialogVisible] = useState(false);
-  const [newFileName, setNewFileName] = useState('');
-  const [renamingFile, setRenamingFile] = useState<ReadDirItem>();
-  const [destinationDialogVisible, setDestinationDialogVisible] =
-    useState(false);
-  const [moveOrCopy, setMoveOrCopy] = useState('');
-  const { multiSelect, allSelected } = useNewSelectionChange(
-    txtFiles,
-    selectedFiles
-  );
-
-  const handleSetSnack = (data: snackActionPayload) => {
-    dispatch(setSnack(data));
-  };
-
-  const deleteSelectedFiles = async (file?: ReadDirItem) => {
-    const filestoBeDeleted = file ? [file] : selectedFiles;
-    // const deleteProms = filestoBeDeleted.map((file) =>
-    //   FileSystem.deleteAsync(file.path)
-    // );
-    // Promise.all(deleteProms)
-    //   .then((_) => {
-    //     handleSetSnack({
-    //       message: 'Files deleted!',
-    //     });
-    //     setSelectedFiles([]);
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   });
-  };
-
-  const toggleSelect = (item: ReadDirItem) => {
-    const isSelected =
-      selectedFiles.findIndex((file) => file.path === item.path) !== -1;
-    if (!isSelected) {
-      setSelectedFiles((prev) => [...prev, item]);
-    } else {
-      setSelectedFiles((prev) =>
-        prev.filter((file) => file.path !== item.path)
-      );
-    }
-  };
-
-  const renderFileItemDoc = ({ item }) => (
-    <FileItemCommon
-      item={item}
-      toggleSelect={toggleSelect}
-      multiSelect={multiSelect}
-      setTransferDialog={setDestinationDialogVisible}
-      setMoveOrCopy={setMoveOrCopy}
-      deleteSelectedFiles={deleteSelectedFiles}
-      setRenamingFile={setRenamingFile}
-      setRenameDialogVisible={setRenameDialogVisible}
-      setNewFileName={setNewFileName}
-    ></FileItemCommon>
-  );
-
-  return (
-    <View style={{ backgroundColor: 'white' }}>
-      <FlatList
-        data={txtFiles}
-        keyExtractor={(item) => item.path}
-        renderItem={renderFileItemDoc}
-      />
-    </View>
-  );
-};
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10 },
@@ -421,5 +348,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
     marginTop: 10,
+  },
+  menuButton: {
+    marginRight: 10,
+  },
+  overlay: {
+    flex: 1,
+  },
+  modalContainer: {
+    position: 'absolute',
+    top: 10, // Điều chỉnh vị trí modal so với nút header
+    right: 35,
+    backgroundColor: '#fff', // Màu nền modal
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    elevation: 5, // Tạo bóng mờ
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+  },
+  modalItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#c7cecfdd', // Đường kẻ giữa các mục
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#000', // Màu chữ trắng
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
 });

@@ -5,6 +5,7 @@ import { cleanOldFiles, restoreFile, TRASH_FOLDER } from '../../utils/Constants'
 import { Checkbox } from 'react-native-paper';
 import { setSnack, snackActionPayload } from '../../features/files/snackbarSlice';
 import { useAppDispatch } from '../../hooks/reduxHooks';
+import { bytesToGB } from '../../utils/Filesize';
 
 const TrashScreen = () => {
   const dispatch = useAppDispatch();
@@ -20,7 +21,7 @@ const TrashScreen = () => {
         setFiles(trashFiles.map((file) => ({
           path: file.path,
           name: file.name,
-          size: (file.size / (1024 ** 3)).toFixed(2) + ' GB',
+          size: bytesToGB(file.size),
           timeLeft: calculateDaysLeft(file.mtime),
         })));
       } catch (error) {

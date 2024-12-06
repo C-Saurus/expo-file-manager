@@ -6,6 +6,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import RNFS from 'react-native-fs';
 import { useAppSelector } from '../../hooks/reduxHooks';
@@ -14,25 +15,46 @@ const TxtViewer = ({ filePath }) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [content, setContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Đọc file txt khi component được mount
   useEffect(() => {
+    setIsLoading(true)
     RNFS.readFile(filePath, 'utf8')
       .then((data) => {
         setContent(data); // Lưu nội dung của file
       })
-      .catch((error) => console.error('Error reading file:', error));
-  }, [filePath]);
+      .catch((error) => console.error('Error reading file:', error))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   // Lưu nội dung vào file khi người dùng chỉnh sửa
   const saveContent = () => {
+    setIsLoading(true)
     RNFS.writeFile(filePath, content, 'utf8')
       .then(() => {
         console.log('File saved successfully');
         setIsEditing(false); // Quay lại chế độ view sau khi lưu
       })
-      .catch((error) => console.error('Error saving file:', error));
+      .catch((error) => console.error('Error saving file:', error))
+      .finally(() => setIsLoading(false));
   };
+
+  
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.background2,
+          width: '100%',
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
 
   // UI cho chế độ view và chỉnh sửa
   return (

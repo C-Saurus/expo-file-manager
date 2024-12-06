@@ -22,19 +22,6 @@ export const Home = () => {
     usedSpace: 0,
   });
 
-  const [loading, setLoading] = useState(false);
-
-  const [storageData, setStorageData] = useState<StorageData>({
-    image: 0,
-    video: 0,
-    audio: 0,
-    pdf: 0,
-    app: 0,
-    zip: 0,
-    document: 0,
-    download: 0,
-  });
-
   useEffect(() => {
     getStorageInfo();
   }, []);
@@ -42,30 +29,6 @@ export const Home = () => {
   useEffect(() => {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
   }, []);
-
-  const getDirectorySize = async (
-    directoryPath: string,
-    fileTypes: string[]
-  ): Promise<number> => {
-    try {
-      const files: ReadDirItem[] = await RNFS.readDir(directoryPath);
-      let totalSize = 0;
-
-      for (const file of files) {
-        if (file.isFile()) {
-          console.log('file', file);
-          const extension = file.name.split('.').pop()?.toLowerCase();
-          if (extension && fileTypes.includes(extension)) {
-            totalSize += file.size;
-          }
-        }
-      }
-      return totalSize;
-    } catch (error) {
-      console.error(`Error getting size for ${directoryPath}:`, error);
-      return 0;
-    }
-  };
 
   const getStorageInfo = async () => {
     try {
@@ -103,7 +66,6 @@ export const Home = () => {
   };
 
   const handleFileCateogory = (item: any) => {
-    console.log('item', item.id);
     switch (Number(item.id)) {
       case ENFILETYPE.IMAGE:
         navigation.navigate('ImageScreen');
@@ -126,7 +88,6 @@ export const Home = () => {
   };
 
   const handleFolderCateogory = (item: any) => {
-    console.log('item', item.id);
     switch (Number(item.id)) {
       case ENFILETYPE.IMAGE:
         navigation.navigate('ImageScreen');
@@ -229,7 +190,6 @@ export const Home = () => {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#f8f8f8' }} nestedScrollEnabled={true}>
       <View style={styles.container}>
         <View style={styles.memoryContainer}>
           <View>
@@ -253,14 +213,15 @@ export const Home = () => {
                 100
               ).toFixed(0)}%`
             }
-            color='black'
-            unfilledColor='#ecedee'
+            color="black"
+            unfilledColor="#ecedee"
             borderWidth={0}
             thickness={5}
           />
         </View>
 
-        <FlatList style={{ padding: 8 }}
+        <FlatList
+          style={{ padding: 8 }}
           data={DATA}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
@@ -272,24 +233,20 @@ export const Home = () => {
           showsHorizontalScrollIndicator={false}
         />
 
-        {loading ? (
-          <Text>Loading...</Text>
-        ) : (
-          <View style={styles.listToolContainer}>
-            <Text style={styles.header}>Công cụ</Text>
-            <FlatList
-              data={DATATOOL}
-              renderItem={renderToolItem}
-              keyExtractor={(item) => item.id}
-              numColumns={3}
-              columnWrapperStyle={styles.row}
-              scrollEnabled={false}
-              horizontal={false}
-              showsVerticalScrollIndicator={false}
-              showsHorizontalScrollIndicator={false}
-            />
-          </View>
-        )}
+        <View style={styles.listToolContainer}>
+          <Text style={styles.header}>Công cụ</Text>
+          <FlatList
+            data={DATATOOL}
+            renderItem={renderToolItem}
+            keyExtractor={(item) => item.id}
+            numColumns={3}
+            columnWrapperStyle={styles.row}
+            scrollEnabled={false}
+            horizontal={false}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
         {/* TODO: impliment in another tab */}
         {/* 
         <View style={styles.listItemContainerFolder}>
@@ -307,6 +264,5 @@ export const Home = () => {
           />
         </View> */}
       </View>
-    </ScrollView>
   );
 };

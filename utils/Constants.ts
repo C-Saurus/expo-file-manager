@@ -8,8 +8,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
 
 export const TRASH_FOLDER = `${RNFS.DocumentDirectoryPath}/Trash`;
+export const IMAGE_FOLDER = `${RNFS.DocumentDirectoryPath}/Image`;
+export const VIDEO_FOLDER = `${RNFS.DocumentDirectoryPath}/Video`;
+export const AUDIO_FOLDER = `${RNFS.DocumentDirectoryPath}/Audio`;
+export const PDF_FOLDER = `${RNFS.DocumentDirectoryPath}/PDF`;
+export const DOC_FOLDER = `${RNFS.DocumentDirectoryPath}/Doc`;
 
-
+export const createInAppFolder = async () => {
+  [
+    TRASH_FOLDER,
+    IMAGE_FOLDER,
+    VIDEO_FOLDER,
+    AUDIO_FOLDER,
+    PDF_FOLDER,
+    DOC_FOLDER,
+  ].forEach(async (item: string) => {
+    const exists = await RNFS.exists(item);
+    if (!exists) {
+      await RNFS.mkdir(item);
+    }
+  });
+};
 
 const saveOriginalPath = async (fileName, originalPath) => {
   try {
@@ -80,19 +99,6 @@ export const cleanOldFiles = async () => {
       await RNFS.unlink(file.path);
     }
   });
-};
-
-export const setDailyInterval = () => {
-  const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
-
-  // Thực hiện kiểm tra và xoá ngay lần đầu
-  cleanOldFiles();
-
-  // Lặp lại mỗi ngày
-  setInterval(() => {
-    console.log('Checking for old files to delete...');
-    cleanOldFiles();
-  }, ONE_DAY_IN_MS);
 };
 
 export const fileIcons = {
