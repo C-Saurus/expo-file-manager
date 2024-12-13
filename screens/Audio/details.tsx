@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     padding: 16
   },
   imageContainer: {
-    marginTop: 150,
+    marginTop: 100,
     marginBottom: 20
   },
   progressBarContainer: {
@@ -153,14 +153,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 160
+    marginTop: 100
   },
   controlContainer: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    marginTop: 20
+    marginTop: 20,
   },
   image: {
     width: 250,

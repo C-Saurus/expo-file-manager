@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '../../stores';
 
-import { RootState } from '../../store';
 
 interface initialStateType {
   visible: boolean;

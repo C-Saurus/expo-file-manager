@@ -73,7 +73,7 @@ export const getAllFiles = async () => {
               size: item.size,
             });
           } else if (fileExtensionCategorys.pdf.includes(extension)) {
-            categorizedFiles.otherFiles.push({
+            categorizedFiles.pdfFiles.push({
               name: item.name,
               path: item.path,
               size: item.size,

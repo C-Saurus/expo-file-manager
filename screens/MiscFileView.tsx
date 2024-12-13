@@ -23,7 +23,7 @@ const MiscFileView = ({ route }: Props) => {
   const fileExt = folderName.split('/').pop().split('.').pop().toLowerCase();
 
   if (fileExt === 'pdf')
-    return <PDFViewer fileURI={prevDir + '/' + folderName} />;
+    return <PDFViewer fileURI={'file://' + folderName} />;
 
   else if (['doc', "docx"].includes(fileExt)) {
     console.log("come", folderName)

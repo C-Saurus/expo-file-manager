@@ -82,12 +82,19 @@ export const Home = () => {
       case ENFILETYPE.DOCUMENT:
         navigation.navigate('DocumentScreen');
         break;
+      case ENFILETYPE.APP:
+        navigation.navigate('ApkScreen');
+        break;
+      case ENFILETYPE.ZIP:
+        navigation.navigate('ZipScreen');
+        break;
       default:
         break;
     }
   };
 
   const handleFolderCateogory = (item: any) => {
+    console.log("item",item)
     switch (Number(item.id)) {
       case ENFILETYPE.IMAGE:
         navigation.navigate('ImageScreen');

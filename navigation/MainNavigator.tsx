@@ -12,6 +12,7 @@ import FileTransfer from '../screens/FileTransfer';
 
 import { useAppSelector } from '../hooks/reduxHooks';
 import HomeStackNavigator1 from './HomeStack';
+import Browser from '../screens/Browser';
 
 const Tab = createBottomTabNavigator();
 
@@ -36,8 +37,8 @@ export const MainNavigator: React.FC = () => {
             iconName = focused ? 'ios-list' : 'ios-list';
           } else if (route.name === 'Downloads') {
             iconName = 'ios-cloud-download';
-          } else if (route.name === 'Web') {
-            iconName = 'ios-globe';
+          } else if (route.name === 'My Folder') {
+            iconName = 'browsers-outline';
           } else if (route.name === 'FileTransfer') {
             iconName = 'ios-documents-outline';
           } else if (route.name === 'Test') {
@@ -50,7 +51,7 @@ export const MainNavigator: React.FC = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeStackNavigator1} />
-      <Tab.Screen name="Web" component={Web} />
+      <Tab.Screen name="My Folder" component={HomeStackNavigator} />
       <Tab.Screen name="FileTransfer" component={FileTransfer} />
       <Tab.Screen name="Settings" component={SettingsStackNavigator} />
     </Tab.Navigator>

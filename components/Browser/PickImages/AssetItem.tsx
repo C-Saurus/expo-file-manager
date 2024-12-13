@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Image, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Image, TouchableOpacity, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZE } from '../../../utils/Constants';
 import { ExtendedAsset } from '../../../types';
@@ -29,10 +29,15 @@ export const AssetItem = ({
         isSelecting ? toggleSelect(asset, true) : toggleSelect(asset);
       }}
     >
+      <View>
       <Image
         style={styles.assetImage}
         source={asset.mediaType === MediaType.audio ? audioThumbnails : { uri: asset.uri }}
       />
+      <Text style={{  }}
+          numberOfLines={1}>{asset.filename}</Text>
+      </View>
+      
       {isSelecting && (
         <View style={styles.checkCircleContainer}>
           <View style={styles.checkCircleBG}></View>

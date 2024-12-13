@@ -14,6 +14,8 @@ import AudioPlayer from '../screens/Audio/details';
 import { DocumentScreen } from '../screens/Document';
 import { DocScanner } from '../screens/DocScanner';
 import TrashScreen from '../screens/Trash';
+import ApkScreen from '../screens/Apk';
+import ZipScreen from '../screens/Zip';
 
 
 const HomeStack = createStackNavigator();
@@ -47,6 +49,8 @@ export const HomeStackNavigator1: React.FC = () => {
         component={DocScanner}
       />
       <HomeStack.Screen name="PDFScreen" component={PDFScreen} />
+      <HomeStack.Screen name="ApkScreen" component={ApkScreen} />
+      <HomeStack.Screen name="ZipScreen" component={ZipScreen} />
       <HomeStack.Screen
         name="ImageScreen"
         component={ImageScreen}
@@ -69,7 +73,6 @@ export const HomeStackNavigator1: React.FC = () => {
         name="AudioPlayer"
         options={({ route }) => ({
           title: 'Audio',
-          headerShown: false,
           presentation: 'transparentModal',
         })}
         component={AudioPlayer}

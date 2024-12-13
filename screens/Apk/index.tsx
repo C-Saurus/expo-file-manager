@@ -15,15 +15,15 @@ import { fetchFiles } from '../../stores/document/action';
 import { ActivityIndicator } from 'react-native-paper';
 import { TabDocFiles } from '../Document/list';
 import { styles } from '../Document/style';
-import { sortPdfByOption } from '../../stores/document/reducer';
+import { sortApkByOption } from '../../stores/document/reducer';
 
-const PDFScreen = ({ navigation }) => {
+const ApkScreen = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
   const [openOption, setOpenOption] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { pdfFiles, loading, error } = useAppSelector(
+  const { apkFile, loading, error } = useAppSelector(
     (state) => state.documentFile
   );
   const layout = useWindowDimensions();
@@ -48,14 +48,14 @@ const PDFScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (hasFetchFile.current) return;
-    if (!pdfFiles.length && !hasFetchFile.current) {
+    if (!apkFile.length && !hasFetchFile.current) {
       dispatch(fetchFiles());
       hasFetchFile.current = true;
     }
-  }, [dispatch, pdfFiles]);
+  }, [dispatch, apkFile]);
 
   const handleSort = (value) => {
-    dispatch(sortPdfByOption(value))
+    dispatch(sortApkByOption(value))
     setOpenOption(false);
   };
 
@@ -75,7 +75,7 @@ const PDFScreen = ({ navigation }) => {
 
   return (
     <>
-      <TabDocFiles fileType="pdf" selectAll={selectAll} />
+      <TabDocFiles fileType="app" selectAll={selectAll} />
       <Modal
         animationType="fade"
         transparent={true}
@@ -117,4 +117,4 @@ const PDFScreen = ({ navigation }) => {
   );
 };
 
-export default PDFScreen;
+export default ApkScreen;
