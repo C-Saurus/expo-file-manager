@@ -22,6 +22,8 @@ import {
 import useNewSelectionChange from '../../hooks/newUseSelectedChange';
 import Dialog from 'react-native-dialog';
 import { styles } from './style';
+import { ExtendedAsset, fileItem } from '../../types';
+import MediaItem from '../../components/Browser/Files/MediaItem';
 
 
 type TabDocFilesProps = {
@@ -30,7 +32,7 @@ type TabDocFilesProps = {
   };
   
   export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(({ fileType, selectAll }) => {
-    const { docFiles, txtFiles, csvExcelFiles, pdfFiles, zipFiles ,apkFile, loading, error } = useAppSelector(
+    const { docFiles, txtFiles, csvExcelFiles, pdfFiles, zipFiles ,apkFile, imageFiles, loading, error } = useAppSelector(
       (state) => state.documentFile
     );
     const fileMap = {
@@ -39,14 +41,17 @@ type TabDocFilesProps = {
         'pdf': pdfFiles,
         'zip': zipFiles,
         'app': apkFile,
+        'image': imageFiles,
         'default': csvExcelFiles, // Giá trị mặc định
       };
-    const data = fileMap[fileType] || fileMap['default'];
+    const data = (fileMap[fileType] || fileMap['default']);
     const dispatch = useAppDispatch();
     const [selectedFiles, setSelectedFiles] = useState<ReadDirItem[]>([]);
+    const [selectedMediaFiles, setSelectedMediaFiles] = useState<fileItem[]>([]);
     const [renameDialogVisible, setRenameDialogVisible] = useState(false);
     const [newFileName, setNewFileName] = useState('');
     const [renamingFile, setRenamingFile] = useState<ReadDirItem>();
+    const [renamingMediaFile, setRenamingMediaFile] = useState<fileItem>();
     const [destinationDialogVisible, setDestinationDialogVisible] =
       useState(false);
     const [moveOrCopy, setMoveOrCopy] = useState('');
@@ -88,6 +93,40 @@ type TabDocFilesProps = {
         return false;
       }
     };
+    
+    const deleteSelectedMediaFiles = async (file?: fileItem) => {
+      const filestoBeDeleted = (file ? [file] : selectedMediaFiles).map((item) => {
+        return {
+          name: item.name,
+          path: item.uri.slice(7),
+          size: item.size
+        } as ReadDirItem
+      });
+
+  
+      if (!filestoBeDeleted.length) {
+        console.warn('Không có file nào được chọn để xóa');
+        return false;
+      }
+  
+      dispatch(removeFileToTrash({filestoBeDeleted, fileType: 'docx'}))
+      setSelectedFiles([]);
+      try {
+        handleSetSnack({
+          message: 'Files deleted!',
+        });
+  
+        
+        return true;
+      } catch (error) {
+        console.error('Lỗi khi di chuyển file:', error);
+        handleSetSnack({
+          message: 'Failed to delete files!',
+          label: 'error',
+        });
+        return false;
+      }
+    };
   
     const toggleSelect = (item: ReadDirItem) => {
       const isSelected =
@@ -97,6 +136,18 @@ type TabDocFilesProps = {
       } else {
         setSelectedFiles((prev) =>
           prev.filter((file) => file.path !== item.path)
+        );
+      }
+    };
+
+    const toggleMediaSelect = (item: fileItem) => {
+      const isSelected =
+        selectedMediaFiles.findIndex((file) => file.uri === item.uri) !== -1;
+      if (!isSelected) {
+        setSelectedMediaFiles((prev) => [...prev, item]);
+      } else {
+        setSelectedMediaFiles((prev) =>
+          prev.filter((file) => file.uri !== item.uri)
         );
       }
     };
@@ -123,12 +174,15 @@ type TabDocFilesProps = {
     }, [error]);
   
     const onRename = async () => {
-      const directoryPath = renamingFile.path.substring(
+      const selectedFile = renamingFile.path ?? renamingMediaFile.uri.slice(7)
+      const directoryPath = selectedFile.substring(
         0,
-        renamingFile.path.lastIndexOf('/')
+        selectedFile.lastIndexOf('/')
       );
       const newPath = `${directoryPath}/${newFileName}`;
       dispatch(renameFiles({ oldPath: renamingFile.path, newPath }));
+      setRenamingFile(undefined)
+      setRenamingMediaFile(undefined)
     };
   
     const renderFileItemDoc = ({ item }) => (
@@ -144,6 +198,19 @@ type TabDocFilesProps = {
         setNewFileName={setNewFileName}
       ></FileItemCommon>
     );
+
+    const renderMediaItem = ( {item }) => (
+      <MediaItem 
+        item={item}
+        toggleSelect={toggleMediaSelect}
+        multiSelect={multiSelect}
+        setMoveOrCopy={setMoveOrCopy}
+        deleteSelectedFiles={deleteSelectedMediaFiles}
+        setRenamingFile={setRenamingMediaFile}
+        setRenameDialogVisible={setRenameDialogVisible}
+        setNewFileName={setNewFileName}>
+      </MediaItem>
+    );
   
     const renderEmptyComponent = useCallback(
       () => (
@@ -158,7 +225,7 @@ type TabDocFilesProps = {
       <View style={{ backgroundColor: 'white' }}>
         <FlatList
           data={data}
-          keyExtractor={(item) => item.path}
+          keyExtractor={(item) => `${item?.path}`}
           renderItem={renderFileItemDoc}
           initialNumToRender={10} // Render một số lượng item ban đầu
           windowSize={5}

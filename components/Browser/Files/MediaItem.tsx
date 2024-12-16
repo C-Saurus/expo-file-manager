@@ -16,7 +16,6 @@ import { useNavigation } from '@react-navigation/native';
 
 import * as Sharing from 'expo-sharing';
 import * as mime from 'react-native-mime-types';
-import moment from 'moment';
 
 import humanFileSize from '../../../utils/Filesize';
 import ActionSheet from '../../ActionSheet';
@@ -29,10 +28,8 @@ import { styles } from '.';
 
 type Props = {
   item: fileItem;
-  currentDir: string;
   multiSelect: boolean;
   toggleSelect: (arg0: fileItem) => void;
-  setTransferDialog: (arg0: boolean) => void;
   setMoveOrCopy: (arg0: string) => void;
   deleteSelectedFiles: (arg0?: fileItem) => void;
   setRenamingFile: (arg0: fileItem) => void;
@@ -40,28 +37,23 @@ type Props = {
   setNewFileName: (arg0: string) => void;
 };
 
-export default function FileItem({
+export default function MediaItem({
   item,
-  currentDir,
   multiSelect,
   toggleSelect,
-  setTransferDialog,
   setMoveOrCopy,
   deleteSelectedFiles,
   setRenamingFile,
   setRenameDialogVisible,
   setNewFileName,
 }: Props) {
-  console.log("item", item.name)
-  console.log("current", currentDir)
+    console.log("item", item);
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
-  const docDir = currentDir;
   const itemMime = mime.lookup(item.uri) || ' ';
   const itemType: string = item.isDirectory ? 'dir' : itemMime.split('/')[0];
   const itemFormat: string = item.isDirectory ? 'dir' : itemMime.split('/')[1];
-  console.log("itemMime", itemMime)
   const ThumbnailImage = ({ uri }) => {
     return (
       <Image
@@ -112,22 +104,18 @@ export default function FileItem({
       if (item.isDirectory) {
         navigation.push('Browser', {
           folderName: item.name,
-          prevDir: docDir,
         });
       } else if (itemType === 'image') {
         navigation.push('ImageGalleryView', {
           folderName: item.name,
-          prevDir: docDir,
         });
       } else if (itemType === 'video') {
         navigation.push('VideoPlayer', {
           folderName: item.name,
-          prevDir: docDir,
         });
       } else {
         navigation.push('MiscFileView', {
           folderName: item.name,
-          prevDir: docDir,
         });
       }
     } else {
@@ -156,7 +144,7 @@ export default function FileItem({
         ]}
         onClose={setItemActionsOpen}
         onItemPressed={(buttonIndex) => {
-          if (buttonIndex === 4) {
+          if (buttonIndex === 3) {
             setTimeout(() => {
               Alert.alert(
                 'Confirm Delete',
@@ -179,20 +167,15 @@ export default function FileItem({
                 ]
               );
             }, 300);
-          } else if (buttonIndex === 3) {
+          } else if (buttonIndex === 2) {
             Sharing.isAvailableAsync().then((canShare) => {
               if (canShare) {
-                Sharing.shareAsync(docDir + '/' + item.name);
+                Sharing.shareAsync(item.uri);
               }
             });
-          } else if (buttonIndex === 2) {
-            setMoveOrCopy('Copy');
-            if (!multiSelect) toggleSelect(item);
-            setTransferDialog(true);
           } else if (buttonIndex === 1) {
             setMoveOrCopy('Move');
             if (!multiSelect) toggleSelect(item);
-            setTransferDialog(true);
           } else if (buttonIndex === 0) {
             setRenamingFile(item);
             setRenameDialogVisible(true);
@@ -229,7 +212,7 @@ export default function FileItem({
               {humanFileSize(item.size)}
             </Text>
             <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
-              {moment(item.modificationTime * 1000).fromNow()}
+              {humanFileSize(item.size)}
             </Text>
           </View>
         </TouchableOpacity>
@@ -258,4 +241,3 @@ export default function FileItem({
     </View>
   );
 }
-

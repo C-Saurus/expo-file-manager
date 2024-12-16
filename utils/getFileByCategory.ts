@@ -7,7 +7,10 @@ const fileExtensionCategorys = {
   csvExcel: ['csv', 'xls', 'xlsx'],
   others: ['ppt', 'pptx', 'rtf', 'odt', 'ods', 'odp'],
   app: ['apk'],
-  zip: ['zip', 'rar']
+  zip: ['zip', 'rar'],
+  image: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'tiff', 'ico'],
+  video: ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', '3gp', 'mpeg'],
+  audio: ['mp3', 'wav', 'aac', 'flac', 'ogg', 'm4a', 'wma', 'alac']
 };
 
 export const getCategoryByExtension = (extension: string) => {
@@ -30,6 +33,9 @@ export const getAllFiles = async () => {
     zipFiles: [],
     apkFile: [],
     otherFiles: [],
+    imageFile: [],
+    videoFile: [],
+    audioFile: [],
   };
 
   const rootPath = RNFS.ExternalStorageDirectoryPath; // Thư mục gốc trên Android
@@ -86,6 +92,24 @@ export const getAllFiles = async () => {
             });
           } else if (fileExtensionCategorys.app.includes(extension)) {
             categorizedFiles.apkFile.push({
+              name: item.name,
+              path: item.path,
+              size: item.size,
+            });
+          } else if (fileExtensionCategorys.image.includes(extension)) {
+            categorizedFiles.imageFile.push({
+              name: item.name,
+              path: item.path,
+              size: item.size,
+            });
+          } else if (fileExtensionCategorys.audio.includes(extension)) {
+            categorizedFiles.audioFile.push({
+              name: item.name,
+              path: item.path,
+              size: item.size,
+            });
+          } else if (fileExtensionCategorys.video.includes(extension)) {
+            categorizedFiles.videoFile.push({
               name: item.name,
               path: item.path,
               size: item.size,

@@ -44,12 +44,14 @@ import {
   State,
 } from 'react-native-gesture-handler';
 import { SIZE } from '../../utils/Constants';
+import { TabDocFiles } from '../Document/list';
 
 export const ImageScreen = ({ navigation }) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [isMediaGranted, setIsMediaGranted] = useState<boolean | null>(null);
   const [openOption, setOpenOption] = useState(false);
-  const [viewMode, setViewMode] = useState(0)
+  const [viewMode, setViewMode] = useState(0);
+  const [selectAll, setSelectAll] = useState(false);
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'first', title: 'All' },
@@ -62,7 +64,7 @@ export const ImageScreen = ({ navigation }) => {
 
   const handleChooseMode = () => {
     if (viewMode === 0) {
-      setViewMode(1)
+      setViewMode(1);
     } else {
       setViewMode(0);
     }
@@ -72,8 +74,12 @@ export const ImageScreen = ({ navigation }) => {
     // Cập nhật headerRight khi màn hình này được render
     navigation.setOptions({
       headerRight: () => (
-        (index === 0 && (
-          <View style={styles.headerIconContainer}>
+        <View
+          style={[
+            styles.headerIconContainer,
+            { display: index ? 'none' : 'flex' },
+          ]}
+        >
           {viewMode === 0 ? (
             <TouchableOpacity onPress={handleChooseMode}>
               <FontAwesome name="th-list" size={24} color="black" />
@@ -84,12 +90,14 @@ export const ImageScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
           {viewMode === 1 && (
-            <TouchableOpacity style={{ marginLeft: 12 }} onPress={handleChooseOption}>
+            <TouchableOpacity
+              style={{ marginLeft: 12 }}
+              onPress={handleChooseOption}
+            >
               <Entypo name="dots-three-vertical" size={24} color="black" />
             </TouchableOpacity>
           )}
         </View>
-        ))
       ),
       headerRightContainerStyle: {
         marginRight: 15,
@@ -152,10 +160,23 @@ export const ImageScreen = ({ navigation }) => {
       </View>
     );
 
-  const renderScene = SceneMap({
-    first: PhotosByDate,
-    second: PhotosByAlbum,
-  });
+  const renderScene = useCallback(
+    ({ route }) => {
+      switch (route.key) {
+        case 'first':
+          return <PhotosByDate viewMode={viewMode} selectAll={selectAll} />;
+        case 'second':
+          return <PhotosByAlbum />;
+        default:
+          return null;
+      }
+    },
+    [viewMode, selectAll]
+  );
+  // const renderScene = SceneMap({
+  //   first: PhotosByDate,
+  //   second: PhotosByAlbum,
+  // });
 
   const renderTabBar = (props) => (
     <TabBar
@@ -303,284 +324,296 @@ const PhotosByAlbum = React.memo(() => {
   );
 });
 
-const PhotosByDate = React.memo(() => {
-  const { colors } = useAppSelector((state) => state.theme.theme);
-  const [assets, setAssets] = useState<ExtendedAsset[]>([]);
-  const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
-  const [endCursor, setEndCursor] = useState<string | null>(null);
-  const [selectedAssets, setSelectedAssets] = useState<ExtendedAsset[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [visible, setVisible] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const isSelecting = useMultiImageSelection(assets);
-  const [multiSelect, setMultiSelect] = useState(false);
-  const [groupedPhotos, setGroupedPhotos] = useState<{
-    [key: string]: ExtendedAsset[];
-  }>({});
-  const currentImageSize = useRef<number>(0);
-  const flatListRef = useRef(null);
+const PhotosByDate: React.FC<{ viewMode: number; selectAll: boolean }> =
+  React.memo(({ viewMode, selectAll }) => {
+    const { colors } = useAppSelector((state) => state.theme.theme);
+    const [assets, setAssets] = useState<ExtendedAsset[]>([]);
+    const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
+    const [endCursor, setEndCursor] = useState<string | null>(null);
+    const [selectedAssets, setSelectedAssets] = useState<ExtendedAsset[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [visible, setVisible] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const isSelecting = useMultiImageSelection(assets);
+    const [multiSelect, setMultiSelect] = useState(false);
+    const [groupedPhotos, setGroupedPhotos] = useState<{
+      [key: string]: ExtendedAsset[];
+    }>({});
+    const currentImageSize = useRef<number>(0);
+    const flatListRef = useRef(null);
 
-  // Animated value for dragging
-  const translateY = useRef(new Animated.Value(0)).current;
+    // Animated value for dragging
+    const translateY = useRef(new Animated.Value(0)).current;
 
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      return Math.abs(gestureState.dy) > Math.abs(gestureState.dx); // Chỉ xử lý vuốt dọc
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      if (gestureState.dy > 0) {
-        translateY.setValue(gestureState.dy); // Di chuyển theo cử chỉ vuốt
-      }
-    },
-    onPanResponderRelease: (evt, gestureState) => {
-      if (gestureState.dy > 100) {
-        // Nếu vuốt đủ xa, đóng modal
-        Animated.timing(translateY, {
-          toValue: Dimensions.get('window').height,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => setVisible(false));
-      } else {
-        // Nếu vuốt không đủ xa, trả lại vị trí ban đầu
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      }
-    },
-  });
-
-  // Scroll to selectedIndex initially
-  const handleModalShow = () => {
-    if (flatListRef.current) {
-      // Đảm bảo chỉ số hợp lệ
-      const validIndex = Math.max(
-        0,
-        Math.min(selectedIndex, assets.length - 1)
-      );
-      flatListRef.current.scrollToIndex({ index: validIndex, animated: false });
-    }
-  };
-
-  async function getAlbumAssets(after?: string) {
-    if (loading) return;
-    console.log('Fetching assets...');
-    currentImageSize.current = assets.length;
-    setLoading(true);
-    const options = {
-      first: 20,
-      sortBy: MediaLibrary.SortBy.creationTime,
-    };
-    if (after) options['after'] = after;
-    const albumAssets = await MediaLibrary.getAssetsAsync(options);
-
-    // Cập nhật assets mới mà không cần nhóm lại
-    setAssets((prev) => [...prev, ...albumAssets.assets]);
-    setHasNextPage(albumAssets.hasNextPage);
-    setEndCursor(albumAssets.endCursor);
-  }
-
-  useEffect(() => {
-    console.log('Photo');
-    getAlbumAssets();
-    return () => {
-      setAssets([]);
-      setGroupedPhotos({});
-    };
-  }, []);
-
-  useEffect(() => {
-    if (assets.length > 0) {
-      groupPhotosByDate(); // Gọi hàm này chỉ khi assets thay đổi
-    }
-  }, [assets]);
-
-  const groupPhotosByDate = () => {
-    const newImage = assets.length - currentImageSize.current;
-    const newGroupedPhotos = { ...groupedPhotos }; // Tạo bản sao của groupedPhotos
-    const newPhotos =
-      newImage > 0 ? assets.slice(currentImageSize.current) : assets;
-
-    newPhotos.forEach((photo) => {
-      const date = moment(photo.creationTime).format('DD/MM/YYYY');
-      if (!newGroupedPhotos[date]) {
-        newGroupedPhotos[date] = [];
-      }
-      newGroupedPhotos[date].push(photo);
+    const panResponder = PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx); // Chỉ xử lý vuốt dọc
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy); // Di chuyển theo cử chỉ vuốt
+        }
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dy > 100) {
+          // Nếu vuốt đủ xa, đóng modal
+          Animated.timing(translateY, {
+            toValue: Dimensions.get('window').height,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setVisible(false));
+        } else {
+          // Nếu vuốt không đủ xa, trả lại vị trí ban đầu
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
     });
-    setGroupedPhotos(newGroupedPhotos);
-    setLoading(false);
-  };
 
-  const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
-    if (multiSelect !== multiSelectEmit) {
-      setMultiSelect(multiSelectEmit);
+    // Scroll to selectedIndex initially
+    const handleModalShow = () => {
+      if (flatListRef.current) {
+        // Đảm bảo chỉ số hợp lệ
+        const validIndex = Math.max(
+          0,
+          Math.min(selectedIndex, assets.length - 1)
+        );
+        flatListRef.current.scrollToIndex({
+          index: validIndex,
+          animated: false,
+        });
+      }
+    };
+
+    async function getAlbumAssets(after?: string) {
+      if (loading) return;
+      console.log('Fetching assets...');
+      currentImageSize.current = assets.length;
+      setLoading(true);
+      const options = {
+        first: 20,
+        sortBy: MediaLibrary.SortBy.creationTime,
+      };
+      if (after) options['after'] = after;
+      const albumAssets = await MediaLibrary.getAssetsAsync(options);
+      // Cập nhật assets mới mà không cần nhóm lại
+      setAssets((prev) => [...prev, ...albumAssets.assets]);
+      setHasNextPage(albumAssets.hasNextPage);
+      setEndCursor(albumAssets.endCursor);
     }
 
-    if (multiSelect || multiSelectEmit) {
-      const isSelected =
-        selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
-      if (!isSelected) {
-        setSelectedAssets((prev) => [...prev, item]);
+    useEffect(() => {
+      console.log('Photo');
+      getAlbumAssets();
+      return () => {
+        setAssets([]);
+        setGroupedPhotos({});
+      };
+    }, []);
+
+    useEffect(() => {
+      if (assets.length > 0) {
+        groupPhotosByDate(); // Gọi hàm này chỉ khi assets thay đổi
+      }
+    }, [assets]);
+
+    const groupPhotosByDate = () => {
+      const newImage = assets.length - currentImageSize.current;
+      const newGroupedPhotos = { ...groupedPhotos }; // Tạo bản sao của groupedPhotos
+      const newPhotos =
+        newImage > 0 ? assets.slice(currentImageSize.current) : assets;
+
+      newPhotos.forEach((photo) => {
+        const date = moment(photo.creationTime).format('DD/MM/YYYY');
+        if (!newGroupedPhotos[date]) {
+          newGroupedPhotos[date] = [];
+        }
+        newGroupedPhotos[date].push(photo);
+      });
+      setGroupedPhotos(newGroupedPhotos);
+      setLoading(false);
+    };
+
+    const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
+      if (multiSelect !== multiSelectEmit) {
+        setMultiSelect(multiSelectEmit);
+      }
+
+      if (multiSelect || multiSelectEmit) {
+        const isSelected =
+          selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
+        if (!isSelected) {
+          setSelectedAssets((prev) => [...prev, item]);
+        } else {
+          setSelectedAssets((prev) =>
+            prev.filter((asset) => asset.id !== item.id)
+          );
+        }
       } else {
-        setSelectedAssets((prev) =>
-          prev.filter((asset) => asset.id !== item.id)
+        openModal(item);
+      }
+
+      // setAssets((prev) =>
+      //   prev.map((i) => {
+      //     if (item.id === i.id) {
+      //       i.selected = !i.selected;
+      //     }
+      //     return i;
+      //   })
+      // );
+    };
+
+    const showDetails = (item) => {};
+
+    const openModal = (item) => {
+      const res = assets.filter((asset) => {
+        return asset.id === item.id;
+      });
+      const indexImg = assets.findIndex((asset) => {
+        return asset.id === item.id;
+      });
+      setSelectedIndex(indexImg);
+      setVisible(true);
+    };
+
+    const renderPhotoItem = useCallback(
+      ({ item }) =>
+        item?.id ? (
+          <AssetItem
+            item={item}
+            toggleSelect={toggleSelect}
+            isSelecting={multiSelect}
+          />
+        ) : (
+          <View style={styles.emptyItem}></View>
+        ),
+      [selectedAssets, assets]
+    );
+
+    const renderGroup = ({ item: { date, photos } }) => (
+      <View style={styles.dateGroup}>
+        <Text style={styles.dateTitle}>{date}</Text>
+        <FlatList
+          data={photos.length >= 3 ? photos : [...photos, {}, {}].slice(0, 3)}
+          renderItem={renderPhotoItem}
+          keyExtractor={(item) => item.id + item.creationTime + item.name}
+          numColumns={3}
+        />
+      </View>
+    );
+
+    const renderFooter = () => {
+      if (loading || !groupedData) {
+        return (
+          <View
+            style={{
+              ...styles.overlay,
+            }}
+          >
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
         );
       }
-    } else {
-      openModal(item);
-    }
+      return null;
+    };
 
-    // setAssets((prev) =>
-    //   prev.map((i) => {
-    //     if (item.id === i.id) {
-    //       i.selected = !i.selected;
-    //     }
-    //     return i;
-    //   })
-    // );
-  };
+    const groupedData = Object.entries(groupedPhotos).map(([date, photos]) => ({
+      date,
+      photos,
+    }));
 
-  const showDetails = (item) => {};
+    const renderImageDetailItem = useCallback(
+      ({ item }) => (
+        <View style={styles.itemContainer}>
+          {/* Hiển thị ảnh full màn */}
+          <ImageBackground source={{ uri: item.uri }} style={styles.thumbnail}>
+            {/* Nút "<" để đóng modal */}
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => setVisible(false)}
+            >
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
 
-  const openModal = (item) => {
-    const res = assets.filter((asset) => {
-      return asset.id === item.id;
-    });
-    const indexImg = assets.findIndex((asset) => {
-      return asset.id === item.id;
-    });
-    setSelectedIndex(indexImg);
-    setVisible(true);
-  };
-
-  const renderPhotoItem = useCallback(
-    ({ item }) =>
-      item?.id ? (
-        <AssetItem
-          item={item}
-          toggleSelect={toggleSelect}
-          isSelecting={multiSelect}
-        />
-      ) : (
-        <View style={styles.emptyItem}></View>
+            {/* Thanh công cụ */}
+            <View style={styles.bottomBar}>
+              <TouchableOpacity>
+                <Ionicons name="heart-outline" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <MaterialIcons name="edit" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Ionicons name="share-social-outline" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Ionicons name="trash-outline" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          </ImageBackground>
+        </View>
       ),
-    [selectedAssets, assets]
-  );
-
-  const renderGroup = ({ item: { date, photos } }) => (
-    <View style={styles.dateGroup}>
-      <Text style={styles.dateTitle}>{date}</Text>
-      <FlatList
-        data={photos.length >= 3 ? photos : [...photos, {}, {}].slice(0, 3)}
-        renderItem={renderPhotoItem}
-        keyExtractor={(item) => item.id + item.creationTime + item.name}
-        numColumns={3}
-      />
-    </View>
-  );
-
-  const renderFooter = () => {
-    if (loading || !groupedData) {
-      return (
-        <View
-          style={{
-            ...styles.overlay,
-          }}
-        >
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
-    }
-    return null;
-  };
-
-  const groupedData = Object.entries(groupedPhotos).map(([date, photos]) => ({
-    date,
-    photos,
-  }));
-
-  const renderImageDetailItem = useCallback(
-    ({ item }) => (
-      <View style={styles.itemContainer}>
-        {/* Hiển thị ảnh full màn */}
-        <ImageBackground source={{ uri: item.uri }} style={styles.thumbnail}>
-          {/* Nút "<" để đóng modal */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => setVisible(false)}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-
-          {/* Thanh công cụ */}
-          <View style={styles.bottomBar}>
-            <TouchableOpacity>
-              <Ionicons name="heart-outline" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <MaterialIcons name="edit" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Ionicons name="share-social-outline" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Ionicons name="trash-outline" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
-        </ImageBackground>
-      </View>
-    ),
-    []
-  );
-
-  const renderModal = useCallback(() => {
-    return (
-      <Modal
-        visible={visible}
-        onRequestClose={() => setVisible(false)}
-        presentationStyle={'overFullScreen'}
-        animationType={'slide'}
-      >
-        <FlatList
-          data={assets}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={true}
-          keyExtractor={(item) => item.id}
-          initialScrollIndex={selectedIndex}
-          getItemLayout={(data, index) => ({
-            length: SIZE,
-            offset: SIZE * index,
-            index,
-          })}
-          renderItem={renderImageDetailItem}
-        />
-      </Modal>
+      []
     );
-  }, [selectedIndex, assets, visible]);
 
-  return (
-    <View style={{ ...styles.container, backgroundColor: colors.background2 }}>
-      <FlatList
-        data={groupedData}
-        renderItem={renderGroup}
-        keyExtractor={(item) => item.date}
-        onEndReached={() => {
-          if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
-        }}
-        onEndReachedThreshold={0.5}
-      />
-      {renderModal()}
-      {(loading || !groupedData) && (
-        <View
-          style={{
-            ...styles.overlay,
-          }}
+    const renderModal = useCallback(() => {
+      return (
+        <Modal
+          visible={visible}
+          onRequestClose={() => setVisible(false)}
+          presentationStyle={'overFullScreen'}
+          animationType={'slide'}
         >
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      )}
-    </View>
-  );
-});
+          <FlatList
+            data={assets}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={true}
+            keyExtractor={(item) => item.id}
+            initialScrollIndex={selectedIndex}
+            getItemLayout={(data, index) => ({
+              length: SIZE,
+              offset: SIZE * index,
+              index,
+            })}
+            renderItem={renderImageDetailItem}
+          />
+        </Modal>
+      );
+    }, [selectedIndex, assets, visible]);
+
+    return (
+      <View
+        style={{ ...styles.container, backgroundColor: colors.background2 }}
+      >
+        {viewMode === 0 ? (
+          <FlatList
+            data={groupedData}
+            renderItem={renderGroup}
+            keyExtractor={(item) => item.date}
+            onEndReached={() => {
+              if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
+            }}
+            onEndReachedThreshold={0.5}
+          />
+        ) : (
+          <TabDocFiles
+            fileType="image"
+            selectAll={selectAll}
+          />
+        )}
+        {renderModal()}
+        {(loading || !groupedData) && (
+          <View
+            style={{
+              ...styles.overlay,
+            }}
+          >
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        )}
+      </View>
+    );
+  });

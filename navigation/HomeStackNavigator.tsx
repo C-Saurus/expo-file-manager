@@ -6,9 +6,10 @@ import ImageGalleryView from '../screens/ImageGalleryView';
 import MiscFileView from '../screens/MiscFileView';
 import Browser from '../screens/Browser';
 import VideoPlayer from '../screens/VideoPlayer';
+import MenuScreen from '../screens/CustomFolder';
 
 type HomeStackParamList = {
-  Browser: { folderName: string; prevDir: string };
+  MenuScreen: { folderName: string; prevDir: string };
   ImageGalleryView: { folderName: string; prevDir: string };
   VideoPlayer: { folderName: string; prevDir: string };
   MiscFileView: { folderName: string; prevDir: string };
@@ -19,17 +20,17 @@ const HomeStack = createStackNavigator<HomeStackParamList>();
 const HomeStackNavigator: React.FC = () => {
   return (
     <HomeStack.Navigator
-      initialRouteName="Browser"
+      initialRouteName="MenuScreen"
       screenOptions={{
         headerShown: false,
       }}
     >
       <HomeStack.Screen
-        name="Browser"
+        name="MenuScreen"
         options={({ route }) => ({
           title: route?.params?.folderName || 'File Manager',
         })}
-        component={Browser}
+        component={MenuScreen}
       />
       <HomeStack.Screen
         name="ImageGalleryView"

@@ -13,14 +13,19 @@ export const documentSlice = createSlice({
     pdfFiles: [],
     zipFiles: [],
     apkFile: [],
+    imageFiles: [],
+    videoFiles: [],
+    audioFiles: [],
     loading: false,
     error: null,
   },
   reducers: {
     sortDocumentByOption: (state, { payload }) => {
-      switch(payload) {
+      switch (payload) {
         case 1:
-          state.docFiles = state.docFiles.sort((a, b) => a.name.localeCompare(b.name));
+          state.docFiles = state.docFiles.sort((a, b) =>
+            a.name.localeCompare(b.name)
+          );
           break;
         case 2:
           state.docFiles = state.docFiles.sort((a, b) => a.size - b.size);
@@ -30,9 +35,11 @@ export const documentSlice = createSlice({
       }
     },
     sortTxtByOption: (state, { payload }) => {
-      switch(payload) {
+      switch (payload) {
         case 1:
-          state.txtFiles = state.txtFiles.sort((a, b) => a.name.localeCompare(b.name));
+          state.txtFiles = state.txtFiles.sort((a, b) =>
+            a.name.localeCompare(b.name)
+          );
           break;
         case 2:
           state.txtFiles = state.txtFiles.sort((a, b) => a.size - b.size);
@@ -42,21 +49,27 @@ export const documentSlice = createSlice({
       }
     },
     sortCsvExcelByOption: (state, { payload }) => {
-      switch(payload) {
+      switch (payload) {
         case 1:
-          state.csvExcelFiles = state.csvExcelFiles.sort((a, b) => a.name.localeCompare(b.name));
+          state.csvExcelFiles = state.csvExcelFiles.sort((a, b) =>
+            a.name.localeCompare(b.name)
+          );
           break;
         case 2:
-          state.csvExcelFiles = state.csvExcelFiles.sort((a, b) => a.size - b.size);
+          state.csvExcelFiles = state.csvExcelFiles.sort(
+            (a, b) => a.size - b.size
+          );
           break;
         default:
           break;
       }
     },
     sortPdfByOption: (state, { payload }) => {
-      switch(payload) {
+      switch (payload) {
         case 1:
-          state.pdfFiles = state.pdfFiles.sort((a, b) => a.name.localeCompare(b.name));
+          state.pdfFiles = state.pdfFiles.sort((a, b) =>
+            a.name.localeCompare(b.name)
+          );
           break;
         case 2:
           state.pdfFiles = state.pdfFiles.sort((a, b) => a.size - b.size);
@@ -66,9 +79,11 @@ export const documentSlice = createSlice({
       }
     },
     sortApkByOption: (state, { payload }) => {
-      switch(payload) {
+      switch (payload) {
         case 1:
-          state.apkFile = state.apkFile.sort((a, b) => a.name.localeCompare(b.name));
+          state.apkFile = state.apkFile.sort((a, b) =>
+            a.name.localeCompare(b.name)
+          );
           break;
         case 2:
           state.apkFile = state.apkFile.sort((a, b) => a.size - b.size);
@@ -76,7 +91,7 @@ export const documentSlice = createSlice({
         default:
           break;
       }
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -93,6 +108,9 @@ export const documentSlice = createSlice({
         state.pdfFiles = action.payload.pdfFiles;
         state.apkFile = action.payload.apkFile;
         state.zipFiles = action.payload.zipFiles;
+        state.imageFiles = action.payload.imageFile;
+        state.videoFiles = action.payload.videoFile;
+        state.audioFiles = action.payload.audioFile;
       })
       .addCase(fetchFiles.rejected, (state, action) => {
         state.loading = false;
@@ -146,6 +164,24 @@ export const documentSlice = createSlice({
               ? { ...file, path: newPath, name: fileName }
               : file
           );
+        } else if (category === 'image') {
+          state.imageFiles = state.imageFiles.map((file) =>
+            file.path === oldPath
+              ? { ...file, path: newPath, name: fileName }
+              : file
+          );
+        } else if (category === 'audio') {
+          state.audioFiles = state.audioFiles.map((file) =>
+            file.path === oldPath
+              ? { ...file, path: newPath, name: fileName }
+              : file
+          );
+        } else if (category === 'video') {
+          state.videoFiles = state.videoFiles.map((file) =>
+            file.path === oldPath
+              ? { ...file, path: newPath, name: fileName }
+              : file
+          );
         } else {
           state.otherFiles = state.otherFiles.map((file) =>
             file.path === oldPath
@@ -191,7 +227,7 @@ export const documentSlice = createSlice({
               ) === -1
           );
         } else if (category === 'pdf') {
-          console.log("category pdf")
+          console.log('category pdf');
           state.csvExcelFiles = state.pdfFiles.map(
             (file) =>
               filestoBeDeletedRes.findIndex(
@@ -227,7 +263,13 @@ export const documentSlice = createSlice({
       });
   },
 });
-export const { sortDocumentByOption, sortTxtByOption, sortCsvExcelByOption, sortPdfByOption, sortApkByOption } = documentSlice.actions;
+export const {
+  sortDocumentByOption,
+  sortTxtByOption,
+  sortCsvExcelByOption,
+  sortPdfByOption,
+  sortApkByOption,
+} = documentSlice.actions;
 export const selectDocument = (state: RootState) => state.documentFile;
 
 export default documentSlice.reducer;
