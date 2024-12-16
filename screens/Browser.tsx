@@ -57,7 +57,7 @@ type IBrowserProps = StackScreenProps<BrowserParamList, 'Browser'>;
 const Browser = ({ route }: IBrowserProps) => {
   console.log("COME Browser")
   const dispatch = useAppDispatch();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { colors } = useAppSelector((state) => state.theme.theme);
   const docDir: string = FileSystem.documentDirectory || '';
   const [currentDir, setCurrentDir] = useState<string>(
@@ -490,6 +490,10 @@ const Browser = ({ route }: IBrowserProps) => {
     dispatch(setSnack(data));
   };
 
+  const handleTest = () => {
+    navigation.navigate("CustomeImage")
+  }
+
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background }}>
       <ActionSheet
@@ -602,6 +606,9 @@ const Browser = ({ route }: IBrowserProps) => {
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setFolderDialogVisible(true)}>
             <Feather name="folder-plus" size={30} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleTest()}>
+            <Feather name="folder" size={30} color={colors.primary} />
           </TouchableOpacity>
         </View>
         {multiSelect && (

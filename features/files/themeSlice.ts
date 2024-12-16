@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { RootState } from '../../store';
 import { LightTheme, DarkTheme } from '../../theme';
+import { RootState } from '../../stores';
 
 interface themeSliceState {
   theme: typeof LightTheme;
