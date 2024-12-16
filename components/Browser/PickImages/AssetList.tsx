@@ -1,41 +1,48 @@
-import React from 'react';
-import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { SIZE } from '../../../utils/Constants';
 import { AssetItem } from './AssetItem';
 import { ExtendedAsset } from '../../../types';
+import * as MediaLibrary from 'expo-media-library';
+import { useAppSelector } from '../../../hooks/reduxHooks';
 
 type AssetListProps = {
-  assets: ExtendedAsset[];
   albumId?: string;
-  hasNextPage: boolean;
-  endCursor: string;
-  isSelecting: boolean;
-  loading?: boolean
-  getAlbumAssets: (albumId: string, after?: string | undefined) => void;
   toggleSelect: (asset: ExtendedAsset) => void;
 };
 
 export const AssetList = ({
-  assets,
   albumId,
-  hasNextPage,
-  endCursor,
-  isSelecting,
-  loading,
-  getAlbumAssets,
   toggleSelect,
 }: AssetListProps) => {
-  console.log("assets", assets)
+  console.log("AssetList")
+  const { colors } = useAppSelector((state) => state.theme.theme);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [assets, setAssets] = useState<ExtendedAsset[]>([]);
+  const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
+  const [endCursor, setEndCursor] = useState<string | null>(null);
+  async function getAlbumAssets(albumId: string, after?: string | undefined) {
+    setLoading(true);
+    const options = {
+      album: albumId,
+      first: 20,
+      sortBy: MediaLibrary.SortBy.creationTime,
+    };
+    if (after) options['after'] = after;
+    const albumAssets = await MediaLibrary.getAssetsAsync(options);
+    setAssets((prev) => [...prev, ...albumAssets.assets]);
+    setHasNextPage(albumAssets.hasNextPage);
+    setEndCursor(albumAssets.endCursor);
+    setLoading(false);
+  }
 
-  const renderFooter = () => {
-    if (loading) {
-      return <ActivityIndicator size="large" color="#0000ff" />;
-    }
-    return null;
-  };
+  useEffect(() => {
+    if (albumId) getAlbumAssets(albumId);
+  }, [albumId]);
 
   return (
-    <FlatList
+    <View style={{ flex: 1}}>
+      <FlatList
       style={styles.albumList}
       contentContainerStyle={styles.contentContainer}
       numColumns={3}
@@ -44,16 +51,27 @@ export const AssetList = ({
         <AssetItem
           item={item}
           toggleSelect={toggleSelect}
-          isSelecting={isSelecting}
+          isSelecting={false}
         />
       )}
-      keyExtractor={(item) => albumId + item.name}
+      keyExtractor={(item) => `${albumId}-${item.id}`}
       onEndReached={() => {
-        if (hasNextPage) getAlbumAssets(endCursor);
+        if (hasNextPage) getAlbumAssets(albumId, endCursor);
       }}
-      onEndReachedThreshold={0.9}
-      ListFooterComponent={renderFooter}
+      onEndReachedThreshold={0.5}
     />
+    {
+      (loading) && (
+        <View
+        style={{
+          ...styles.overlay,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+      )
+    }
+    </View>
   );
 };
 
@@ -65,5 +83,18 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-evenly',
+  },
+  overlay: {
+    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    ...StyleSheet.absoluteFillObject, // Phủ toàn bộ màn hình
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Màu nền mờ
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10, // Đảm bảo overlay nằm trên cùng
   },
 });

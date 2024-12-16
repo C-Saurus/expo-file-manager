@@ -122,4 +122,22 @@ export const styles = StyleSheet.create({
     borderRadius: 20, // Góc bo tròn
     padding: 10,
   },
+  overlay: {
+    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    ...StyleSheet.absoluteFillObject, // Phủ toàn bộ màn hình
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Màu nền mờ
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10, // Đảm bảo overlay nằm trên cùng
+  },
+  headerIconContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    flexDirection: 'row'
+  }
 });

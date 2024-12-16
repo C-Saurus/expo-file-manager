@@ -191,6 +191,7 @@ export const documentSlice = createSlice({
               ) === -1
           );
         } else if (category === 'pdf') {
+          console.log("category pdf")
           state.csvExcelFiles = state.pdfFiles.map(
             (file) =>
               filestoBeDeletedRes.findIndex(

@@ -34,8 +34,13 @@ export const AssetItem = ({
         style={styles.assetImage}
         source={asset.mediaType === MediaType.audio ? audioThumbnails : { uri: asset.uri }}
       />
-      <Text style={{  }}
-          numberOfLines={1}>{asset.filename}</Text>
+      {
+        asset.mediaType === MediaType.audio && (
+          <Text style={{ marginBottom: 8 }}
+          numberOfLines={1}>{ asset.filename}</Text>
+        )
+      }
+
       </View>
       
       {isSelecting && (
