@@ -607,9 +607,6 @@ const Browser = ({ route }: IBrowserProps) => {
           <TouchableOpacity onPress={() => setFolderDialogVisible(true)}>
             <Feather name="folder-plus" size={30} color={colors.primary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleTest()}>
-            <Feather name="folder" size={30} color={colors.primary} />
-          </TouchableOpacity>
         </View>
         {multiSelect && (
           <View style={styles.topRight}>

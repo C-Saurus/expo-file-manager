@@ -50,8 +50,10 @@ const fileTypes = [
 
 const MenuScreen = ({ navigation }) => {
   const handlePress = (type) => {
-    alert(`You selected ${type}!`);
-    // navigation.navigate('FileTypeScreen', { fileType: type });
+    navigation.navigate('Browser', {
+      folderName: '',
+      prevDir: '',
+    });
   };
 
   const renderItem = ({ item }) => (

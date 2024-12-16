@@ -45,8 +45,11 @@ import {
 } from 'react-native-gesture-handler';
 import { SIZE } from '../../utils/Constants';
 import { TabDocFiles } from '../Document/list';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-export const ImageScreen = ({ navigation }) => {
+export const ImageScreen = ({ route, navigation }) => {
+  const { fileType } = route.params;
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [isMediaGranted, setIsMediaGranted] = useState<boolean | null>(null);
   const [openOption, setOpenOption] = useState(false);
@@ -164,9 +167,15 @@ export const ImageScreen = ({ navigation }) => {
     ({ route }) => {
       switch (route.key) {
         case 'first':
-          return <PhotosByDate viewMode={viewMode} selectAll={selectAll} />;
+          return (
+            <PhotosByDate
+              fileType={fileType}
+              viewMode={viewMode}
+              selectAll={selectAll}
+            />
+          );
         case 'second':
-          return <PhotosByAlbum />;
+          return <PhotosByAlbum fileType={fileType} />;
         default:
           return null;
       }
@@ -204,416 +213,373 @@ export type selectedAlbumType = {
   title: string;
 };
 
-const PhotosByAlbum = React.memo(() => {
-  const { colors } = useAppSelector((state) => state.theme.theme);
-  const [albums, setAlbums] = useState<customAlbum[]>([]);
-  const [albumsFetched, setAlbumsFetched] = useState(false);
-  const [selectedAlbum, setSelectedAlbum] = useState<selectedAlbumType | null>(
-    null
-  );
-  const [selectedAssets, setSelectedAssets] = useState<ExtendedAsset[]>([]);
-
-  async function getAlbums() {
-    const albums = await MediaLibrary.getAlbumsAsync();
-    const albumsPromiseArray = albums.map(
-      async (album) =>
-        await MediaLibrary.getAssetsAsync({
-          album: album,
-          first: 10,
-          sortBy: MediaLibrary.SortBy.default,
-        })
-    );
-    Promise.all(albumsPromiseArray).then((values) => {
-      const nonEmptyAlbums = values
-        .filter((item) => item.totalCount > 0)
-        .map((item) => {
-          const album = albums.find((a) => a.id === item.assets[0].albumId);
-          const albumObject: customAlbum = {
-            id: album?.id,
-            title: album?.title,
-            assetCount: album?.assetCount,
-            type: album?.type,
-            coverImage: item.assets[0].uri,
-          };
-          return albumObject;
-        });
-      setAlbums(nonEmptyAlbums);
-      setAlbumsFetched(true);
-    });
-  }
-
-  useEffect(() => {
-    getAlbums();
-  }, []);
-
-  const toggleSelect = (item: ExtendedAsset) => {
-    const isSelected =
-      selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
-    if (!isSelected) setSelectedAssets((prev) => [...prev, item]);
-    else
-      setSelectedAssets((prev) => [
-        ...prev.filter((asset) => asset.id != item.id),
-      ]);
-  };
-
-  // const unSelectAll = () => {
-  //   setAssets(
-  //     assets.map((i) => {
-  //       i.selected = false;
-  //       return i;
-  //     })
-  //   );
-  // };
-
-  if (!albumsFetched)
-    return (
-      <View
-        style={{
-          ...styles.container,
-          backgroundColor: colors.background2,
-          width: '100%',
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-
-  if (albumsFetched && albums.length === 0)
-    return (
-      <View
-        style={{ ...styles.container, backgroundColor: colors.background2 }}
-      >
-        <Text style={{ color: colors.text, fontFamily: 'Poppins_600SemiBold' }}>
-          No Albums Found
-        </Text>
-      </View>
-    );
-
-  return (
-    <View style={{ ...styles.container, backgroundColor: colors.background2 }}>
-      <View style={styles.header}>
-        <View>
-          {selectedAlbum?.title && (
-            <Text style={{ ...styles.title, color: colors.primary }}>
-              {selectedAlbum?.title}
-            </Text>
-          )}
-        </View>
-        <View style={styles.backButtonContainer}>
-          {selectedAlbum && (
-            <TouchableOpacity
-              onPress={() => {
-                setSelectedAlbum(null);
-                setSelectedAssets([]);
-              }}
-            >
-              <Feather name="chevron-left" size={32} color={colors.primary} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-      <View style={styles.listContainer}>
-        {albumsFetched && !selectedAlbum && (
-          <AlbumList albums={albums} setSelectedAlbum={setSelectedAlbum} />
-        )}
-        {selectedAlbum && (
-          <AssetList albumId={selectedAlbum.id} toggleSelect={toggleSelect} />
-        )}
-      </View>
-    </View>
-  );
-});
-
-const PhotosByDate: React.FC<{ viewMode: number; selectAll: boolean }> =
-  React.memo(({ viewMode, selectAll }) => {
+const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
+  ({ fileType }) => {
     const { colors } = useAppSelector((state) => state.theme.theme);
-    const [assets, setAssets] = useState<ExtendedAsset[]>([]);
-    const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
-    const [endCursor, setEndCursor] = useState<string | null>(null);
+    const [albums, setAlbums] = useState<customAlbum[]>([]);
+    const [albumsFetched, setAlbumsFetched] = useState(false);
+    const [selectedAlbum, setSelectedAlbum] =
+      useState<selectedAlbumType | null>(null);
     const [selectedAssets, setSelectedAssets] = useState<ExtendedAsset[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [visible, setVisible] = useState(false);
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const isSelecting = useMultiImageSelection(assets);
-    const [multiSelect, setMultiSelect] = useState(false);
-    const [groupedPhotos, setGroupedPhotos] = useState<{
-      [key: string]: ExtendedAsset[];
-    }>({});
-    const currentImageSize = useRef<number>(0);
-    const flatListRef = useRef(null);
 
-    // Animated value for dragging
-    const translateY = useRef(new Animated.Value(0)).current;
-
-    const panResponder = PanResponder.create({
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx); // Chỉ xử lý vuốt dọc
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy); // Di chuyển theo cử chỉ vuốt
-        }
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dy > 100) {
-          // Nếu vuốt đủ xa, đóng modal
-          Animated.timing(translateY, {
-            toValue: Dimensions.get('window').height,
-            duration: 300,
-            useNativeDriver: true,
-          }).start(() => setVisible(false));
-        } else {
-          // Nếu vuốt không đủ xa, trả lại vị trí ban đầu
-          Animated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    });
-
-    // Scroll to selectedIndex initially
-    const handleModalShow = () => {
-      if (flatListRef.current) {
-        // Đảm bảo chỉ số hợp lệ
-        const validIndex = Math.max(
-          0,
-          Math.min(selectedIndex, assets.length - 1)
-        );
-        flatListRef.current.scrollToIndex({
-          index: validIndex,
-          animated: false,
-        });
-      }
-    };
-
-    async function getAlbumAssets(after?: string) {
-      if (loading) return;
-      console.log('Fetching assets...');
-      currentImageSize.current = assets.length;
-      setLoading(true);
-      const options = {
-        first: 20,
-        sortBy: MediaLibrary.SortBy.creationTime,
-      };
-      if (after) options['after'] = after;
-      const albumAssets = await MediaLibrary.getAssetsAsync(options);
-      // Cập nhật assets mới mà không cần nhóm lại
-      setAssets((prev) => [...prev, ...albumAssets.assets]);
-      setHasNextPage(albumAssets.hasNextPage);
-      setEndCursor(albumAssets.endCursor);
+    async function getAlbums() {
+      const albums = await MediaLibrary.getAlbumsAsync();
+      const albumsPromiseArray = albums.map(
+        async (album) =>
+          await MediaLibrary.getAssetsAsync({
+            album: album,
+            first: 10,
+            sortBy: MediaLibrary.SortBy.default,
+            mediaType: MediaLibrary.MediaType[fileType]
+          })
+      );
+      Promise.all(albumsPromiseArray).then((values) => {
+        const nonEmptyAlbums = values
+          .filter((item) => item.totalCount > 0)
+          .map((item) => {
+            const album = albums.find((a) => a.id === item.assets[0].albumId);
+            const albumObject: customAlbum = {
+              id: album?.id,
+              title: album?.title,
+              assetCount: album?.assetCount,
+              type: album?.type,
+              coverImage: fileType === 'audio' ? undefined : item.assets[0].uri,
+            };
+            return albumObject;
+          });
+        setAlbums(nonEmptyAlbums);
+        setAlbumsFetched(true);
+      });
     }
 
     useEffect(() => {
-      console.log('Photo');
-      getAlbumAssets();
-      return () => {
-        setAssets([]);
-        setGroupedPhotos({});
-      };
+      getAlbums();
     }, []);
 
-    useEffect(() => {
-      if (assets.length > 0) {
-        groupPhotosByDate(); // Gọi hàm này chỉ khi assets thay đổi
-      }
-    }, [assets]);
-
-    const groupPhotosByDate = () => {
-      const newImage = assets.length - currentImageSize.current;
-      const newGroupedPhotos = { ...groupedPhotos }; // Tạo bản sao của groupedPhotos
-      const newPhotos =
-        newImage > 0 ? assets.slice(currentImageSize.current) : assets;
-
-      newPhotos.forEach((photo) => {
-        const date = moment(photo.creationTime).format('DD/MM/YYYY');
-        if (!newGroupedPhotos[date]) {
-          newGroupedPhotos[date] = [];
-        }
-        newGroupedPhotos[date].push(photo);
-      });
-      setGroupedPhotos(newGroupedPhotos);
-      setLoading(false);
+    const toggleSelect = (item: ExtendedAsset) => {
+      const isSelected =
+        selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
+      if (!isSelected) setSelectedAssets((prev) => [...prev, item]);
+      else
+        setSelectedAssets((prev) => [
+          ...prev.filter((asset) => asset.id != item.id),
+        ]);
     };
 
-    const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
-      if (multiSelect !== multiSelectEmit) {
-        setMultiSelect(multiSelectEmit);
-      }
+    // const unSelectAll = () => {
+    //   setAssets(
+    //     assets.map((i) => {
+    //       i.selected = false;
+    //       return i;
+    //     })
+    //   );
+    // };
 
-      if (multiSelect || multiSelectEmit) {
-        const isSelected =
-          selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
-        if (!isSelected) {
-          setSelectedAssets((prev) => [...prev, item]);
-        } else {
-          setSelectedAssets((prev) =>
-            prev.filter((asset) => asset.id !== item.id)
-          );
-        }
-      } else {
-        openModal(item);
-      }
-
-      // setAssets((prev) =>
-      //   prev.map((i) => {
-      //     if (item.id === i.id) {
-      //       i.selected = !i.selected;
-      //     }
-      //     return i;
-      //   })
-      // );
-    };
-
-    const showDetails = (item) => {};
-
-    const openModal = (item) => {
-      const res = assets.filter((asset) => {
-        return asset.id === item.id;
-      });
-      const indexImg = assets.findIndex((asset) => {
-        return asset.id === item.id;
-      });
-      setSelectedIndex(indexImg);
-      setVisible(true);
-    };
-
-    const renderPhotoItem = useCallback(
-      ({ item }) =>
-        item?.id ? (
-          <AssetItem
-            item={item}
-            toggleSelect={toggleSelect}
-            isSelecting={multiSelect}
-          />
-        ) : (
-          <View style={styles.emptyItem}></View>
-        ),
-      [selectedAssets, assets]
-    );
-
-    const renderGroup = ({ item: { date, photos } }) => (
-      <View style={styles.dateGroup}>
-        <Text style={styles.dateTitle}>{date}</Text>
-        <FlatList
-          data={photos.length >= 3 ? photos : [...photos, {}, {}].slice(0, 3)}
-          renderItem={renderPhotoItem}
-          keyExtractor={(item) => item.id + item.creationTime + item.name}
-          numColumns={3}
-        />
-      </View>
-    );
-
-    const renderFooter = () => {
-      if (loading || !groupedData) {
-        return (
-          <View
-            style={{
-              ...styles.overlay,
-            }}
-          >
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        );
-      }
-      return null;
-    };
-
-    const groupedData = Object.entries(groupedPhotos).map(([date, photos]) => ({
-      date,
-      photos,
-    }));
-
-    const renderImageDetailItem = useCallback(
-      ({ item }) => (
-        <View style={styles.itemContainer}>
-          {/* Hiển thị ảnh full màn */}
-          <ImageBackground source={{ uri: item.uri }} style={styles.thumbnail}>
-            {/* Nút "<" để đóng modal */}
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => setVisible(false)}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-
-            {/* Thanh công cụ */}
-            <View style={styles.bottomBar}>
-              <TouchableOpacity>
-                <Ionicons name="heart-outline" size={24} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <MaterialIcons name="edit" size={24} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Ionicons name="share-social-outline" size={24} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Ionicons name="trash-outline" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-          </ImageBackground>
-        </View>
-      ),
-      []
-    );
-
-    const renderModal = useCallback(() => {
+    if (!albumsFetched)
       return (
-        <Modal
-          visible={visible}
-          onRequestClose={() => setVisible(false)}
-          presentationStyle={'overFullScreen'}
-          animationType={'slide'}
+        <View
+          style={{
+            ...styles.container,
+            backgroundColor: colors.background2,
+            width: '100%',
+          }}
         >
-          <FlatList
-            data={assets}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={true}
-            keyExtractor={(item) => item.id}
-            initialScrollIndex={selectedIndex}
-            getItemLayout={(data, index) => ({
-              length: SIZE,
-              offset: SIZE * index,
-              index,
-            })}
-            renderItem={renderImageDetailItem}
-          />
-        </Modal>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       );
-    }, [selectedIndex, assets, visible]);
+
+    if (albumsFetched && albums.length === 0)
+      return (
+        <View
+          style={{ ...styles.container, backgroundColor: colors.background2 }}
+        >
+          <Text
+            style={{ color: colors.text, fontFamily: 'Poppins_600SemiBold' }}
+          >
+            No Albums Found
+          </Text>
+        </View>
+      );
 
     return (
       <View
         style={{ ...styles.container, backgroundColor: colors.background2 }}
       >
-        {viewMode === 0 ? (
-          <FlatList
-            data={groupedData}
-            renderItem={renderGroup}
-            keyExtractor={(item) => item.date}
-            onEndReached={() => {
-              if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
-            }}
-            onEndReachedThreshold={0.5}
-          />
-        ) : (
-          <TabDocFiles
-            fileType="image"
-            selectAll={selectAll}
-          />
-        )}
-        {renderModal()}
-        {(loading || !groupedData) && (
-          <View
-            style={{
-              ...styles.overlay,
-            }}
-          >
-            <ActivityIndicator size="large" color={colors.primary} />
+        <View style={styles.header}>
+          <View>
+            {selectedAlbum?.title && (
+              <Text style={{ ...styles.title, color: colors.primary }}>
+                {selectedAlbum?.title}
+              </Text>
+            )}
           </View>
-        )}
+          <View style={styles.backButtonContainer}>
+            {selectedAlbum && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSelectedAlbum(null);
+                  setSelectedAssets([]);
+                }}
+              >
+                <Feather name="chevron-left" size={32} color={colors.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+        <View style={styles.listContainer}>
+          {albumsFetched && !selectedAlbum && (
+            <AlbumList albums={albums} setSelectedAlbum={setSelectedAlbum} />
+          )}
+          {selectedAlbum && (
+            <AssetList albumId={selectedAlbum.id} toggleSelect={toggleSelect} />
+          )}
+        </View>
       </View>
     );
-  });
+  }
+);
+
+const PhotosByDate: React.FC<{
+  fileType: string;
+  viewMode: number;
+  selectAll: boolean;
+}> = React.memo(({ fileType, viewMode, selectAll }) => {
+  const navigation = useNavigation<StackNavigationProp<any>>();
+  const { colors } = useAppSelector((state) => state.theme.theme);
+  const [assets, setAssets] = useState<ExtendedAsset[]>([]);
+  const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
+  const [endCursor, setEndCursor] = useState<string | null>(null);
+  const [selectedAssets, setSelectedAssets] = useState<ExtendedAsset[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [visible, setVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const isSelecting = useMultiImageSelection(assets);
+  const [multiSelect, setMultiSelect] = useState(false);
+  const [groupedPhotos, setGroupedPhotos] = useState<{
+    [key: string]: ExtendedAsset[];
+  }>({});
+  const currentImageSize = useRef<number>(0);
+
+  async function getAlbumAssets(after?: string) {
+    if (loading) return;
+    console.log('Fetching assets...');
+    currentImageSize.current = assets.length;
+    setLoading(true);
+    const options = {
+      first: 20,
+      sortBy: MediaLibrary.SortBy.creationTime,
+      mediaType: MediaLibrary.MediaType[fileType],
+    };
+    if (after) options['after'] = after;
+    const albumAssets = await MediaLibrary.getAssetsAsync(options);
+    // Cập nhật assets mới mà không cần nhóm lại
+    setAssets((prev) => [...prev, ...albumAssets.assets]);
+    setHasNextPage(albumAssets.hasNextPage);
+    setEndCursor(albumAssets.endCursor);
+  }
+
+  useEffect(() => {
+    console.log('Photo');
+    getAlbumAssets();
+    return () => {
+      setAssets([]);
+      setGroupedPhotos({});
+    };
+  }, []);
+
+  useEffect(() => {
+    if (assets.length > 0) {
+      groupPhotosByDate(); // Gọi hàm này chỉ khi assets thay đổi
+    }
+  }, [assets]);
+
+  const groupPhotosByDate = () => {
+    const newImage = assets.length - currentImageSize.current;
+    const newGroupedPhotos = { ...groupedPhotos }; // Tạo bản sao của groupedPhotos
+    const newPhotos =
+      newImage > 0 ? assets.slice(currentImageSize.current) : assets;
+
+    newPhotos.forEach((photo) => {
+      const date = moment(photo.creationTime).format('DD/MM/YYYY');
+      if (!newGroupedPhotos[date]) {
+        newGroupedPhotos[date] = [];
+      }
+      newGroupedPhotos[date].push(photo);
+    });
+    setGroupedPhotos(newGroupedPhotos);
+    setLoading(false);
+  };
+
+  const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
+    if (fileType === 'audio') {
+      navigation.push('AudioPlayer', {
+        filename: item.filename,
+        uri: item.uri,
+      });
+    } else if (fileType === 'video') {
+      navigation.push('VideoPlayer', {
+        folderName: '',
+        prevDir: '',
+        uriValue: item.uri,
+      });
+    } else {
+      openModal(item)
+    }
+
+    // setAssets((prev) =>
+    //   prev.map((i) => {
+    //     if (item.id === i.id) {
+    //       i.selected = !i.selected;
+    //     }
+    //     return i;
+    //   })
+    // );
+  };
+
+  const showDetails = (item) => {};
+
+  const openModal = (item) => {
+    const res = assets.filter((asset) => {
+      return asset.id === item.id;
+    });
+    const indexImg = assets.findIndex((asset) => {
+      return asset.id === item.id;
+    });
+    setSelectedIndex(indexImg);
+    setVisible(true);
+  };
+
+  const renderPhotoItem = useCallback(
+    ({ item }) =>
+      item?.id ? (
+        <AssetItem
+          item={item}
+          toggleSelect={toggleSelect}
+          isSelecting={multiSelect}
+        />
+      ) : (
+        <View style={styles.emptyItem}></View>
+      ),
+    [selectedAssets, assets]
+  );
+
+  const renderGroup = ({ item: { date, photos } }) => (
+    <View style={styles.dateGroup}>
+      <Text style={styles.dateTitle}>{date}</Text>
+      <FlatList
+        data={photos.length >= 3 ? photos : [...photos, {}, {}].slice(0, 3)}
+        renderItem={renderPhotoItem}
+        keyExtractor={(item) => item.id + item.creationTime + item.name}
+        numColumns={3}
+      />
+    </View>
+  );
+
+  const renderFooter = () => {
+    if (loading || !groupedData) {
+      return (
+        <View
+          style={{
+            ...styles.overlay,
+          }}
+        >
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
+    }
+    return null;
+  };
+
+  const groupedData = Object.entries(groupedPhotos).map(([date, photos]) => ({
+    date,
+    photos,
+  }));
+
+  const renderImageDetailItem = useCallback(
+    ({ item }) => (
+      <View style={styles.itemContainer}>
+        {/* Hiển thị ảnh full màn */}
+        <ImageBackground source={{ uri: item.uri }} style={styles.thumbnail}>
+          {/* Nút "<" để đóng modal */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setVisible(false)}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+
+          {/* Thanh công cụ */}
+          <View style={styles.bottomBar}>
+            <TouchableOpacity>
+              <Ionicons name="heart-outline" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <MaterialIcons name="edit" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Ionicons name="share-social-outline" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Ionicons name="trash-outline" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
+      </View>
+    ),
+    []
+  );
+
+  const renderModal = useCallback(() => {
+    return (
+      <Modal
+        visible={visible}
+        onRequestClose={() => setVisible(false)}
+        presentationStyle={'overFullScreen'}
+        animationType={'slide'}
+      >
+        <FlatList
+          data={assets}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={true}
+          keyExtractor={(item) => item.id}
+          initialScrollIndex={selectedIndex}
+          getItemLayout={(data, index) => ({
+            length: SIZE,
+            offset: SIZE * index,
+            index,
+          })}
+          renderItem={renderImageDetailItem}
+        />
+      </Modal>
+    );
+  }, [selectedIndex, assets, visible]);
+
+  return (
+    <View style={{ ...styles.container, backgroundColor: colors.background2 }}>
+      {viewMode === 0 ? (
+        <FlatList
+          data={groupedData}
+          renderItem={renderGroup}
+          keyExtractor={(item) => item.date}
+          onEndReached={() => {
+            if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
+          }}
+          onEndReachedThreshold={0.5}
+        />
+      ) : (
+        <TabDocFiles fileType="image" selectAll={selectAll} />
+      )}
+      {renderModal()}
+      {(loading || !groupedData) && (
+        <View
+          style={{
+            ...styles.overlay,
+          }}
+        >
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
+    </View>
+  );
+});

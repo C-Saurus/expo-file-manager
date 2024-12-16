@@ -18,7 +18,22 @@ import ApkScreen from '../screens/Apk';
 import ZipScreen from '../screens/Zip';
 
 
-const HomeStack = createStackNavigator();
+type HomeStackParamList = {
+  HomeMain: any;
+  TrashScreen: any;
+  PDFScreen: any;
+  ApkScreen: any;
+  ZipScreen: any;
+  VideoPlayer: any;
+  AudioPlayer: any;
+  DocScanner: any;
+  DocumentScreen: any;
+  MiscFileView: any;
+  ImageScreen: { fileType: string }
+  LargeFilesScanner: { mode: string }
+};
+
+const HomeStack = createStackNavigator<HomeStackParamList>();
 
 
 export const HomeStackNavigator1: React.FC = () => {
@@ -54,21 +69,20 @@ export const HomeStackNavigator1: React.FC = () => {
       <HomeStack.Screen
         name="ImageScreen"
         component={ImageScreen}
-        options={{
+        options={({ route }) => ({
+          title: route.params.fileType === 'video' ? "Video" : (route.params.fileType === 'audio' ? "Audio" : "Image"),
           animationTypeForReplace: 'pop',
-        }}
+        })}
       />
-      <HomeStack.Screen name="VideoScreen" component={VideoScreen} />
       <HomeStack.Screen
         name="VideoPlayer"
         options={({ route }) => ({
-          title: 'Video',
           headerShown: false,
           presentation: 'transparentModal',
         })}
         component={VideoPlayer}
       />
-      <HomeStack.Screen name="AudioScreen" component={AudioScreen} />
+
       <HomeStack.Screen
         name="AudioPlayer"
         options={({ route }) => ({
@@ -78,13 +92,6 @@ export const HomeStackNavigator1: React.FC = () => {
         component={AudioPlayer}
       />
       <HomeStack.Screen name="DocumentScreen" component={DocumentScreen} />
-      <HomeStack.Screen
-        name="Browser"
-        options={({ route }) => ({
-          title: 'File Manager',
-        })}
-        component={Browser}
-      />
       <HomeStack.Screen
         name="MiscFileView"
         options={({ route }) => ({

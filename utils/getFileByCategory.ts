@@ -115,7 +115,7 @@ export const getAllFiles = async () => {
               size: item.size,
             });
           }
-        } else if (item.isDirectory()) {
+        } else if (item.isDirectory() && !item.path.includes(".AppCache")) {
           directoriesToScan.push(item.path);
         }
       }

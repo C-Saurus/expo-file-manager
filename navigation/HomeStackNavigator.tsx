@@ -10,6 +10,7 @@ import MenuScreen from '../screens/CustomFolder';
 
 type HomeStackParamList = {
   MenuScreen: { folderName: string; prevDir: string };
+  Browser: { folderName: string; prevDir: string };
   ImageGalleryView: { folderName: string; prevDir: string };
   VideoPlayer: { folderName: string; prevDir: string };
   MiscFileView: { folderName: string; prevDir: string };
@@ -31,6 +32,14 @@ const HomeStackNavigator: React.FC = () => {
           title: route?.params?.folderName || 'File Manager',
         })}
         component={MenuScreen}
+      />
+      <HomeStack.Screen
+        name="Browser"
+        options={({ route }) => ({
+          title: route?.params?.prevDir.split('/').pop() || 'Gallery',
+          presentation: 'transparentModal',
+        })}
+        component={Browser}
       />
       <HomeStack.Screen
         name="ImageGalleryView"

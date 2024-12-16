@@ -68,16 +68,22 @@ export const Home = () => {
   const handleFileCateogory = (item: any) => {
     switch (Number(item.id)) {
       case ENFILETYPE.IMAGE:
-        navigation.navigate('ImageScreen');
+        navigation.navigate('ImageScreen', {
+          fileType: 'photo',
+        });
         break;
       case ENFILETYPE.VIDEO:
-        navigation.navigate('VideoScreen');
+        navigation.navigate('ImageScreen', {
+          fileType: 'video',
+        });
         break;
       case ENFILETYPE.PDF:
         navigation.navigate('PDFScreen');
         break;
       case ENFILETYPE.AUDIO:
-        navigation.navigate('AudioScreen');
+        navigation.navigate('ImageScreen', {
+          fileType: 'audio',
+        });
         break;
       case ENFILETYPE.DOCUMENT:
         navigation.navigate('DocumentScreen');

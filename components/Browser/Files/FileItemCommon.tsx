@@ -49,15 +49,14 @@ export default function FileItemCommon({
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
   const itemMime = mime.lookup(item.path) || ' ';
   const itemType: string = item.isDirectory ? 'dir' : itemMime.split('/')[0];
+  console.log("itemType", itemType)
   const itemFormat: string = item.isDirectory ? 'dir' : itemMime.split('/')[1];
 
   const ThumbnailImage = ({ uri }) => {
     return (
       <Image
         style={styles.image}
-        source={{
-          uri,
-        }}
+        source={{ uri: `file://${uri}`}}
       />
     );
   };
