@@ -14,6 +14,10 @@ export const store = configureStore({
     tabbarStyle: tabbarStyleSlice,
     documentFile: documentSlice,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -101,6 +101,10 @@ export const cleanOldFiles = async () => {
   });
 };
 
+export const isMediaItem = async (value: any) => {
+  
+}
+
 export const fileIcons = {
   json: 'code-json',
   pdf: 'file-pdf-box',

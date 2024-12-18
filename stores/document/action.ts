@@ -5,7 +5,6 @@ import { moveFileToTrash } from '../../utils/Constants';
 
 export const fetchFiles = createAsyncThunk('files/fetchFiles', async () => {
   const files = await getAllFiles();
-  console.log("files", files);
   return files;
 });
 

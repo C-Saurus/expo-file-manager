@@ -16,16 +16,30 @@ export const documentSlice = createSlice({
     imageFiles: [],
     videoFiles: [],
     audioFiles: [],
+    isMultiSelect: false,
+    selectAll: false,
+    selectedFileLength: 0,
+    currentSelectFileType: undefined,
     loading: false,
     error: null,
   },
   reducers: {
+    setMultiSelect: (state, { payload, type }) => {
+      state.isMultiSelect = payload
+
+    },
+    setSelectAll: (state, { payload }) => {
+      state.selectAll = payload
+
+    },
     sortDocumentByOption: (state, { payload }) => {
       switch (payload) {
         case 1:
-          state.docFiles = state.docFiles.sort((a, b) =>
+          console.log("sortDocumentByOption start", new Date());
+          state.docFiles = [...state.docFiles].sort((a, b) =>
             a.name.localeCompare(b.name)
           );
+          console.log("sortDocumentByOption end", new Date());
           break;
         case 2:
           state.docFiles = state.docFiles.sort((a, b) => a.size - b.size);
@@ -264,6 +278,8 @@ export const documentSlice = createSlice({
   },
 });
 export const {
+  setMultiSelect,
+  setSelectAll,
   sortDocumentByOption,
   sortTxtByOption,
   sortCsvExcelByOption,

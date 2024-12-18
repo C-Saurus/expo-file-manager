@@ -7,26 +7,37 @@ import * as MediaLibrary from 'expo-media-library';
 import { useAppSelector } from '../../../hooks/reduxHooks';
 
 type AssetListProps = {
+  fileType?: string
   albumId?: string;
   toggleSelect: (asset: ExtendedAsset) => void;
 };
 
 export const AssetList = ({
+  fileType,
   albumId,
   toggleSelect,
 }: AssetListProps) => {
-  console.log("AssetList")
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [loading, setLoading] = useState<boolean>(false);
   const [assets, setAssets] = useState<ExtendedAsset[]>([]);
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
   const [endCursor, setEndCursor] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      setAssets([])
+      setHasNextPage(null)
+      setEndCursor(null)
+    }
+  }, [])
+
   async function getAlbumAssets(albumId: string, after?: string | undefined) {
     setLoading(true);
     const options = {
       album: albumId,
       first: 20,
       sortBy: MediaLibrary.SortBy.creationTime,
+      mediaType: MediaLibrary.MediaType[fileType]
     };
     if (after) options['after'] = after;
     const albumAssets = await MediaLibrary.getAssetsAsync(options);

@@ -16,6 +16,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import { TabDocFiles } from '../Document/list';
 import { styles } from '../Document/style';
 import { sortPdfByOption } from '../../stores/document/reducer';
+import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
 
 const PDFScreen = ({ navigation }) => {
   const dispatch = useAppDispatch();
@@ -73,46 +74,15 @@ const PDFScreen = ({ navigation }) => {
     );
   }
 
+  console.log("RE_RENDER_PDF");
   return (
     <>
-      <TabDocFiles fileType="pdf" selectAll={selectAll} />
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={openOption}
-        onRequestClose={() => setOpenOption(false)}
-      >
-        <Pressable style={styles.overlay} onPress={() => setOpenOption(false)}>
-          <View style={styles.modalContainer}>
-            <TouchableOpacity
-              delayPressIn={0}
-              style={styles.modalItem}
-              onPress={() => handleSort(1)}
-            >
-              <Text style={styles.modalText}>Sắp xếp theo tên</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalItem}
-              onPress={() => handleSort(2)}
-            >
-              <Text style={styles.modalText}>Sắp xếp theo dung lượng</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalItem}
-              onPress={() => setSelectAll(!selectAll)}
-            >
-              <View style={styles.checkboxContainer}>
-                <Ionicons
-                  name={selectAll ? 'checkbox-outline' : 'square-outline'}
-                  size={20}
-                  color="#fff"
-                />
-                <Text style={styles.modalText}>Chọn tất cả</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
+      <TabDocFiles data={pdfFiles} selectAll={selectAll} />
+      <DisplayOptionModal
+        openOption={openOption}
+        setOpenOption={setOpenOption}
+        handleSort={handleSort}
+      />
     </>
   );
 };

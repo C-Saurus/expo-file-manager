@@ -49,7 +49,6 @@ export default function FileItemCommon({
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
   const itemMime = mime.lookup(item.path) || ' ';
   const itemType: string = item.isDirectory ? 'dir' : itemMime.split('/')[0];
-  console.log("itemType", itemType)
   const itemFormat: string = item.isDirectory ? 'dir' : itemMime.split('/')[1];
 
   const ThumbnailImage = ({ uri }) => {
@@ -97,9 +96,17 @@ export default function FileItemCommon({
 
   const onPressHandler = () => {
     if (!multiSelect) {
-      navigation.push('MiscFileView', {
-        folderName: item.path,
-      });
+      if (itemType === 'image') {
+
+      } else if (itemType === 'video') {
+
+      } else if (itemType === 'audio') {
+
+      } else {
+        navigation.push('MiscFileView', {
+          folderName: item.path,
+        });
+      }
     } else {
       toggleSelect(item);
     }

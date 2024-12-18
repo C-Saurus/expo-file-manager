@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Text,
   View,
@@ -47,10 +47,14 @@ import { SIZE } from '../../utils/Constants';
 import { TabDocFiles } from '../Document/list';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { HeaderRight } from '../../components/Header';
 
 export const ImageScreen = ({ route, navigation }) => {
   const { fileType } = route.params;
   const { colors } = useAppSelector((state) => state.theme.theme);
+  const { imageFiles, videoFiles, audioFiles } = useAppSelector(
+    (state) => state.documentFile
+  );
   const [isMediaGranted, setIsMediaGranted] = useState<boolean | null>(null);
   const [openOption, setOpenOption] = useState(false);
   const [viewMode, setViewMode] = useState(0);
@@ -61,9 +65,13 @@ export const ImageScreen = ({ route, navigation }) => {
     { key: 'second', title: 'Your Album' },
   ]);
 
-  const handleChooseOption = () => {
-    setOpenOption(!openOption);
-  };
+  const fileMap = {
+    photo: imageFiles,
+    audio: audioFiles,
+    video: videoFiles
+  }
+
+  const data = useMemo(() => fileMap[fileType] || fileMap['default'], [videoFiles, imageFiles, audioFiles, fileType]);
 
   const handleChooseMode = () => {
     if (viewMode === 0) {
@@ -75,38 +83,18 @@ export const ImageScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     // Cập nhật headerRight khi màn hình này được render
+    console.log("COME");
     navigation.setOptions({
       headerRight: () => (
-        <View
-          style={[
-            styles.headerIconContainer,
-            { display: index ? 'none' : 'flex' },
-          ]}
-        >
-          {viewMode === 0 ? (
-            <TouchableOpacity onPress={handleChooseMode}>
-              <FontAwesome name="th-list" size={24} color="black" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={handleChooseMode}>
-              <FontAwesome name="th" size={24} color="black" />
-            </TouchableOpacity>
-          )}
-          {viewMode === 1 && (
-            <TouchableOpacity
-              style={{ marginLeft: 12 }}
-              onPress={handleChooseOption}
-            >
-              <Entypo name="dots-three-vertical" size={24} color="black" />
-            </TouchableOpacity>
-          )}
-        </View>
+        <HeaderRight
+          viewMode={viewMode}
+          index={index}
+          handleChooseOption={() => (setOpenOption((prev) => !prev))}
+          handleChooseMode={handleChooseMode}
+      />
       ),
-      headerRightContainerStyle: {
-        marginRight: 15,
-      },
     });
-  }, [navigation, openOption, viewMode, index]);
+  }, [navigation, viewMode, index]);
 
   useEffect(() => {
     const requestMediaPermission = async () => {
@@ -147,7 +135,10 @@ export const ImageScreen = ({ route, navigation }) => {
   }, []);
 
   const layout = useWindowDimensions();
-
+  useEffect(() => {
+    console.log("ImageScreen");
+  }, [])
+  console.log("ImageScreen-Rerender");
   if (!isMediaGranted && isMediaGranted !== null)
     return (
       <View
@@ -167,11 +158,14 @@ export const ImageScreen = ({ route, navigation }) => {
     ({ route }) => {
       switch (route.key) {
         case 'first':
-          return (
+          return !viewMode ? (
             <PhotosByDate
               fileType={fileType}
-              viewMode={viewMode}
               selectAll={selectAll}
+            />
+          ) : (
+            <TabDocFiles
+              data={data}
             />
           );
         case 'second':
@@ -238,6 +232,7 @@ const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
           .filter((item) => item.totalCount > 0)
           .map((item) => {
             const album = albums.find((a) => a.id === item.assets[0].albumId);
+            console.log("albums", albums);
             const albumObject: customAlbum = {
               id: album?.id,
               title: album?.title,
@@ -331,7 +326,7 @@ const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
             <AlbumList albums={albums} setSelectedAlbum={setSelectedAlbum} />
           )}
           {selectedAlbum && (
-            <AssetList albumId={selectedAlbum.id} toggleSelect={toggleSelect} />
+            <AssetList fileType={fileType} albumId={selectedAlbum.id} toggleSelect={toggleSelect} />
           )}
         </View>
       </View>
@@ -341,11 +336,11 @@ const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
 
 const PhotosByDate: React.FC<{
   fileType: string;
-  viewMode: number;
   selectAll: boolean;
-}> = React.memo(({ fileType, viewMode, selectAll }) => {
+}> = React.memo(({ fileType }) => {
   const navigation = useNavigation<StackNavigationProp<any>>();
   const { colors } = useAppSelector((state) => state.theme.theme);
+
   const [assets, setAssets] = useState<ExtendedAsset[]>([]);
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
   const [endCursor, setEndCursor] = useState<string | null>(null);
@@ -411,20 +406,25 @@ const PhotosByDate: React.FC<{
   };
 
   const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
-    if (fileType === 'audio') {
-      navigation.push('AudioPlayer', {
-        filename: item.filename,
-        uri: item.uri,
-      });
-    } else if (fileType === 'video') {
-      navigation.push('VideoPlayer', {
-        folderName: '',
-        prevDir: '',
-        uriValue: item.uri,
-      });
+    if (multiSelectEmit) {
+
     } else {
-      openModal(item)
+      if (fileType === 'audio') {
+        navigation.push('AudioPlayer', {
+          filename: item.filename,
+          uri: item.uri,
+        });
+      } else if (fileType === 'video') {
+        navigation.push('VideoPlayer', {
+          folderName: '',
+          prevDir: '',
+          uriValue: item.uri,
+        });
+      } else {
+        openModal(item)
+      }
     }
+    
 
     // setAssets((prev) =>
     //   prev.map((i) => {
@@ -557,19 +557,20 @@ const PhotosByDate: React.FC<{
 
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background2 }}>
-      {viewMode === 0 ? (
-        <FlatList
+      <FlatList
           data={groupedData}
           renderItem={renderGroup}
           keyExtractor={(item) => item.date}
           onEndReached={() => {
             if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
           }}
-          onEndReachedThreshold={0.5}
+          getItemLayout={(data, index) => ({
+            length: SIZE,
+            offset: SIZE * index,
+            index,
+          })}
+          onEndReachedThreshold={0.4}
         />
-      ) : (
-        <TabDocFiles fileType="image" selectAll={selectAll} />
-      )}
       {renderModal()}
       {(loading || !groupedData) && (
         <View

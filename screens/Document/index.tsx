@@ -10,11 +10,18 @@ import {
 } from 'react-native';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { Entypo, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import {
+  Entypo,
+  Feather,
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from '@expo/vector-icons';
 import { fetchFiles } from '../../stores/document/action';
 import { ActivityIndicator } from 'react-native-paper';
 import { TabDocFiles } from './list';
 import {
+  setSelectAll,
   sortCsvExcelByOption,
   sortDocumentByOption,
   sortTxtByOption,
@@ -26,9 +33,8 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
   const [openOption, setOpenOption] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { docFiles, loading, error } = useAppSelector(
+  const { docFiles, txtFiles, loading, isMultiSelect, selectAll, error } = useAppSelector(
     (state) => state.documentFile
   );
   const layout = useWindowDimensions();
@@ -62,15 +68,15 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   const renderScene = useCallback(({ route }) => {
     switch (route.key) {
       case 'doc':
-        return <TabDocFiles fileType="doc" selectAll={selectAll} />;
+        return <TabDocFiles data={docFiles} selectAll={selectAll} />;
       case 'txt':
-        return <TabDocFiles fileType="text" selectAll={selectAll} />;
+        return <TabDocFiles data={txtFiles} selectAll={selectAll} />;
       case 'sheet':
-        return <TabDocFiles fileType="csv/excel" selectAll={selectAll} />;
+        return <TabDocFiles data={txtFiles} selectAll={selectAll} />;
       default:
         return null;
     }
-  }, []);
+  }, [docFiles, txtFiles]);
 
   const handleSort = (value) => {
     switch (index) {
@@ -109,6 +115,10 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
     []
   );
 
+  const handleSelectAll = () => {
+    dispatch(setSelectAll({payload: true, type: ''}))
+  };
+
   if (loading) {
     return (
       <View
@@ -125,8 +135,22 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
 
   return (
     <>
+      {!isMultiSelect && (
+        <View style={styles.nav}>
+          <Text style={styles.count}>12/12</Text>
+          <TouchableOpacity onPress={handleSelectAll}>
+            <Feather
+              style={{ marginLeft: 10 }}
+              name={selectAll ? 'check-square' : 'square'}
+              size={24}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
       <TabView
         lazy={true}
+        swipeEnabled={!isMultiSelect}
         lazyPreloadDistance={1}
         renderTabBar={renderTabBar}
         navigationState={{ index, routes }}
@@ -134,11 +158,10 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
         onIndexChange={setIndex}
         initialLayout={{ width: layout.width }}
       />
+
       <DisplayOptionModal
         openOption={openOption}
         setOpenOption={setOpenOption}
-        selectAll={selectAll}
-        setSelectAll={setSelectAll}
         handleSort={handleSort}
       />
     </>

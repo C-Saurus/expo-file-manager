@@ -12,8 +12,6 @@ export const DisplayOptionModal = ({
   openOption,
   setOpenOption,
   handleSort,
-  selectAll,
-  setSelectAll,
 }) => {
   return (
     <Modal
@@ -37,26 +35,13 @@ export const DisplayOptionModal = ({
           >
             <Text style={styles.modalText}>Sắp xếp theo dung lượng</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.modalItem}
-            onPress={() => setSelectAll(!selectAll)}
-          >
-            <View style={styles.checkboxContainer}>
-              <Ionicons
-                name={selectAll ? 'checkbox-outline' : 'square-outline'}
-                size={20}
-                color="#fff"
-              />
-              <Text style={styles.modalText}>Chọn tất cả</Text>
-            </View>
-          </TouchableOpacity>
         </View>
       </Pressable>
     </Modal>
   );
 };
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   overlay: {
     flex: 1,
   },

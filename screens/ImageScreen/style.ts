@@ -134,10 +134,5 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10, // Đảm bảo overlay nằm trên cùng
-  },
-  headerIconContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    flexDirection: 'row'
   }
 });

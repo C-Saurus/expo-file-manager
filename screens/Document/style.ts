@@ -7,6 +7,16 @@ export const styles = StyleSheet.create({
     },
     overlay: {
       flex: 1,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      ...StyleSheet.absoluteFillObject, // Phủ toàn bộ màn hình
+      backgroundColor: 'rgba(0, 0, 0, 0.3)', // Màu nền mờ
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10, // Đảm bảo overlay nằm trên cùng
     },
     modalContainer: {
       position: 'absolute',
@@ -52,6 +62,21 @@ export const styles = StyleSheet.create({
       fontSize: 16,
       color: 'gray',
       marginTop: 10,
+    },
+    nav: {
+      flex: 1,
+      flexDirection: 'row',
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      left: 0,
+      zIndex: 10,
+      justifyContent: 'space-between',
+      padding: 12,
+      backgroundColor: '#4cabebfd',
+    },
+    count: {
+      fontSize: 16,
     },
   });
   
