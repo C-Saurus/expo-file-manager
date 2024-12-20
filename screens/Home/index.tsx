@@ -1,4 +1,11 @@
-import { FlatList, Image, LogBox, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  Image,
+  LogBox,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import * as Progress from 'react-native-progress';
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
@@ -11,8 +18,10 @@ import { styles } from './style';
 import { bytesToGB } from '../../utils/Filesize';
 import { DATA, DATA_FOLDER } from '../../constants/const';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useAppSelector } from '../../hooks/reduxHooks';
 
 export const Home = () => {
+  const { theme } = useAppSelector((state) => state.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
   const [storageInfo, setStorageInfo] = useState<
     FSInfoResult & { usedSpace: number }
@@ -128,7 +137,7 @@ export const Home = () => {
       title: 'Tệp lớn',
       icon: 'insert-drive-file',
       iconLib: 'MaterialIcons',
-      background: '#f0f2f7',
+      background: theme.dark ? '#1c1f22' : '#f0f2f7',
       color: '#537ad4',
     },
     {
@@ -136,7 +145,7 @@ export const Home = () => {
       title: 'Filter Duplicate',
       icon: 'filter',
       iconLib: 'MaterialIcons',
-      background: '#ebf7f7',
+      background: theme.dark ? '#172020' : '#ebf7f7',
       color: '#5ff0f0',
     },
     {
@@ -144,7 +153,7 @@ export const Home = () => {
       title: 'TrashScreen',
       icon: 'trash',
       iconLib: 'FontAwesome5',
-      background: '#f7f0f4',
+      background: theme.dark ? '#1f181c' : '#f7f0f4',
       color: '#d85090',
     },
     {
@@ -152,7 +161,7 @@ export const Home = () => {
       title: 'DocScanner',
       icon: 'expand',
       iconLib: 'FontAwesome5',
-      background: '#faf5ed',
+      background: theme.dark ? '#27241f' : '#faf5ed',
       color: '#d69c31',
     },
   ];
@@ -171,9 +180,15 @@ export const Home = () => {
   };
   const renderToolItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleFilePress(item)}>
-      <View style={[styles.toolItemContainer, { backgroundColor: item.background }]}>
+      <View
+        style={[styles.toolItemContainer, { backgroundColor: item.background }]}
+      >
         {renderIcon(item)}
-        <Text style={styles.toolTitle}>{item.title}</Text>
+        <Text
+          style={[styles.toolTitle, { color: theme.dark ? 'white' : 'black' }]}
+        >
+          {item.title}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -182,10 +197,19 @@ export const Home = () => {
     return (
       <TouchableOpacity onPress={() => handleFileCateogory(item)}>
         <View style={styles.itemContainer}>
-          <View style={styles.iconContainer}>
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: theme.dark ? 'black' : 'white' },
+            ]}
+          >
             <MaterialIcons name={item.icon} size={35} color={item.color} />
           </View>
-          <Text style={styles.title}>{item.title}</Text>
+          <Text
+            style={[styles.title, { color: theme.dark ? 'white' : 'black' }]}
+          >
+            {item.title}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -203,65 +227,96 @@ export const Home = () => {
   };
 
   return (
-      <View style={styles.container}>
-        <View style={styles.memoryContainer}>
-          <View>
-            <Text style={styles.memoryText}>Lưu trữ nội bộ</Text>
-            <Text style={styles.memoryUsage}>
-              {bytesToGB(storageInfo?.usedSpace)} /{' '}
-              {bytesToGB(storageInfo?.totalSpace)} GB
-            </Text>
-          </View>
-          <Progress.Circle
-            size={70}
-            progress={
-              storageInfo.totalSpace > 0
-                ? storageInfo?.usedSpace / storageInfo?.totalSpace
-                : 0
-            }
-            showsText={true}
-            formatText={() =>
-              `${(
-                (storageInfo?.usedSpace / storageInfo?.totalSpace) *
-                100
-              ).toFixed(0)}%`
-            }
-            color="black"
-            unfilledColor="#ecedee"
-            borderWidth={0}
-            thickness={5}
-          />
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.dark ? '#1d1d1d' : '#eeeeee' },
+      ]}
+    >
+      <View
+        style={[
+          styles.memoryContainer,
+          { backgroundColor: theme.dark ? 'black' : 'white' },
+        ]}
+      >
+        <View>
+          <Text
+            style={[
+              styles.memoryText,
+              { color: theme.dark ? 'white' : 'black' },
+            ]}
+          >
+            Lưu trữ nội bộ
+          </Text>
+          <Text
+            style={[
+              styles.memoryUsage,
+              { color: theme.dark ? 'white' : 'black' },
+            ]}
+          >
+            {bytesToGB(storageInfo?.usedSpace)} /{' '}
+            {bytesToGB(storageInfo?.totalSpace)} GB
+          </Text>
         </View>
+        <Progress.Circle
+          size={70}
+          progress={
+            storageInfo.totalSpace > 0
+              ? storageInfo?.usedSpace / storageInfo?.totalSpace
+              : 0
+          }
+          showsText={true}
+          formatText={() =>
+            `${(
+              (storageInfo?.usedSpace / storageInfo?.totalSpace) *
+              100
+            ).toFixed(0)}%`
+          }
+          color={theme.dark ? 'white' : 'black'}
+          unfilledColor={theme.dark ? '#1d1d1d' : '#ecedee'}
+          borderWidth={0}
+          thickness={5}
+        />
+      </View>
 
+      <FlatList
+        style={{ padding: 8 }}
+        data={DATA}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        numColumns={4}
+        columnWrapperStyle={styles.row}
+        scrollEnabled={false}
+        horizontal={false}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+      />
+
+      <View
+        style={[
+          styles.listToolContainer,
+          { backgroundColor: theme.dark ? 'black' : 'white' },
+        ]}
+      >
+        <Text
+          style={[styles.header, { color: theme.dark ? 'white' : 'black' }]}
+        >
+          Công cụ
+        </Text>
         <FlatList
-          style={{ padding: 8 }}
-          data={DATA}
-          renderItem={renderItem}
+          data={DATATOOL}
+          renderItem={renderToolItem}
           keyExtractor={(item) => item.id}
-          numColumns={4}
+          numColumns={3}
           columnWrapperStyle={styles.row}
           scrollEnabled={false}
           horizontal={false}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
         />
-
-        <View style={styles.listToolContainer}>
-          <Text style={styles.header}>Công cụ</Text>
-          <FlatList
-            data={DATATOOL}
-            renderItem={renderToolItem}
-            keyExtractor={(item) => item.id}
-            numColumns={3}
-            columnWrapperStyle={styles.row}
-            scrollEnabled={false}
-            horizontal={false}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
-        {/* TODO: impliment in another tab */}
-        {/* 
+      </View>
+      {/* TODO: impliment in another tab */}
+      {/* 
         <View style={styles.listItemContainerFolder}>
           <Text style={styles.header}>Folder của tôi</Text>
           <FlatList
@@ -276,6 +331,6 @@ export const Home = () => {
             showsHorizontalScrollIndicator={false}
           />
         </View> */}
-      </View>
+    </View>
   );
 };

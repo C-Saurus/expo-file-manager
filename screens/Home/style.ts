@@ -4,7 +4,6 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f8f8f8',
   },
   memoryContainer: {
     display: 'flex',
@@ -12,7 +11,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 30,
-    backgroundColor: 'white',
     padding: 16,
     borderRadius: 24
   },
@@ -45,7 +43,6 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
     paddingHorizontal: 16,
     paddingVertical: 18,
-    backgroundColor: 'white',
     borderRadius: 10
   },
   icon: {
@@ -92,7 +89,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderRadius: 15,
-    marginVertical: 2,
+    marginVertical: 2
   },
   listItemContainerFolder: {
 
