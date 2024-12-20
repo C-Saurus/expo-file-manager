@@ -82,11 +82,49 @@ export const moveFileToTrash = async (filePath) => {
     await RNFS.moveFile(filePath, destination);
     return {
       destination: destination,
-      oldPath: filePath
+      oldPath: filePath,
     };
   } catch (error) {
     console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);
-    return undefined
+    return undefined;
+  }
+};
+
+export const moveFileToCustomeFolder = async (
+  filePath: string,
+  folder: string
+) => {
+  try {
+    await ensureTrashFolderExists();
+    const fileName = filePath.split('/').pop();
+    const destination = `${folder}/${fileName}`;
+    await RNFS.moveFile(filePath, destination);
+    return {
+      destination: destination,
+      oldPath: filePath,
+    };
+  } catch (error) {
+    console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);
+    return undefined;
+  }
+};
+
+export const copyFileToCustomeFolder = async (
+  filePath: string,
+  folder: string
+) => {
+  try {
+    await ensureTrashFolderExists();
+    const fileName = filePath.split('/').pop();
+    const destination = `${folder}/${fileName}`;
+    await RNFS.copyFile(filePath, destination);
+    return {
+      destination: destination,
+      oldPath: filePath,
+    };
+  } catch (error) {
+    console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);
+    return undefined;
   }
 };
 
@@ -95,15 +133,42 @@ export const cleanOldFiles = async () => {
   const now = Date.now();
   files.forEach(async (file) => {
     const lastModified = new Date((await RNFS.stat(file.path)).mtime).getTime();
-    if (now - lastModified > 30 * 24 * 60 * 60 * 1000) { // 30 ngày
+    if (now - lastModified > 30 * 24 * 60 * 60 * 1000) {
+      // 30 ngày
       await RNFS.unlink(file.path);
     }
   });
 };
 
-export const isMediaItem = async (value: any) => {
-  
-}
+export const getAllCustomeFileByFolder = async (folder: string) => {
+  const listFile = [];
+  const directoriesToScan = [folder];
+
+  try {
+    while (directoriesToScan.length > 0) {
+      const currentDir = directoriesToScan.pop();
+      let items = [];
+      try {
+        items = await RNFS.readDir(currentDir);
+      } catch (error) {
+        console.warn(`Cannot read directory: ${currentDir}`, error);
+        continue;
+      }
+      for (const item of items) {
+        if (item.isFile()) {
+          listFile.push(item);
+        } else if (item.isDirectory()) {
+          directoriesToScan.push(item.path);
+        }
+      }
+    }
+
+    return listFile;
+  } catch (error) {
+    console.error('Error while scanning files:', error);
+    return listFile;
+  }
+};
 
 export const fileIcons = {
   json: 'code-json',

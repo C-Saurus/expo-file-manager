@@ -2,14 +2,12 @@ import React from 'react';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import { ImageScreen } from '../screens/ImageScreen';
-import { VideoScreen } from '../screens/VideoScreen';
 import VideoPlayer from '../screens/VideoPlayer';
 import Browser from '../screens/Browser';
 import LargeFilesScanner from '../screens/ScanLargeFile';
 import { Home } from '../screens/Home';
 import PDFScreen from '../screens/PDFScreen';
 import MiscFileView from '../screens/MiscFileView';
-import { AudioScreen } from '../screens/Audio';
 import AudioPlayer from '../screens/Audio/details';
 import { DocumentScreen } from '../screens/Document';
 import { DocScanner } from '../screens/DocScanner';
@@ -70,6 +68,7 @@ export const HomeStackNavigator1: React.FC = () => {
         name="ImageScreen"
         component={ImageScreen}
         options={({ route }) => ({
+          headerShown: false,
           title: route.params.fileType === 'video' ? "Video" : (route.params.fileType === 'audio' ? "Audio" : "Image"),
           animationTypeForReplace: 'pop',
         })}

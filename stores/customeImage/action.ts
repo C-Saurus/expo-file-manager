@@ -1,16 +1,14 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
-import { getAllFiles } from '../../utils/getFileByCategory';
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { copyFileToCustomeFolder, getAllCustomeFileByFolder, moveFileToCustomeFolder, moveFileToTrash } from "../../utils/Constants";
 import RNFS, { ReadDirItem } from 'react-native-fs';
-import {
-  copyFileToCustomeFolder,
-  moveFileToCustomeFolder,
-  moveFileToTrash,
-} from '../../utils/Constants';
 
-export const fetchFiles = createAsyncThunk('files/fetchFiles', async () => {
-  const files = await getAllFiles();
-  return files;
-});
+export const fetchImageFiles = createAsyncThunk(
+  'files/fetchImageFiles',
+  async (folder: string) => {
+    const files = await getAllCustomeFileByFolder(folder);
+    return files;
+  }
+);
 
 export const renameFiles = createAsyncThunk(
   'files/rename',
@@ -20,7 +18,7 @@ export const renameFiles = createAsyncThunk(
   ) => {
     try {
       await RNFS.moveFile(oldPath, newPath);
-      return { oldPath, newPath };
+      return {oldPath, newPath}
     } catch (error) {
       rejectWithValue(error);
     }
@@ -30,21 +28,18 @@ export const renameFiles = createAsyncThunk(
 export const removeFileToTrash = createAsyncThunk(
   'files/moveToTrash',
   async (
-    {
-      filestoBeDeleted,
-      fileType,
-    }: { filestoBeDeleted?: ReadDirItem[]; fileType: string },
+    { filestoBeDeleted, fileType } : { filestoBeDeleted?: ReadDirItem[], fileType: string },
     { rejectWithValue }
   ) => {
     try {
       const promises = filestoBeDeleted.map((file) => {
-        return moveFileToTrash(file.path);
+        return moveFileToTrash(file.path)
       });
 
       const filestoBeDeletedRes = await Promise.all(promises);
-      return { filestoBeDeletedRes, fileType };
+      return {filestoBeDeletedRes, fileType}
     } catch (error) {
-      console.log('[ERR]', error);
+      console.log("[ERR]", error)
       rejectWithValue(error);
     }
   }
@@ -53,21 +48,18 @@ export const removeFileToTrash = createAsyncThunk(
 export const moveFileToCustomeFolderRequest = createAsyncThunk(
   'files/moveFileToCustomeFolder',
   async (
-    {
-      filestoBeDeleted,
-      folder,
-    }: { filestoBeDeleted?: ReadDirItem[]; folder: string },
+    { filestoBeDeleted, folder } : { filestoBeDeleted?: ReadDirItem[], folder: string },
     { rejectWithValue }
   ) => {
     try {
       const promises = filestoBeDeleted.map((file) => {
-        return moveFileToCustomeFolder(file.path, folder);
+        return moveFileToCustomeFolder(file.path, folder)
       });
 
       const filestoBeDeletedRes = await Promise.all(promises);
-      return { filestoBeDeletedRes, folder };
+      return {filestoBeDeletedRes, folder}
     } catch (error) {
-      console.log('[ERR]', error);
+      console.log("[ERR]", error)
       rejectWithValue(error);
     }
   }
@@ -76,26 +68,19 @@ export const moveFileToCustomeFolderRequest = createAsyncThunk(
 export const copyFileToCustomeFolderRequest = createAsyncThunk(
   'files/copyFileToCustomeFolder',
   async (
-    {
-      filestoBeDeleted,
-      folder,
-    }: { filestoBeDeleted?: ReadDirItem[]; folder: string },
+    { filestoBeDeleted, folder } : { filestoBeDeleted?: ReadDirItem[], folder: string },
     { rejectWithValue }
   ) => {
     try {
       const promises = filestoBeDeleted.map((file) => {
-        return copyFileToCustomeFolder(file.path, folder);
+        return copyFileToCustomeFolder(file.path, folder)
       });
 
       const filestoBeDeletedRes = await Promise.all(promises);
-      return { filestoBeDeletedRes, folder };
+      return {filestoBeDeletedRes, folder}
     } catch (error) {
-      console.log('[ERR]', error);
+      console.log("[ERR]", error)
       rejectWithValue(error);
     }
   }
 );
-
-export const updateSelectedItemInListFile = (
-  files: ReadDirItem & { isSelected?: boolean }[]
-) => {};

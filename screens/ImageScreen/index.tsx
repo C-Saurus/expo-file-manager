@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from 'react';
 import {
   Text,
   View,
@@ -48,13 +54,14 @@ import { TabDocFiles } from '../Document/list';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HeaderRight } from '../../components/Header';
+import MediaHeader from '../../components/Header/MediaHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const ImageScreen = ({ route, navigation }) => {
   const { fileType } = route.params;
+    const { top } = useSafeAreaInsets();
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { imageFiles, videoFiles, audioFiles } = useAppSelector(
-    (state) => state.documentFile
-  );
+  const { image, video, audio } = useAppSelector((state) => state.documentFile);
   const [isMediaGranted, setIsMediaGranted] = useState<boolean | null>(null);
   const [openOption, setOpenOption] = useState(false);
   const [viewMode, setViewMode] = useState(0);
@@ -66,12 +73,15 @@ export const ImageScreen = ({ route, navigation }) => {
   ]);
 
   const fileMap = {
-    photo: imageFiles,
-    audio: audioFiles,
-    video: videoFiles
-  }
+    photo: image,
+    audio: audio,
+    video: video,
+  };
 
-  const data = useMemo(() => fileMap[fileType] || fileMap['default'], [videoFiles, imageFiles, audioFiles, fileType]);
+  const data = useMemo(
+    () => fileMap[fileType] || fileMap['default'],
+    [video, image, audio, fileType]
+  );
 
   const handleChooseMode = () => {
     if (viewMode === 0) {
@@ -81,20 +91,14 @@ export const ImageScreen = ({ route, navigation }) => {
     }
   };
 
-  useEffect(() => {
-    // Cập nhật headerRight khi màn hình này được render
-    console.log("COME");
-    navigation.setOptions({
-      headerRight: () => (
-        <HeaderRight
-          viewMode={viewMode}
-          index={index}
-          handleChooseOption={() => (setOpenOption((prev) => !prev))}
-          handleChooseMode={handleChooseMode}
-      />
-      ),
-    });
-  }, [navigation, viewMode, index]);
+  const onBackPress = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      // Nếu không thể quay lại (root screen), xử lý thêm ở đây nếu cần
+      console.log('Cannot go back, you are on the root screen.');
+    }
+  };
 
   useEffect(() => {
     const requestMediaPermission = async () => {
@@ -136,9 +140,10 @@ export const ImageScreen = ({ route, navigation }) => {
 
   const layout = useWindowDimensions();
   useEffect(() => {
-    console.log("ImageScreen");
-  }, [])
-  console.log("ImageScreen-Rerender");
+    console.log('ImageScreen');
+  }, []);
+
+  console.log('ImageScreen-Rerender');
   if (!isMediaGranted && isMediaGranted !== null)
     return (
       <View
@@ -159,14 +164,9 @@ export const ImageScreen = ({ route, navigation }) => {
       switch (route.key) {
         case 'first':
           return !viewMode ? (
-            <PhotosByDate
-              fileType={fileType}
-              selectAll={selectAll}
-            />
+            <PhotosByDate fileType={fileType} selectAll={selectAll} />
           ) : (
-            <TabDocFiles
-              data={data}
-            />
+            <TabDocFiles data={data} />
           );
         case 'second':
           return <PhotosByAlbum fileType={fileType} />;
@@ -191,14 +191,26 @@ export const ImageScreen = ({ route, navigation }) => {
   );
 
   return (
-    <TabView
-      lazy
-      renderTabBar={renderTabBar}
-      navigationState={{ index, routes }}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{ width: layout.width }}
-    />
+    <View style={{ paddingTop: top,  flex: 1,
+      width: SIZE, backgroundColor: colors.background}}>
+      <MediaHeader
+        onBackPress={onBackPress}
+        index={index}
+        handleChooseMode={handleChooseMode}
+        handleChooseOption={() => setOpenOption((prev) => !prev)}
+        colors={colors}
+        viewMode={viewMode}
+        headerTitle={fileType}
+      />
+      <TabView
+        lazy
+        renderTabBar={renderTabBar}
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: layout.width }}
+      />
+    </View>
   );
 };
 
@@ -224,7 +236,7 @@ const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
             album: album,
             first: 10,
             sortBy: MediaLibrary.SortBy.default,
-            mediaType: MediaLibrary.MediaType[fileType]
+            mediaType: MediaLibrary.MediaType[fileType],
           })
       );
       Promise.all(albumsPromiseArray).then((values) => {
@@ -232,7 +244,7 @@ const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
           .filter((item) => item.totalCount > 0)
           .map((item) => {
             const album = albums.find((a) => a.id === item.assets[0].albumId);
-            console.log("albums", albums);
+            console.log('albums', albums);
             const albumObject: customAlbum = {
               id: album?.id,
               title: album?.title,
@@ -326,7 +338,11 @@ const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
             <AlbumList albums={albums} setSelectedAlbum={setSelectedAlbum} />
           )}
           {selectedAlbum && (
-            <AssetList fileType={fileType} albumId={selectedAlbum.id} toggleSelect={toggleSelect} />
+            <AssetList
+              fileType={fileType}
+              albumId={selectedAlbum.id}
+              toggleSelect={toggleSelect}
+            />
           )}
         </View>
       </View>
@@ -407,7 +423,6 @@ const PhotosByDate: React.FC<{
 
   const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
     if (multiSelectEmit) {
-
     } else {
       if (fileType === 'audio') {
         navigation.push('AudioPlayer', {
@@ -421,10 +436,9 @@ const PhotosByDate: React.FC<{
           uriValue: item.uri,
         });
       } else {
-        openModal(item)
+        openModal(item);
       }
     }
-    
 
     // setAssets((prev) =>
     //   prev.map((i) => {
@@ -558,19 +572,19 @@ const PhotosByDate: React.FC<{
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background2 }}>
       <FlatList
-          data={groupedData}
-          renderItem={renderGroup}
-          keyExtractor={(item) => item.date}
-          onEndReached={() => {
-            if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
-          }}
-          getItemLayout={(data, index) => ({
-            length: SIZE,
-            offset: SIZE * index,
-            index,
-          })}
-          onEndReachedThreshold={0.4}
-        />
+        data={groupedData}
+        renderItem={renderGroup}
+        keyExtractor={(item) => item.date}
+        onEndReached={() => {
+          if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
+        }}
+        getItemLayout={(data, index) => ({
+          length: SIZE,
+          offset: SIZE * index,
+          index,
+        })}
+        onEndReachedThreshold={0.4}
+      />
       {renderModal()}
       {(loading || !groupedData) && (
         <View

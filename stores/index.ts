@@ -4,6 +4,7 @@ import themeSlice from "../features/files/themeSlice";
 import snackbarSlice from "../features/files/snackbarSlice";
 import tabbarStyleSlice from "../features/files/tabbarStyleSlice";
 import documentSlice from "./document/reducer";
+import customeImageSlice from "./customeImage/reducer";
 
 
 export const store = configureStore({
@@ -13,6 +14,7 @@ export const store = configureStore({
     snackbar: snackbarSlice,
     tabbarStyle: tabbarStyleSlice,
     documentFile: documentSlice,
+    customeImageFile: customeImageSlice
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -65,18 +65,26 @@ export const styles = StyleSheet.create({
     },
     nav: {
       flex: 1,
-      flexDirection: 'row',
       position: 'absolute',
-      top: 0,
       right: 0,
       left: 0,
       zIndex: 10,
       justifyContent: 'space-between',
-      padding: 12,
       backgroundColor: '#4cabebfd',
+    },
+    navFirst: {
+      flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginVertical: 10,
+      paddingHorizontal: 16,
     },
     count: {
       fontSize: 16,
     },
+    line: {
+      height: 1,
+      backgroundColor: '#1f3442fd',
+    }
   });
   

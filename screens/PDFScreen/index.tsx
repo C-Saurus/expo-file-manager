@@ -24,7 +24,7 @@ const PDFScreen = ({ navigation }) => {
   const [openOption, setOpenOption] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { pdfFiles, loading, error } = useAppSelector(
+  const { pdf, loading, error } = useAppSelector(
     (state) => state.documentFile
   );
   const layout = useWindowDimensions();
@@ -49,11 +49,11 @@ const PDFScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (hasFetchFile.current) return;
-    if (!pdfFiles.length && !hasFetchFile.current) {
+    if (!pdf.length && !hasFetchFile.current) {
       dispatch(fetchFiles());
       hasFetchFile.current = true;
     }
-  }, [dispatch, pdfFiles]);
+  }, [dispatch, pdf]);
 
   const handleSort = (value) => {
     dispatch(sortPdfByOption(value))
@@ -77,7 +77,7 @@ const PDFScreen = ({ navigation }) => {
   console.log("RE_RENDER_PDF");
   return (
     <>
-      <TabDocFiles data={pdfFiles} selectAll={selectAll} />
+      <TabDocFiles data={pdf} selectAll={selectAll} />
       <DisplayOptionModal
         openOption={openOption}
         setOpenOption={setOpenOption}

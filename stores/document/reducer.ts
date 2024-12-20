@@ -1,48 +1,78 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchFiles, removeFileToTrash, renameFiles } from './action';
+import { fetchFiles, moveFileToCustomeFolderRequest, removeFileToTrash, renameFiles } from './action';
 import { RootState } from '..';
 import { getCategoryByExtension } from '../../utils/getFileByCategory';
 
 export const documentSlice = createSlice({
   name: 'files',
   initialState: {
-    docFiles: [],
-    txtFiles: [],
-    csvExcelFiles: [],
-    otherFiles: [],
-    pdfFiles: [],
-    zipFiles: [],
-    apkFile: [],
-    imageFiles: [],
-    videoFiles: [],
-    audioFiles: [],
+    doc: [],
+    txt: [],
+    csvExcel: [],
+    pdf: [],
+    zip: [],
+    apk: [],
+    image: [],
+    video: [],
+    audio: [],
     isMultiSelect: false,
     selectAll: false,
-    selectedFileLength: 0,
+    selectedFile: [],
     currentSelectFileType: undefined,
     loading: false,
     error: null,
   },
   reducers: {
-    setMultiSelect: (state, { payload, type }) => {
-      state.isMultiSelect = payload
+    setMultiSelect: (state, { payload }) => {
+      const ext = payload.split('.').pop();
+      const category = getCategoryByExtension(ext);
+      console.log("currentSelectFileType", state.currentSelectFileType);
+      console.log("isMultiSelect", new Date());
+      if (!state.currentSelectFileType) {
+        state.currentSelectFileType = category
+      }
+      if (state.isMultiSelect) {
+        const fileIndex = state.selectedFile.findIndex((item) => item.path === payload);
+        if (fileIndex !== -1) {
+          // Xóa file nếu đã tồn tại
+          state.selectedFile.splice(fileIndex, 1);
+        } else {
+          // Thêm file nếu chưa tồn tại
+          state.selectedFile = [...state.selectedFile, payload];
+        }
+      } else {
+        console.log("COME");
+        state.isMultiSelect = true
+        state.selectedFile = [payload];
+        console.log("currentSelectFileType", state.currentSelectFileType);
+        console.log("isMultiSelect", state.isMultiSelect);
+      }
 
     },
-    setSelectAll: (state, { payload }) => {
-      state.selectAll = payload
-
+    setSelectAll: (state) => {
+      if (state.isMultiSelect) {
+        state.selectedFile = state[state.currentSelectFileType]
+      }
+    },
+    cancelMultiSelect: (state) => {
+      if (state.isMultiSelect) {
+        state.selectAll = false
+        state.selectedFile = []
+        state.currentSelectFileType = undefined
+      }
+      state.isMultiSelect = false
     },
     sortDocumentByOption: (state, { payload }) => {
       switch (payload) {
         case 1:
           console.log("sortDocumentByOption start", new Date());
-          state.docFiles = [...state.docFiles].sort((a, b) =>
+          state.doc = [...state.doc].sort((a, b) =>
             a.name.localeCompare(b.name)
           );
           console.log("sortDocumentByOption end", new Date());
           break;
         case 2:
-          state.docFiles = state.docFiles.sort((a, b) => a.size - b.size);
+          state.doc = state.doc.sort((a, b) => a.size - b.size);
           break;
         default:
           break;
@@ -51,12 +81,12 @@ export const documentSlice = createSlice({
     sortTxtByOption: (state, { payload }) => {
       switch (payload) {
         case 1:
-          state.txtFiles = state.txtFiles.sort((a, b) =>
+          state.txt = state.txt.sort((a, b) =>
             a.name.localeCompare(b.name)
           );
           break;
         case 2:
-          state.txtFiles = state.txtFiles.sort((a, b) => a.size - b.size);
+          state.txt = state.txt.sort((a, b) => a.size - b.size);
           break;
         default:
           break;
@@ -65,12 +95,12 @@ export const documentSlice = createSlice({
     sortCsvExcelByOption: (state, { payload }) => {
       switch (payload) {
         case 1:
-          state.csvExcelFiles = state.csvExcelFiles.sort((a, b) =>
+          state.csvExcel = state.csvExcel.sort((a, b) =>
             a.name.localeCompare(b.name)
           );
           break;
         case 2:
-          state.csvExcelFiles = state.csvExcelFiles.sort(
+          state.csvExcel = state.csvExcel.sort(
             (a, b) => a.size - b.size
           );
           break;
@@ -81,12 +111,12 @@ export const documentSlice = createSlice({
     sortPdfByOption: (state, { payload }) => {
       switch (payload) {
         case 1:
-          state.pdfFiles = state.pdfFiles.sort((a, b) =>
+          state.pdf = state.pdf.sort((a, b) =>
             a.name.localeCompare(b.name)
           );
           break;
         case 2:
-          state.pdfFiles = state.pdfFiles.sort((a, b) => a.size - b.size);
+          state.pdf = state.pdf.sort((a, b) => a.size - b.size);
           break;
         default:
           break;
@@ -95,12 +125,12 @@ export const documentSlice = createSlice({
     sortApkByOption: (state, { payload }) => {
       switch (payload) {
         case 1:
-          state.apkFile = state.apkFile.sort((a, b) =>
+          state.apk = state.apk.sort((a, b) =>
             a.name.localeCompare(b.name)
           );
           break;
         case 2:
-          state.apkFile = state.apkFile.sort((a, b) => a.size - b.size);
+          state.apk = state.apk.sort((a, b) => a.size - b.size);
           break;
         default:
           break;
@@ -114,17 +144,16 @@ export const documentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchFiles.fulfilled, (state, action) => {
+        state.doc = action.payload.docFiles;
+        state.txt = action.payload.txtFiles;
+        state.csvExcel = action.payload.csvExcelFiles;
+        state.pdf = action.payload.pdfFiles;
+        state.apk = action.payload.apkFile;
+        state.zip = action.payload.zipFiles;
+        state.image = action.payload.imageFile;
+        state.video = action.payload.videoFile;
+        state.audio = action.payload.audioFile;
         state.loading = false;
-        state.docFiles = action.payload.docFiles;
-        state.txtFiles = action.payload.txtFiles;
-        state.csvExcelFiles = action.payload.csvExcelFiles;
-        state.otherFiles = action.payload.otherFiles;
-        state.pdfFiles = action.payload.pdfFiles;
-        state.apkFile = action.payload.apkFile;
-        state.zipFiles = action.payload.zipFiles;
-        state.imageFiles = action.payload.imageFile;
-        state.videoFiles = action.payload.videoFile;
-        state.audioFiles = action.payload.audioFile;
       })
       .addCase(fetchFiles.rejected, (state, action) => {
         state.loading = false;
@@ -135,74 +164,16 @@ export const documentSlice = createSlice({
         state.error = null;
       })
       .addCase(renameFiles.fulfilled, (state, action) => {
-        state.loading = false;
         const { oldPath, newPath } = action.payload;
         const ext = newPath.split('.').pop();
         const category = getCategoryByExtension(ext);
         const fileName = newPath.split('/').pop();
-
-        // Update the corresponding list
-        if (category === 'doc') {
-          state.docFiles = state.docFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else if (category === 'txt') {
-          state.txtFiles = state.txtFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else if (category === 'csvExcel') {
-          state.csvExcelFiles = state.csvExcelFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else if (category === 'pdf') {
-          state.csvExcelFiles = state.pdfFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else if (category === 'zip') {
-          state.zipFiles = state.csvExcelFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else if (category === 'app') {
-          state.apkFile = state.csvExcelFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else if (category === 'image') {
-          state.imageFiles = state.imageFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else if (category === 'audio') {
-          state.audioFiles = state.audioFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else if (category === 'video') {
-          state.videoFiles = state.videoFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        } else {
-          state.otherFiles = state.otherFiles.map((file) =>
-            file.path === oldPath
-              ? { ...file, path: newPath, name: fileName }
-              : file
-          );
-        }
+        state[category] = [...state[category]].map((file) =>
+          file.path === oldPath
+            ? { ...file, path: newPath, name: fileName }
+            : file
+        );
+        state.loading = false;
       })
       .addCase(renameFiles.rejected, (state, action) => {
         state.loading = false;
@@ -218,60 +189,35 @@ export const documentSlice = createSlice({
         const { filestoBeDeletedRes, fileType } = action.payload;
         const category = getCategoryByExtension(fileType);
 
-        // Update the corresponding list
-        if (category === 'doc') {
-          state.docFiles = state.docFiles.filter(
-            (file) =>
-              filestoBeDeletedRes.findIndex(
-                (fileDeleted) => fileDeleted.oldPath === file.path
-              ) === -1
-          );
-        } else if (category === 'txt') {
-          state.txtFiles = state.txtFiles.map(
-            (file) =>
-              filestoBeDeletedRes.findIndex(
-                (fileDeleted) => fileDeleted.oldPath === file.path
-              ) === -1
-          );
-        } else if (category === 'csvExcel') {
-          state.csvExcelFiles = state.csvExcelFiles.map(
-            (file) =>
-              filestoBeDeletedRes.findIndex(
-                (fileDeleted) => fileDeleted.oldPath === file.path
-              ) === -1
-          );
-        } else if (category === 'pdf') {
-          console.log('category pdf');
-          state.csvExcelFiles = state.pdfFiles.map(
-            (file) =>
-              filestoBeDeletedRes.findIndex(
-                (fileDeleted) => fileDeleted.oldPath === file.path
-              ) === -1
-          );
-        } else if (category === 'zip') {
-          state.zipFiles = state.csvExcelFiles.map(
-            (file) =>
-              filestoBeDeletedRes.findIndex(
-                (fileDeleted) => fileDeleted.oldPath === file.path
-              ) === -1
-          );
-        } else if (category === 'app') {
-          state.apkFile = state.csvExcelFiles.map(
-            (file) =>
-              filestoBeDeletedRes.findIndex(
-                (fileDeleted) => fileDeleted.oldPath === file.path
-              ) === -1
-          );
-        } else {
-          state.otherFiles = state.otherFiles.map(
-            (file) =>
-              filestoBeDeletedRes.findIndex(
-                (fileDeleted) => fileDeleted.oldPath === file.path
-              ) === -1
-          );
-        }
+        state[category] = [...state[category]].filter(
+          (file) =>
+            filestoBeDeletedRes.findIndex(
+              (fileDeleted) => fileDeleted.oldPath === file.path
+            ) === -1
+        );
       })
       .addCase(removeFileToTrash.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(moveFileToCustomeFolderRequest.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(moveFileToCustomeFolderRequest.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log(action);
+        const { filestoBeDeletedRes, folder } = action.payload;
+        const category = getCategoryByExtension(folder);
+
+        state[category] = [...state[category]].filter(
+          (file) =>
+            filestoBeDeletedRes.findIndex(
+              (fileDeleted) => fileDeleted.oldPath === file.path
+            ) === -1
+        );
+      })
+      .addCase(moveFileToCustomeFolderRequest.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       });
@@ -280,6 +226,7 @@ export const documentSlice = createSlice({
 export const {
   setMultiSelect,
   setSelectAll,
+  cancelMultiSelect,
   sortDocumentByOption,
   sortTxtByOption,
   sortCsvExcelByOption,

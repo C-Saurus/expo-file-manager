@@ -8,7 +8,8 @@ import {
   Alert,
   BackHandler,
   TextInput,
-  PermissionsAndroid
+  PermissionsAndroid,
+  Text
 } from 'react-native';
 
 import Dialog from 'react-native-dialog';
@@ -17,7 +18,7 @@ import {
   Dialog as GalleryDialog,
   ProgressDialog,
 } from 'react-native-simple-dialogs';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { AntDesign, Feather, Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import FileItem from '../components/Browser/Files/FileItem';
@@ -47,6 +48,7 @@ import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { setImages } from '../features/files/imagesSlice';
 import { setSnack, snackActionPayload } from '../features/files/snackbarSlice';
 import { HEIGHT, imageFormats, reExt, SIZE } from '../utils/Constants';
+import CustomHeader from '../components/Header/CommondHeader';
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -490,8 +492,21 @@ const Browser = ({ route }: IBrowserProps) => {
     dispatch(setSnack(data));
   };
 
-  const handleTest = () => {
-    navigation.navigate("CustomeImage")
+  const onBackPress = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      // Nếu không thể quay lại (root screen), xử lý thêm ở đây nếu cần
+      console.log('Cannot go back, you are on the root screen.');
+    }
+  };
+
+  const onAddFilePress = () => {
+
+  }
+
+  const onAddFolderPress = () => {
+    
   }
 
   return (
@@ -598,16 +613,13 @@ const Browser = ({ route }: IBrowserProps) => {
         title="Importing Assets"
         message="Please, wait..."
       />
-
+      <CustomHeader
+        onBackPress={onBackPress}
+        onAddFilePress={onAddFilePress}
+        onAddFolderPress={onAddFolderPress}
+        colors={colors}
+      />
       <View style={styles.topButtons}>
-        <View style={styles.topLeft}>
-          <TouchableOpacity onPress={() => setNewFileActionSheet(true)}>
-            <AntDesign name="addfile" size={30} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setFolderDialogVisible(true)}>
-            <Feather name="folder-plus" size={30} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
         {multiSelect && (
           <View style={styles.topRight}>
             <TouchableOpacity
@@ -634,7 +646,7 @@ const Browser = ({ route }: IBrowserProps) => {
           </View>
         )}
       </View>
-      <View style={{ ...styles.fileList, borderTopColor: colors.primary }}>
+      <View style={{ ...styles.fileList }}>
         <FlatList
           data={files}
           showsVerticalScrollIndicator={false}
@@ -691,7 +703,6 @@ const styles = StyleSheet.create({
   },
   fileList: {
     flex: 1,
-    borderTopWidth: 0.5,
     marginTop: 15,
     marginHorizontal: 5,
   },

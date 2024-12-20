@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Modal,
   Pressable,
@@ -21,6 +27,7 @@ import { fetchFiles } from '../../stores/document/action';
 import { ActivityIndicator } from 'react-native-paper';
 import { TabDocFiles } from './list';
 import {
+  cancelMultiSelect,
   setSelectAll,
   sortCsvExcelByOption,
   sortDocumentByOption,
@@ -28,55 +35,83 @@ import {
 } from '../../stores/document/reducer';
 import { styles } from './style';
 import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
   const [openOption, setOpenOption] = useState(false);
+  const [index, setIndex] = useState(0); // Tab index
+  const [routes] = useState([
+    //{ key: 'doc', title: 'DOC' },
+    { key: 'txt', title: 'TXT' },
+    // { key: 'sheet', title: 'CSV/Excel' },
+  ]);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { docFiles, txtFiles, loading, isMultiSelect, selectAll, error } = useAppSelector(
-    (state) => state.documentFile
-  );
-  const layout = useWindowDimensions();
-
-  const handleChooseOption = () => {
-    setOpenOption(!openOption);
+  const {
+    doc,
+    txt,
+    loading,
+    isMultiSelect,
+    selectAll,
+    selectedFile,
+    currentSelectFileType,
+  } = useAppSelector((state) => ({
+    doc: state.documentFile.doc,
+    txt: state.documentFile.txt,
+    loading: state.documentFile.loading,
+    isMultiSelect: state.documentFile.isMultiSelect,
+    selectAll: state.documentFile.selectAll,
+    selectedFile: state.documentFile.selectedFile,
+    currentSelectFileType: state.documentFile.currentSelectFileType,
+  }));
+  const fileMap = {
+    doc: doc,
+    txt: txt,
   };
 
+  const layout = useWindowDimensions();
+  const { top } = useSafeAreaInsets();
+
+  const handleChooseOption = useCallback(() => {
+    setOpenOption((prev) => !prev);
+  }, []);
+
   useEffect(() => {
-    // Cập nhật headerRight khi màn hình này được render
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity onPress={handleChooseOption}>
           <Entypo name="dots-three-vertical" size={24} color="black" />
         </TouchableOpacity>
       ),
-      headerRightContainerStyle: {
-        marginRight: 15,
-      },
+      headerRightContainerStyle: { marginRight: 15 },
     });
-  }, [navigation, openOption]);
+  }, [navigation, handleChooseOption]);
 
   useEffect(() => {
     if (hasFetchFile.current) return;
-    if (!docFiles.length && !hasFetchFile.current) {
+    if (!doc.length && !hasFetchFile.current) {
       dispatch(fetchFiles());
       hasFetchFile.current = true;
     }
-  }, [dispatch, docFiles]);
+  }, [dispatch, doc]);
 
-  const renderScene = useCallback(({ route }) => {
-    switch (route.key) {
-      case 'doc':
-        return <TabDocFiles data={docFiles} selectAll={selectAll} />;
-      case 'txt':
-        return <TabDocFiles data={txtFiles} selectAll={selectAll} />;
-      case 'sheet':
-        return <TabDocFiles data={txtFiles} selectAll={selectAll} />;
-      default:
-        return null;
-    }
-  }, [docFiles, txtFiles]);
+  const renderScene = useCallback(
+    ({ route }) => {
+      switch (route.key) {
+        // case 'doc':
+        //   return <TabDocFiles data={doc} selectAll={selectAll} />;
+        case 'txt':
+          return <TabDocFiles data={txt} selectAll={selectAll} />;
+          // case 'sheet':
+          //   return <TabDocFiles data={txt} selectAll={selectAll} />;
+          // default:
+          return null;
+      }
+    },
+    [doc, txt]
+  );
 
   const handleSort = (value) => {
     switch (index) {
@@ -95,13 +130,6 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
     setOpenOption(false);
   };
 
-  const [index, setIndex] = useState(0); // Tab index
-  const [routes] = useState([
-    { key: 'doc', title: 'DOC' },
-    { key: 'txt', title: 'TXT' },
-    { key: 'sheet', title: 'CSV/Excel' },
-  ]);
-
   const renderTabBar = useCallback(
     (props) => (
       <TabBar
@@ -116,7 +144,7 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   );
 
   const handleSelectAll = () => {
-    dispatch(setSelectAll({payload: true, type: ''}))
+    dispatch(setSelectAll());
   };
 
   if (loading) {
@@ -134,18 +162,46 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   }
 
   return (
-    <>
-      {!isMultiSelect && (
-        <View style={styles.nav}>
-          <Text style={styles.count}>12/12</Text>
-          <TouchableOpacity onPress={handleSelectAll}>
-            <Feather
-              style={{ marginLeft: 10 }}
-              name={selectAll ? 'check-square' : 'square'}
-              size={24}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
+    <View>
+      {isMultiSelect && currentSelectFileType && (
+        <View style={[styles.nav, { top: top - useHeaderHeight() + 10 }]}>
+          <View style={styles.navFirst}>
+            <Text style={styles.count}>
+              {selectedFile.length} / {fileMap[currentSelectFileType]?.length}
+            </Text>
+            <Text style={styles.count}>Multiple Select</Text>
+            <TouchableOpacity onPress={() => dispatch(cancelMultiSelect())}>
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.line}></View>
+          <View style={styles.navFirst}>
+            <TouchableOpacity>
+              <MaterialCommunityIcons
+                name="file-move-outline"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Ionicons name="copy-outline" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <MaterialCommunityIcons
+                name="delete-outline"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSelectAll}>
+              <Feather
+                style={{ marginLeft: 10 }}
+                name={selectAll ? 'check-square' : 'square'}
+                size={24}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
       <TabView
@@ -164,6 +220,6 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
         setOpenOption={setOpenOption}
         handleSort={handleSort}
       />
-    </>
+    </View>
   );
 });

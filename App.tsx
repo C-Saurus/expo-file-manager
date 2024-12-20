@@ -32,7 +32,7 @@ const App = () => {
   const setUpApp = async () => {
     const storagePermission =  await requestStoragePermission()
     setPermissionAllow(storagePermission)
-    // await createInAppFolder()
+    await createInAppFolder()
   }
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Text,
   View,
@@ -16,48 +16,70 @@ import * as mime from 'react-native-mime-types';
 import humanFileSize from '../../../utils/Filesize';
 import ActionSheet from '../../ActionSheet';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAppSelector } from '../../../hooks/reduxHooks';
+import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { fileIcons } from '../../../utils/Constants';
 import { ReadDirItem } from 'react-native-fs';
 import { styles } from '.';
+import { setMultiSelect } from '../../../stores/document/reducer';
+import { removeFileToTrash } from '../../../stores/document/action';
+import {
+  setSnack,
+  snackActionPayload,
+} from '../../../features/files/snackbarSlice';
 
 type Props = {
-  item: ReadDirItem & {selected?: boolean};
-  multiSelect: boolean;
-  toggleSelect: (arg0: ReadDirItem & {selected?: boolean}) => void;
+  item: ReadDirItem;
   setTransferDialog: (arg0: boolean) => void;
   setMoveOrCopy: (arg0: string) => void;
-  deleteSelectedFiles: (arg0?: ReadDirItem & {selected?: boolean}) => void;
-  setRenamingFile: (arg0: ReadDirItem & {selected?: boolean}) => void;
+  setRenamingFile: (arg0: ReadDirItem & { selected?: boolean }) => void;
   setRenameDialogVisible: (arg0: boolean) => void;
   setNewFileName: (arg0: string) => void;
 };
 
 export default function FileItemCommon({
   item,
-  multiSelect,
-  toggleSelect,
   setTransferDialog,
   setMoveOrCopy,
-  deleteSelectedFiles,
   setRenamingFile,
   setRenameDialogVisible,
   setNewFileName,
 }: Props) {
   const { colors } = useAppSelector((state) => state.theme.theme);
+  const { isMultiSelect, selectedFile } = useAppSelector(
+    (state) => state.documentFile
+  );
+
+  const dispatch = useAppDispatch();
   const navigation = useNavigation<StackNavigationProp<any>>();
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
   const itemMime = mime.lookup(item.path) || ' ';
   const itemType: string = item.isDirectory ? 'dir' : itemMime.split('/')[0];
   const itemFormat: string = item.isDirectory ? 'dir' : itemMime.split('/')[1];
+  const handleSetSnack = (data: snackActionPayload) => {
+    dispatch(setSnack(data));
+  };
 
+  const deleteSelectedFiles = async () => {
+    try {
+      dispatch(
+        removeFileToTrash({ filestoBeDeleted: [item], fileType: 'docx' })
+      );
+      handleSetSnack({
+        message: 'Files deleted!',
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Lỗi khi di chuyển file:', error);
+      handleSetSnack({
+        message: 'Failed to delete files!',
+        label: 'error',
+      });
+      return false;
+    }
+  };
   const ThumbnailImage = ({ uri }) => {
-    return (
-      <Image
-        style={styles.image}
-        source={{ uri: `file://${uri}`}}
-      />
-    );
+    return <Image style={styles.image} source={{ uri: `file://${uri}` }} />;
   };
 
   const ItemThumbnail = () => {
@@ -94,14 +116,17 @@ export default function FileItemCommon({
     }
   };
 
+  const toggleSelect = (item: ReadDirItem) => {
+    console.log('toggleSelect', new Date());
+    dispatch(setMultiSelect(item.path));
+  };
+
   const onPressHandler = () => {
-    if (!multiSelect) {
+    console.log('isMultiSelect', isMultiSelect);
+    if (!isMultiSelect) {
       if (itemType === 'image') {
-
       } else if (itemType === 'video') {
-
       } else if (itemType === 'audio') {
-
       } else {
         navigation.push('MiscFileView', {
           folderName: item.path,
@@ -116,15 +141,16 @@ export default function FileItemCommon({
     <View style={styles.container}>
       <ActionSheet
         title={
-          multiSelect
+          isMultiSelect
             ? 'Choose an action for the selected items'
             : decodeURI(item.name)
         }
-        numberOfLinesTitle={multiSelect ? undefined : 1}
+        numberOfLinesTitle={isMultiSelect ? undefined : 1}
         visible={itemActionsOpen}
-        actionItems={['Rename', 'Move', 'Share', 'Delete', 'Cancel']}
+        actionItems={['Rename', 'Copy', 'Move', 'Share', 'Delete', 'Cancel']}
         itemIcons={[
           'edit',
+          'file-copy',
           'drive-file-move',
           'share',
           'delete',
@@ -132,12 +158,12 @@ export default function FileItemCommon({
         ]}
         onClose={setItemActionsOpen}
         onItemPressed={(buttonIndex) => {
-          if (buttonIndex === 3) {
+          if (buttonIndex === 4) {
             setTimeout(() => {
               Alert.alert(
                 'Confirm Delete',
                 `Are you sure you want to delete ${
-                  multiSelect ? 'selected files' : 'this file'
+                  isMultiSelect ? 'selected files' : 'this file'
                 }?`,
                 [
                   {
@@ -148,23 +174,28 @@ export default function FileItemCommon({
                   {
                     text: 'Delete',
                     onPress: () => {
-                      if (!multiSelect) deleteSelectedFiles(item);
-                      else deleteSelectedFiles();
+                      deleteSelectedFiles();
                     },
                   },
                 ]
               );
             }, 300);
+          } else if (buttonIndex === 3) {
+            Sharing.isAvailableAsync()
+              .then((canShare) => {
+                if (canShare) {
+                  Sharing.shareAsync(`file://${item.path}`);
+                }
+              })
+              .catch((error) =>
+                console.log('[Error] share failed with err:', error)
+              );
           } else if (buttonIndex === 2) {
-            Sharing.isAvailableAsync().then((canShare) => {
-              if (canShare) {
-                Sharing.shareAsync(`file://${item.path}`);
-              }
-            }).catch((error) => console.log("[Error] share failed with err:", error));
+            setMoveOrCopy('Move');
+            //if (!multiSelect) toggleSelect(item);
+            setTransferDialog(true);
           } else if (buttonIndex === 1) {
             setMoveOrCopy('Move');
-            if (!multiSelect) toggleSelect(item);
-            setTransferDialog(true);
           } else if (buttonIndex === 0) {
             setRenamingFile(item);
             setRenameDialogVisible(true);
@@ -182,7 +213,8 @@ export default function FileItemCommon({
           activeOpacity={0.5}
           onPress={onPressHandler}
           onLongPress={() => {
-            if (!multiSelect) {
+            console.log('onLongPress', isMultiSelect);
+            if (!isMultiSelect) {
               toggleSelect(item);
             }
           }}
@@ -211,14 +243,17 @@ export default function FileItemCommon({
         >
           <TouchableOpacity onPress={() => setItemActionsOpen(true)}>
             <View style={styles.fileMenu}>
-              {!item.selected ? (
+              {!isMultiSelect ? (
                 <Feather
                   name="more-horizontal"
                   size={24}
                   color={colors.primary}
                 />
-              ) : (
+              ) : selectedFile?.findIndex((it) => it.path === item.path) !==
+                -1 ? (
                 <Feather name="check-square" size={24} color={colors.primary} />
+              ) : (
+                <Feather name="square" size={24} color={colors.primary} />
               )}
             </View>
           </TouchableOpacity>
@@ -227,4 +262,3 @@ export default function FileItemCommon({
     </View>
   );
 }
-
