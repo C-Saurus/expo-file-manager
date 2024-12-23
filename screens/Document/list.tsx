@@ -39,6 +39,7 @@ import {
   getCustomeFileByFolder,
   moveFileToCustomeFolder,
 } from '../../utils/Constants';
+import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
 
 type TabDocFilesProps = {
   data: ReadDirItem[];
@@ -399,6 +400,12 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
           />
           <Dialog.Button label="Rename" onPress={() => onRename()} />
         </Dialog.Container>
+
+        {/* <DisplayOptionModal
+          openOption={openOption}
+          setOpenOption={setOpenOption}
+          handleSort={handleSort}
+        /> */}
       </View>
     );
   }

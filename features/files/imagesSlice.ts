@@ -1,9 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { FileInfo } from 'expo-file-system';
 import { RootState } from '../../stores';
 
 interface imagesSliceState {
-  images: FileInfo[];
+  images: {uri: string}[];
 }
 
 const initialState: imagesSliceState = {
@@ -14,7 +13,7 @@ export const imagesSlice = createSlice({
   name: 'images',
   initialState,
   reducers: {
-    setImages: (state, action: PayloadAction<FileInfo[]>) => {
+    setImages: (state, action: PayloadAction<{uri: string}[]>) => {
       state.images = action.payload;
     },
   },

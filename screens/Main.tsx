@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { LogBox, View } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
@@ -25,10 +25,9 @@ import useColorScheme from '../hooks/useColorScheme';
 import useLock from '../hooks/useLock';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { setLightTheme, setDarkTheme } from '../features/files/themeSlice';
-import { hideSnack } from '../features/files/snackbarSlice';
-
 import LockScreen from '../screens/LockScreen';
 import Toast from 'react-native-toast-message';
+import { fetchFiles } from '../stores/document/action';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,13 +37,10 @@ LogBox.ignoreLogs([
 ]);
 
 export default function Main() {
+
+  const hasFetchFile = useRef(false);
   const { locked, setLocked } = useLock();
   const { theme } = useAppSelector((state) => state.theme);
-  const {
-    isVisible: isSnackVisible,
-    message: snackMessage,
-    label: snackLabel,
-  } = useAppSelector((state) => state.snackbar);
   const colorScheme = useColorScheme();
   const dispatch = useAppDispatch();
 
@@ -58,6 +54,12 @@ export default function Main() {
       return false;
     }
   };
+
+  useEffect(() => {
+    if (hasFetchFile.current) return;
+    dispatch(fetchFiles());
+    hasFetchFile.current = true;
+  }, [dispatch]);
 
   useEffect(() => {
     getPassCodeStatus();

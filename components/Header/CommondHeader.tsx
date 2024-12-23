@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { AntDesign, Feather, Ionicons } from '@expo/vector-icons';
+import { AntDesign, Entypo, Feather, Ionicons } from '@expo/vector-icons';
 
 const CustomHeader = ({
   onBackPress,
   onAddFilePress,
   onAddFolderPress,
+  handleChooseOption,
   colors,
   headerTitle
 }) => {
@@ -25,12 +26,12 @@ const CustomHeader = ({
 
       {/* Biểu tượng ở bên phải */}
       <View style={styles.rightSection}>
-        <TouchableOpacity onPress={onAddFilePress} style={styles.iconButton}>
-          <AntDesign name="addfile" size={30} color={colors.primary} />
-        </TouchableOpacity>
         <TouchableOpacity onPress={onAddFolderPress} style={styles.iconButton}>
           <Feather name="folder-plus" size={30} color={colors.primary} />
         </TouchableOpacity>
+        <TouchableOpacity onPress={handleChooseOption}>
+          <Entypo name="dots-three-vertical" size={24} color="black" />
+      </TouchableOpacity>
       </View>
     </View>
   );

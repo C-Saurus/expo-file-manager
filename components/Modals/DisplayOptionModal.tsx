@@ -27,13 +27,26 @@ export const DisplayOptionModal = ({
             style={styles.modalItem}
             onPress={() => handleSort(1)}
           >
-            <Text style={styles.modalText}>Sắp xếp theo tên</Text>
+            <Text style={styles.modalText}>Sắp xếp theo tên (A-Z)</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            delayPressIn={0}
             style={styles.modalItem}
             onPress={() => handleSort(2)}
           >
-            <Text style={styles.modalText}>Sắp xếp theo dung lượng</Text>
+            <Text style={styles.modalText}>Sắp xếp theo tên (Z-A)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.modalItem}
+            onPress={() => handleSort(3)}
+          >
+            <Text style={styles.modalText}>Sắp xếp theo dung lượng (Tăng)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.modalItem}
+            onPress={() => handleSort(4)}
+          >
+            <Text style={styles.modalText}>Sắp xếp theo dung lượng (Giảm)</Text>
           </TouchableOpacity>
         </View>
       </Pressable>

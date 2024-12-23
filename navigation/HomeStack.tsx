@@ -15,7 +15,8 @@ import TrashScreen from '../screens/Trash';
 import ApkScreen from '../screens/Apk';
 import ZipScreen from '../screens/Zip';
 import TxtScreen from '../screens/Txt';
-
+import ImageGalleryView from '../screens/ImageGalleryView';
+import AIFileAssume from '../screens/AIFileAssume';
 
 type HomeStackParamList = {
   HomeMain: any;
@@ -29,12 +30,13 @@ type HomeStackParamList = {
   DocumentScreen: any;
   TxtScreen: any;
   MiscFileView: any;
-  ImageScreen: { fileType: string }
-  LargeFilesScanner: { mode: string }
+  ImageGalleryView: any;
+  ImageScreen: { fileType: string };
+  LargeFilesScanner: { mode: string };
+  AIFileAssume: { filePath: string };
 };
 
 const HomeStack = createStackNavigator<HomeStackParamList>();
-
 
 export const HomeStackNavigator1: React.FC = () => {
   return (
@@ -55,14 +57,8 @@ export const HomeStackNavigator1: React.FC = () => {
         name="LargeFilesScanner"
         component={LargeFilesScanner}
       />
-      <HomeStack.Screen
-        name="TrashScreen"
-        component={TrashScreen}
-      />
-      <HomeStack.Screen
-        name="DocScanner"
-        component={DocScanner}
-      />
+      <HomeStack.Screen name="TrashScreen" component={TrashScreen} />
+      <HomeStack.Screen name="DocScanner" component={DocScanner} />
       <HomeStack.Screen name="PDFScreen" component={PDFScreen} />
       <HomeStack.Screen name="ApkScreen" component={ApkScreen} />
       <HomeStack.Screen name="ZipScreen" component={ZipScreen} />
@@ -72,7 +68,12 @@ export const HomeStackNavigator1: React.FC = () => {
         component={ImageScreen}
         options={({ route }) => ({
           headerShown: false,
-          title: route.params.fileType === 'video' ? "Video" : (route.params.fileType === 'audio' ? "Audio" : "Image"),
+          title:
+            route.params.fileType === 'video'
+              ? 'Video'
+              : route.params.fileType === 'audio'
+              ? 'Audio'
+              : 'Image',
           animationTypeForReplace: 'pop',
         })}
       />
@@ -93,6 +94,15 @@ export const HomeStackNavigator1: React.FC = () => {
         })}
         component={AudioPlayer}
       />
+      <HomeStack.Screen
+        name="ImageGalleryView"
+        options={({ route }) => ({
+          headerShown: false,
+          title: route?.params?.prevDir.split('/').pop() || 'Gallery',
+          presentation: 'transparentModal',
+        })}
+        component={ImageGalleryView}
+      />
       <HomeStack.Screen name="DocumentScreen" component={DocumentScreen} />
       <HomeStack.Screen
         name="MiscFileView"
@@ -101,6 +111,14 @@ export const HomeStackNavigator1: React.FC = () => {
           presentation: 'transparentModal',
         })}
         component={MiscFileView}
+      />
+      <HomeStack.Screen
+        name="AIFileAssume"
+        component={AIFileAssume}
+        options={({ route }) => ({
+          title: 'File Assume',
+          presentation: 'transparentModal',
+        })}
       />
     </HomeStack.Navigator>
   );

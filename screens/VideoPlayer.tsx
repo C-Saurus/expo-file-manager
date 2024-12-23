@@ -29,7 +29,7 @@ export default function VideoPlayer({ route }: Props) {
           height: '100%',
         }}
         source={{
-          uri: prevDir + folderName + uriValue,
+          uri: prevDir ? `${prevDir}/${folderName}` : uriValue,
         }}
         useNativeControls
         shouldPlay

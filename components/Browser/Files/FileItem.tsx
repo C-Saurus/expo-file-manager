@@ -53,6 +53,7 @@ export default function FileItem({
   setNewFileName,
 }: Props) {
   console.log("current", currentDir)
+  console.log("item", item.name);
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
@@ -111,22 +112,28 @@ export default function FileItem({
       if (item.isDirectory) {
         navigation.push('Browser', {
           folderName: item.name,
-          prevDir: `${item.name}/${item.name}`,
+          prevDir: `${docDir}/${item.name}`,
         });
       } else if (itemType === 'image') {
         navigation.push('ImageGalleryView', {
           folderName: item.name,
-          prevDir: docDir,
+          prevDir: `${docDir}`,
         });
       } else if (itemType === 'video') {
         navigation.push('VideoPlayer', {
           folderName: item.name,
-          prevDir: docDir,
+          prevDir: `${docDir}`,
+        });
+      } else if (itemType === 'audio') {
+        navigation.push('AudioPlayer', {
+          folderName: item.name,
+          prevDir: `${docDir}`,
+          uriValue: ''
         });
       } else {
         navigation.push('MiscFileView', {
           folderName: item.name,
-          prevDir: docDir,
+          prevDir: `${docDir}`,
         });
       }
     } else {

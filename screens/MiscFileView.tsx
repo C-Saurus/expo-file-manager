@@ -23,15 +23,15 @@ const MiscFileView = ({ route }: Props) => {
   const fileExt = folderName.split('/').pop().split('.').pop().toLowerCase();
 
   if (fileExt === 'pdf')
-    return <PDFViewer fileURI={'file://' + folderName} />;
+    return <PDFViewer fileURI={prevDir ? `${prevDir}/${folderName}` : `file://${folderName}` } />;
 
   else if (['doc', "docx"].includes(fileExt)) {
     console.log("come", folderName)
-    return <DocViewer filePath={folderName} />
+    return <DocViewer filePath={prevDir ? `${prevDir}/${folderName}` : `file://${folderName}`} />
   } else if (fileExt === 'txt') {
-    return <TxtViewer filePath={folderName} />
+    return <TxtViewer filePath={prevDir ? `${prevDir}/${folderName}` : `file://${folderName}`} />
   } else if (['csv', "xlsx"].includes(fileExt)) {
-    return <ExcelViewer filePath={folderName} />
+    return <ExcelViewer filePath={prevDir ? `${prevDir}/${folderName}` : `file://${folderName}`} />
   }
 
   return (

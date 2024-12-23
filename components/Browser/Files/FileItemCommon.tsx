@@ -93,8 +93,23 @@ export default function FileItemCommon({
     console.log('multiSelect', multiSelect);
     if (!multiSelect) {
       if (itemType === 'image') {
+        navigation.push('ImageGalleryView', {
+          folderName: item.name,
+          prevDir: ``,
+          uriValue: `file://${item.path}`
+        });
       } else if (itemType === 'video') {
+        navigation.push('VideoPlayer', {
+          folderName: item.name,
+          prevDir: ``,
+          uriValue: `file://${item.path}`
+        });
       } else if (itemType === 'audio') {
+        navigation.push('AudioPlayer', {
+          folderName: item.name,
+          prevDir: ``,
+          uriValue: `file://${item.path}`
+        });
       } else {
         navigation.push('MiscFileView', {
           folderName: item.path,
@@ -115,17 +130,23 @@ export default function FileItemCommon({
         }
         numberOfLinesTitle={multiSelect ? undefined : 1}
         visible={itemActionsOpen}
-        actionItems={['Rename', 'Copy', 'Move', 'Share', 'Delete', 'Cancel']}
+        actionItems={['Rename', 'Copy', 'Move', 'Share', 'Delete', 'Assume', 'Cancel']}
         itemIcons={[
           'edit',
           'file-copy',
           'drive-file-move',
           'share',
           'delete',
+          'flash-on',
           'close',
         ]}
         onClose={setItemActionsOpen}
         onItemPressed={(buttonIndex) => {
+          if (buttonIndex === 5) {
+            navigation.push('AIFileAssume', {
+              filePath: item.path,
+            });
+          }
           if (buttonIndex === 4) {
             setTimeout(() => {
               Alert.alert(

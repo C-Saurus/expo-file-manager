@@ -36,7 +36,7 @@ import {
 } from '@expo/vector-icons';
 import * as MediaLibrary from 'expo-media-library';
 import { styles } from './style';
-import { useAppSelector } from '../../hooks/reduxHooks';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { customAlbum, ExtendedAsset } from '../../types';
 import useMultiImageSelection from '../../hooks/useMultiImageSelection';
 import { AlbumList } from '../../components/Browser/PickImages/AlbumList';
@@ -55,16 +55,18 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import MediaHeader from '../../components/Header/MediaHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { setImages } from '../../features/files/imagesSlice';
+import { useDispatch } from 'react-redux';
 
 export const ImageScreen = ({ route, navigation }) => {
   const { fileType } = route.params;
     const { top } = useSafeAreaInsets();
+  const dispatch = useAppDispatch()
   const { colors } = useAppSelector((state) => state.theme.theme);
   const { image, video, audio } = useAppSelector((state) => state.documentFile);
   const [isMediaGranted, setIsMediaGranted] = useState<boolean | null>(null);
   const [openOption, setOpenOption] = useState(false);
   const [viewMode, setViewMode] = useState(0);
-  const [selectAll, setSelectAll] = useState(false);
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'first', title: 'All' },
@@ -81,6 +83,14 @@ export const ImageScreen = ({ route, navigation }) => {
     () => fileMap[fileType] || fileMap['default'],
     [video, image, audio, fileType]
   );
+
+  useEffect(() => {
+    dispatch(setImages(image.map((item) => {
+      return {
+        uri: `file://${item.path}`
+      }
+    })));
+  }, [image])
 
   const handleChooseMode = () => {
     if (viewMode === 0) {
@@ -163,7 +173,7 @@ export const ImageScreen = ({ route, navigation }) => {
       switch (route.key) {
         case 'first':
           return !viewMode ? (
-            <PhotosByDate fileType={fileType} selectAll={selectAll} />
+            <PhotosByDate fileType={fileType} />
           ) : (
             <TabDocFiles data={data} />
           );
@@ -173,7 +183,7 @@ export const ImageScreen = ({ route, navigation }) => {
           return null;
       }
     },
-    [viewMode, selectAll]
+    [viewMode]
   );
   // const renderScene = SceneMap({
   //   first: PhotosByDate,
@@ -220,6 +230,7 @@ export type selectedAlbumType = {
 
 const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
   ({ fileType }) => {
+    const navigation = useNavigation<StackNavigationProp<any>>();
     const { colors } = useAppSelector((state) => state.theme.theme);
     const [albums, setAlbums] = useState<customAlbum[]>([]);
     const [albumsFetched, setAlbumsFetched] = useState(false);
@@ -263,13 +274,25 @@ const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
     }, []);
 
     const toggleSelect = (item: ExtendedAsset) => {
-      const isSelected =
-        selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
-      if (!isSelected) setSelectedAssets((prev) => [...prev, item]);
-      else
-        setSelectedAssets((prev) => [
-          ...prev.filter((asset) => asset.id != item.id),
-        ]);
+      if (fileType === 'audio') {
+        navigation.push('AudioPlayer', {
+          folderName: item.filename,
+          prevDir: '',
+          uriValue: item.uri,
+        });
+      } else if (fileType === 'video') {
+        navigation.push('VideoPlayer', {
+          folderName: '',
+          prevDir: '',
+          uriValue: item.uri,
+        });
+      } else {
+        navigation.push('ImageGalleryView', {
+          folderName: item.filename,
+          prevDir: '',
+          uriValue: item.uri,
+        });
+      }
     };
 
     // const unSelectAll = () => {
@@ -351,11 +374,10 @@ const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
 
 const PhotosByDate: React.FC<{
   fileType: string;
-  selectAll: boolean;
 }> = React.memo(({ fileType }) => {
   const navigation = useNavigation<StackNavigationProp<any>>();
   const { colors } = useAppSelector((state) => state.theme.theme);
-
+  const dispatch = useDispatch()
   const [assets, setAssets] = useState<ExtendedAsset[]>([]);
   const [hasNextPage, setHasNextPage] = useState<boolean | null>(null);
   const [endCursor, setEndCursor] = useState<string | null>(null);
@@ -400,6 +422,11 @@ const PhotosByDate: React.FC<{
   useEffect(() => {
     if (assets.length > 0) {
       groupPhotosByDate(); // Gọi hàm này chỉ khi assets thay đổi
+      dispatch(setImages(assets.map((item) => {
+        return {
+          uri: item.uri
+        }
+      })));
     }
   }, [assets]);
 
@@ -425,8 +452,9 @@ const PhotosByDate: React.FC<{
     } else {
       if (fileType === 'audio') {
         navigation.push('AudioPlayer', {
-          filename: item.filename,
-          uri: item.uri,
+          folderName: item.filename,
+          prevDir: '',
+          uriValue: item.uri,
         });
       } else if (fileType === 'video') {
         navigation.push('VideoPlayer', {
@@ -435,32 +463,15 @@ const PhotosByDate: React.FC<{
           uriValue: item.uri,
         });
       } else {
-        openModal(item);
+        navigation.push('ImageGalleryView', {
+          folderName: item.filename,
+          prevDir: '',
+          uriValue: item.uri,
+        });
       }
     }
-
-    // setAssets((prev) =>
-    //   prev.map((i) => {
-    //     if (item.id === i.id) {
-    //       i.selected = !i.selected;
-    //     }
-    //     return i;
-    //   })
-    // );
   };
 
-  const showDetails = (item) => {};
-
-  const openModal = (item) => {
-    const res = assets.filter((asset) => {
-      return asset.id === item.id;
-    });
-    const indexImg = assets.findIndex((asset) => {
-      return asset.id === item.id;
-    });
-    setSelectedIndex(indexImg);
-    setVisible(true);
-  };
 
   const renderPhotoItem = useCallback(
     ({ item }) =>
@@ -508,66 +519,6 @@ const PhotosByDate: React.FC<{
     photos,
   }));
 
-  const renderImageDetailItem = useCallback(
-    ({ item }) => (
-      <View style={styles.itemContainer}>
-        {/* Hiển thị ảnh full màn */}
-        <ImageBackground source={{ uri: item.uri }} style={styles.thumbnail}>
-          {/* Nút "<" để đóng modal */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => setVisible(false)}
-          >
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-
-          {/* Thanh công cụ */}
-          <View style={styles.bottomBar}>
-            <TouchableOpacity>
-              <Ionicons name="heart-outline" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <MaterialIcons name="edit" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Ionicons name="share-social-outline" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Ionicons name="trash-outline" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
-        </ImageBackground>
-      </View>
-    ),
-    []
-  );
-
-  const renderModal = useCallback(() => {
-    return (
-      <Modal
-        visible={visible}
-        onRequestClose={() => setVisible(false)}
-        presentationStyle={'overFullScreen'}
-        animationType={'slide'}
-      >
-        <FlatList
-          data={assets}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={true}
-          keyExtractor={(item) => item.id}
-          initialScrollIndex={selectedIndex}
-          getItemLayout={(data, index) => ({
-            length: SIZE,
-            offset: SIZE * index,
-            index,
-          })}
-          renderItem={renderImageDetailItem}
-        />
-      </Modal>
-    );
-  }, [selectedIndex, assets, visible]);
-
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background2 }}>
       <FlatList
@@ -578,13 +529,12 @@ const PhotosByDate: React.FC<{
           if (hasNextPage) getAlbumAssets(endCursor); // Tải thêm ảnh nếu có
         }}
         getItemLayout={(data, index) => ({
-          length: SIZE,
-          offset: SIZE * index,
+          length: SIZE/3,
+          offset: SIZE/3 * index,
           index,
         })}
         onEndReachedThreshold={0.4}
       />
-      {renderModal()}
       {(loading || !groupedData) && (
         <View
           style={{

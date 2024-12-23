@@ -66,6 +66,7 @@ import useNewSelectionChange from '../hooks/newUseSelectedChange';
 import { getCategoryByExtension } from '../utils/getFileByCategory';
 import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DisplayOptionModal } from '../components/Modals/DisplayOptionModal';
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -74,7 +75,6 @@ type BrowserParamList = {
 type IBrowserProps = StackScreenProps<BrowserParamList, 'Browser'>;
 
 const Browser = ({ route }: IBrowserProps) => {
-  console.log('COME Browser');
   const dispatch = useAppDispatch();
   const { top } = useSafeAreaInsets();
   const navigation = useNavigation<any>();
@@ -96,6 +96,7 @@ const Browser = ({ route }: IBrowserProps) => {
   const [moveOrCopy, setMoveOrCopy] = useState('');
   const [selectAll, setSelectAll] = useState(false);
   const [multiSelect, setMultiSelect] = useState(false);
+  const [openOption, setOpenOption] = useState(false);
 
   const selectedFiles = () => {
     return files.filter((file) => file.selected);
@@ -207,7 +208,6 @@ const Browser = ({ route }: IBrowserProps) => {
   };
 
   const getFiles = async () => {
-    console.log('currentDIr', currentDir);
     FileSystem.readDirectoryAsync(currentDir)
       .then((dirFiles) => {
         const filteredFiles = dirFiles.filter(
@@ -231,18 +231,22 @@ const Browser = ({ route }: IBrowserProps) => {
             });
           });
           setFiles(tempfiles);
-          const tempImageFiles = results.filter((file) => {
-            let fileExtension = file.uri
-              .split('/')
-              .pop()
-              .split('.')
-              .pop()
-              .toLowerCase();
-            if (imageFormats.includes(fileExtension)) {
-              return file;
-            }
-          });
-          dispatch(setImages(tempImageFiles));
+          if (currentDir.includes('Image')) {
+            const tempImageFiles = results.filter((file) => {
+              let fileExtension = file.uri
+                .split('/')
+                .pop()
+                .split('.')
+                .pop()
+                .toLowerCase();
+              if (imageFormats.includes(fileExtension)) {
+                return {
+                  uri: file.uri,
+                };
+              }
+            });
+            dispatch(setImages(tempImageFiles));
+          }
         });
       })
       .catch((_) => {});
@@ -410,7 +414,7 @@ const Browser = ({ route }: IBrowserProps) => {
         setMoveDir('');
         setMoveOrCopy('');
         getFiles();
-        cancelMultiSelect()
+        cancelMultiSelect();
       });
     }
     const conflictingFiles = selectedFiles.filter((file) =>
@@ -442,22 +446,24 @@ const Browser = ({ route }: IBrowserProps) => {
     }
   };
 
-  const deleteSelectedFiles = async () => {
-    const deleteProms = files
-      .filter((file) => file.selected === true)
-      .map((file) => FileSystem.deleteAsync(file.uri));
+  const deleteSelectedFiles = async (item?: fileItem) => {
+    const deleteFile = multiSelect
+      ? files.filter((file) => file.selected === true)
+      : [item];
+    const deleteProms = deleteFile.map((file) =>
+      FileSystem.deleteAsync(file.uri)
+    );
     Promise.all(deleteProms)
       .then((_) => {
-        handleSetSnack({
-          message: 'Files deleted!',
-        });
+        console.log('deleteProms');
       })
       .catch((err) => {
+        console.log('ERRR');
         console.log(err);
       })
       .finally(() => {
         getFiles();
-        cancelMultiSelect()
+        cancelMultiSelect();
       });
   };
 
@@ -515,6 +521,30 @@ const Browser = ({ route }: IBrowserProps) => {
     }
   };
 
+  const handleChooseOption = () => {
+    setOpenOption((prev) => !prev);
+  };
+
+  const handleSort = (value: number) => {
+    switch (value) {
+      case 1:
+        setFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
+        break;
+      case 2:
+        setFiles(files.sort((a, b) => b.name.localeCompare(a.name)));
+        break;
+      case 3:
+        setFiles(files.sort((a, b) => a.size - b.size));
+        break;
+      case 4:
+        setFiles(files.sort((a, b) => b.size - a.size));
+        break;
+      default:
+        break;
+    }
+    setOpenOption(false)
+  };
+
   const onAddFilePress = () => {
     setNewFileActionSheet(true);
   };
@@ -525,16 +555,16 @@ const Browser = ({ route }: IBrowserProps) => {
 
   const cancelMultiSelect = () => {
     setMultiSelect(false);
-    setSelectAll(false)
+    setSelectAll(false);
   };
 
   const handleMoveFile = () => {
     setMoveOrCopy('Move');
     setDestinationDialogVisible(true);
-  }
+  };
 
   const handleDeleteFile = () => {
-    console.log("COME")
+    console.log('COME');
     setTimeout(() => {
       Alert.alert(
         'Confirm Delete',
@@ -556,12 +586,12 @@ const Browser = ({ route }: IBrowserProps) => {
         ]
       );
     }, 300);
-  }
+  };
 
   const handleCopyFile = () => {
     setMoveOrCopy('Copy');
     setDestinationDialogVisible(true);
-  }
+  };
   const renderEmptyComponent = useCallback(
     () => (
       <View style={styles.emptyContainer}>
@@ -682,6 +712,7 @@ const Browser = ({ route }: IBrowserProps) => {
         onBackPress={onBackPress}
         onAddFilePress={onAddFilePress}
         onAddFolderPress={onAddFolderPress}
+        handleChooseOption={handleChooseOption}
         colors={colors}
         headerTitle={route.params.folderName}
       />
@@ -748,6 +779,14 @@ const Browser = ({ route }: IBrowserProps) => {
           </TouchableOpacity>
         </View>
       )}
+      <DisplayOptionModal
+        openOption={openOption}
+        setOpenOption={setOpenOption}
+        handleSort={handleSort}
+      />
+      <TouchableOpacity style={styles.fab} onPress={onAddFilePress}>
+        <MaterialIcons name="add" size={30} color="white" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -838,6 +877,22 @@ const styles = StyleSheet.create({
   line: {
     height: 1,
     backgroundColor: '#1f3442fd',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20, // Khoảng cách từ dưới màn hình
+    right: 20, // Khoảng cách từ mép phải màn hình
+    backgroundColor: '#007AFF', // Màu nền của FAB
+    width: 60, // Kích thước FAB
+    height: 60,
+    borderRadius: 30, // Hình dạng tròn
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5, // Tạo hiệu ứng nổi (trên Android)
+    shadowColor: '#000', // Tạo hiệu ứng nổi (trên iOS)
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
 });
 

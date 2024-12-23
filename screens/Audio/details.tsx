@@ -10,12 +10,13 @@ export default function AudioPlayer({ route }) {
   const [isRepeat, setIsRepeat] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
+  const { uriValue, folderName, prevDir } = route.params
 
   useEffect(() => {
     const loadSound = async () => {
       try {
         const { sound } = await Audio.Sound.createAsync(
-          { uri: route.params.uri },
+          { uri: prevDir ? `${prevDir}/${folderName}` : uriValue },
           { shouldPlay: false }
         );
         setSound(sound);
@@ -86,7 +87,7 @@ export default function AudioPlayer({ route }) {
       </View>
 
       {/* Tên file */}
-      <Text style={styles.fileName}>{route.params.filename}</Text>
+      <Text style={styles.fileName}>{folderName}</Text>
 
       <View style={styles.progressBarContainer}>
         <Text style={styles.time}>{formatTime(position)}</Text>

@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LogBox, Permission, PermissionsAndroid, Platform } from 'react-native';
 import { Provider } from 'react-redux';
 import Main from './screens/Main';

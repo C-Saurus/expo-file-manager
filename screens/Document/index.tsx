@@ -37,6 +37,7 @@ import { styles } from './style';
 import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Header from '../../components/Header';
 
 export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   const dispatch = useAppDispatch();
@@ -49,30 +50,13 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
     { key: 'sheet', title: 'CSV/Excel' },
   ]);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const {
-    doc,
-    txt,
-    loading,
-    isMultiSelect,
-    selectAll,
-    selectedFile,
-    currentSelectFileType,
-  } = useAppSelector((state) => ({
+  const { doc, csvExcel, loading } = useAppSelector((state) => ({
     doc: state.documentFile.doc,
-    txt: state.documentFile.txt,
+    csvExcel: state.documentFile.csvExcel,
     loading: state.documentFile.loading,
-    isMultiSelect: state.documentFile.isMultiSelect,
-    selectAll: state.documentFile.selectAll,
-    selectedFile: state.documentFile.selectedFile,
-    currentSelectFileType: state.documentFile.currentSelectFileType,
   }));
-  const fileMap = {
-    doc: doc,
-    txt: txt,
-  };
 
   const layout = useWindowDimensions();
-  const { top } = useSafeAreaInsets();
 
   const handleChooseOption = useCallback(() => {
     setOpenOption((prev) => !prev);
@@ -102,33 +86,14 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
       switch (route.key) {
         case 'doc':
           return <TabDocFiles data={doc} />;
-        //case 'txt':
-          //return <TabDocFiles data={txt} />;
         case 'sheet':
-          return <TabDocFiles data={txt} />;
+          return <TabDocFiles data={csvExcel} />;
         default:
           return null;
       }
     },
-    [doc, txt]
+    [doc, csvExcel]
   );
-
-  const handleSort = (value) => {
-    switch (index) {
-      case 0:
-        dispatch(sortDocumentByOption(value));
-        break;
-      case 1:
-        dispatch(sortTxtByOption(value));
-        break;
-      case 1:
-        dispatch(sortCsvExcelByOption(value));
-        break;
-      default:
-        break;
-    }
-    setOpenOption(false);
-  };
 
   const renderTabBar = useCallback(
     (props) => (
@@ -143,8 +108,15 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
     []
   );
 
-  const handleSelectAll = () => {
-    dispatch(setSelectAll());
+  const handleSort = (value: number) => {};
+
+  const onBackPress = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      // Nếu không thể quay lại (root screen), xử lý thêm ở đây nếu cần
+      console.log('Cannot go back, you are on the root screen.');
+    }
   };
 
   if (loading) {
@@ -162,51 +134,15 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   }
 
   return (
-    <View style={{ flex: 1}}>
-      {isMultiSelect && currentSelectFileType && (
-        <View style={[styles.nav, { top: top - useHeaderHeight() + 10 }]}>
-          <View style={styles.navFirst}>
-            <Text style={styles.count}>
-              {selectedFile.length} / {fileMap[currentSelectFileType]?.length}
-            </Text>
-            <Text style={styles.count}>Multiple Select</Text>
-            <TouchableOpacity onPress={() => dispatch(cancelMultiSelect())}>
-              <Ionicons name="close" size={24} color="black" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.line}></View>
-          <View style={styles.navFirst}>
-            <TouchableOpacity>
-              <MaterialCommunityIcons
-                name="file-move-outline"
-                size={24}
-                color="black"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Ionicons name="copy-outline" size={24} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <MaterialCommunityIcons
-                name="delete-outline"
-                size={24}
-                color="black"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleSelectAll}>
-              <Feather
-                style={{ marginLeft: 10 }}
-                name={selectAll ? 'check-square' : 'square'}
-                size={24}
-                color={colors.primary}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+    <View style={{ flex: 1 }}>
+      <Header
+        colors={colors}
+        handleChooseOption={handleChooseOption}
+        headerTitle={index ? 'Csv-Excel' : 'Doc'}
+        onBackPress={onBackPress}
+      />
       <TabView
         lazy={true}
-        swipeEnabled={!isMultiSelect}
         lazyPreloadDistance={1}
         renderTabBar={renderTabBar}
         navigationState={{ index, routes }}

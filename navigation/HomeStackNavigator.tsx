@@ -7,6 +7,7 @@ import MiscFileView from '../screens/MiscFileView';
 import Browser from '../screens/Browser';
 import VideoPlayer from '../screens/VideoPlayer';
 import MenuScreen from '../screens/CustomFolder';
+import AudioPlayer from '../screens/Audio/details';
 
 type HomeStackParamList = {
   MenuScreen: { folderName: string; prevDir: string };
@@ -14,6 +15,7 @@ type HomeStackParamList = {
   ImageGalleryView: { folderName: string; prevDir: string };
   VideoPlayer: { folderName: string; prevDir: string };
   MiscFileView: { folderName: string; prevDir: string };
+  AudioPlayer: {};
 };
 
 const HomeStack = createStackNavigator<HomeStackParamList>();
@@ -55,6 +57,14 @@ const HomeStackNavigator: React.FC = () => {
           presentation: 'transparentModal',
         })}
         component={VideoPlayer}
+      />
+      <HomeStack.Screen
+        name="AudioPlayer"
+        options={({ route }) => ({
+          title: 'Audio',
+          presentation: 'transparentModal',
+        })}
+        component={AudioPlayer}
       />
       <HomeStack.Screen
         name="MiscFileView"
