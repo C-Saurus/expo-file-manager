@@ -159,68 +159,6 @@ export const documentSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
-      .addCase(renameFiles.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(renameFiles.fulfilled, (state, action) => {
-        const { oldPath, newPath } = action.payload;
-        const ext = newPath.split('.').pop();
-        const category = getCategoryByExtension(ext);
-        const fileName = newPath.split('/').pop();
-        state[category] = [...state[category]].map((file) =>
-          file.path === oldPath
-            ? { ...file, path: newPath, name: fileName }
-            : file
-        );
-        state.loading = false;
-      })
-      .addCase(renameFiles.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
-      .addCase(removeFileToTrash.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(removeFileToTrash.fulfilled, (state, action) => {
-        state.loading = false;
-        console.log(action);
-        const { filestoBeDeletedRes, fileType } = action.payload;
-        const category = getCategoryByExtension(fileType);
-
-        state[category] = [...state[category]].filter(
-          (file) =>
-            filestoBeDeletedRes.findIndex(
-              (fileDeleted) => fileDeleted.oldPath === file.path
-            ) === -1
-        );
-      })
-      .addCase(removeFileToTrash.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
-      .addCase(moveFileToCustomeFolderRequest.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(moveFileToCustomeFolderRequest.fulfilled, (state, action) => {
-        state.loading = false;
-        console.log(action);
-        const { filestoBeDeletedRes, folder } = action.payload;
-        const category = getCategoryByExtension(folder);
-
-        state[category] = [...state[category]].filter(
-          (file) =>
-            filestoBeDeletedRes.findIndex(
-              (fileDeleted) => fileDeleted.oldPath === file.path
-            ) === -1
-        );
-      })
-      .addCase(moveFileToCustomeFolderRequest.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      });
   },
 });
 export const {

@@ -1,12 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
@@ -16,36 +24,237 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { removeFileToTrash, renameFiles } from '../../stores/document/action';
 import { ReadDirItem } from 'react-native-fs';
 import FileItemCommon from '../../components/Browser/Files/FileItemCommon';
-import {
-  setSnack,
-  snackActionPayload,
-} from '../../features/files/snackbarSlice';
 import Dialog from 'react-native-dialog';
 import { styles } from './style';
+import { FileTransferDialog } from '../../components/Browser/FileTransferDialog';
+import { FsFileTransferDialog } from '../../components/Browser/FsFileTransferDialog';
+import { MultiSelect } from '../../components/Modals/MultiSelectModal';
+import CustomHeader from '../../components/Header/CommondHeader';
+import { useNavigation } from '@react-navigation/native';
+import allProgress from '../../utils/promiseProgress';
+import Header from '../../components/Header';
+import MediaHeader from '../../components/Header/MediaHeader';
+import {
+  copyFileToCustomeFolder,
+  getCustomeFileByFolder,
+  moveFileToCustomeFolder,
+} from '../../utils/Constants';
 
 type TabDocFilesProps = {
-  data: ReadDirItem[]
-  selectAll?: boolean;
+  data: ReadDirItem[];
+  fileType?: string;
 };
 
-
-
 export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
-  ({ data }) => {
+  ({ data, fileType }) => {
+    const navigation = useNavigation();
     const dispatch = useAppDispatch();
-    const [localLoading, setLocalLoading] = useState(true)
-    const [selectedFiles, setSelectedFiles] = useState<ReadDirItem[]>([]);
+    const { colors } = useAppSelector((state) => state.theme.theme);
     const [renameDialogVisible, setRenameDialogVisible] = useState(false);
     const [newFileName, setNewFileName] = useState('');
     const [renamingFile, setRenamingFile] = useState<ReadDirItem>();
     const [destinationDialogVisible, setDestinationDialogVisible] =
       useState(false);
-    const [moveOrCopy, setMoveOrCopy] = useState('');
     const [moveDir, setMoveDir] = useState('');
     const [initialSelectionDone, setInitialSelectionDone] = useState(false);
+    const [moveOrCopy, setMoveOrCopy] = useState('');
+    const [selectAll, setSelectAll] = useState(false);
+    const [multiSelect, setMultiSelect] = useState(false);
+    const [loading, setLoading] = useState(false);
     const renameInputRef = useRef<TextInput>(null);
+    const [files, setFiles] = useState<
+      (ReadDirItem & { selected?: boolean })[]
+    >(
+      data.map((file) => {
+        return {
+          ...file,
+          selected: false,
+        };
+      })
+    );
 
+    const selectedFiles = () => {
+      return files.filter((file) => file.selected);
+    };
 
+    const deleteSelectedFiles = async (item?: ReadDirItem) => {
+      try {
+        setLoading(true);
+        const deleteFile = multiSelect
+          ? files.filter((file) => file.selected === true)
+          : [item];
+        console.log('deleteFile', deleteFile);
+        const res = await removeFileToTrash(deleteFile);
+        console.log('res', res);
+        const filesAfterDelete = files
+          .filter((file) => !res.includes(file.path))
+          .map((file) => {
+            return {
+              ...file,
+              selected: false,
+            };
+          });
+        setFiles(filesAfterDelete);
+        cancelMultiSelect();
+      } catch (error) {
+        console.error('Lỗi khi di chuyển file:', error);
+      }
+      setLoading(false);
+    };
+
+    const onBackPress = () => {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        // Nếu không thể quay lại (root screen), xử lý thêm ở đây nếu cần
+        console.log('Cannot go back, you are on the root screen.');
+      }
+    };
+
+    const cancelMultiSelect = () => {
+      setMultiSelect(false);
+      setSelectAll(false);
+    };
+
+    const handleMoveFile = () => {
+      setMoveOrCopy('Move');
+      setDestinationDialogVisible(true);
+    };
+
+    const handleDeleteFile = () => {
+      console.log('COME');
+      setTimeout(() => {
+        Alert.alert(
+          'Confirm Delete',
+          `Are you sure you want to delete ${
+            multiSelect ? 'selected files' : 'this file'
+          }?`,
+          [
+            {
+              text: 'Cancel',
+              onPress: () => {},
+              style: 'cancel',
+            },
+            {
+              text: 'Delete',
+              onPress: () => {
+                deleteSelectedFiles();
+              },
+            },
+          ]
+        );
+      }, 300);
+    };
+
+    const handleCopyFile = () => {
+      setMoveOrCopy('Copy');
+      setDestinationDialogVisible(true);
+    };
+
+    const toggleSelectAll = () => {
+      if (!selectAll) {
+        setFiles(
+          files.map((item) => {
+            item.selected = true;
+            return item;
+          })
+        );
+      } else {
+        setFiles(
+          files.map((item) => {
+            item.selected = false;
+            return item;
+          })
+        );
+      }
+      setSelectAll((prev) => !prev);
+    };
+
+    const executeTransfer = async (
+      selectedFiles: ReadDirItem[],
+      destination: string
+    ) => {
+      const transferPromises = selectedFiles.map((file) => {
+        if (moveOrCopy === 'Copy')
+          return moveFileToCustomeFolder(file.path, destination);
+        else return copyFileToCustomeFolder(file.path, destination);
+      });
+      const res = await Promise.all(transferPromises);
+      const filesAfterDelete =
+        moveOrCopy === 'Copy'
+          ? files
+          : files.filter((file) => !res.includes(file.path));
+
+      setFiles(
+        filesAfterDelete.map((file) => {
+          return {
+            ...file,
+            selected: false,
+          };
+        })
+      );
+      cancelMultiSelect();
+      setDestinationDialogVisible(false);
+      setMoveDir('');
+      setMoveOrCopy('');
+    };
+
+    const moveSelectedFiles = async (destination: string) => {
+      const selectedFiles = files.filter((file) => file.selected);
+      console.log('destination', destination.slice(7));
+      const destinationFolderFiles = await getCustomeFileByFolder(
+        destination.slice(7)
+      );
+      const conflictingFiles = selectedFiles.filter(
+        (file) =>
+          destinationFolderFiles.findIndex(
+            (destinationFile) => destinationFile.path === file.path
+          ) !== -1
+      );
+      const confLen = conflictingFiles.length;
+      if (confLen > 0) {
+        Alert.alert(
+          'Conflicting Files',
+          `The destination folder has ${confLen} ${
+            confLen === 1 ? 'file' : 'files'
+          } with the same ${confLen === 1 ? 'name' : 'names'}.`,
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Replace the files',
+              onPress: () => {
+                executeTransfer(selectedFiles, destination.slice(7));
+              },
+              style: 'default',
+            },
+          ]
+        );
+      } else {
+        executeTransfer(selectedFiles, destination.slice(7));
+      }
+    };
+
+    const toggleSelect = useCallback(
+      (item: ReadDirItem & { selected?: boolean }, multiSelect?: boolean) => {
+        console.log('==toggleSelect==1');
+        if (multiSelect) {
+          setMultiSelect(true);
+          console.log('==toggleSelect==2');
+        }
+        setFiles(
+          files.map((i) => {
+            if (item === i) {
+              i.selected = !i.selected;
+            }
+            return i;
+          })
+        );
+      },
+      []
+    );
 
     useEffect(() => {
       if (renameDialogVisible && Platform.OS === 'android') {
@@ -59,15 +268,6 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         }, 500);
     }, [renameDialogVisible]);
 
-    // useEffect(() => {
-    //   if (error) {
-    //     handleSetSnack({
-    //       message: `Error ${error}`,
-    //       label: 'error',
-    //     });
-    //   }
-    // }, [error]);
-
     const onRename = async () => {
       const directoryPath = renamingFile.path.substring(
         0,
@@ -78,23 +278,22 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
       setRenamingFile(undefined);
     };
 
-    useEffect(() => {
-      console.log("re render data");
-    }, [data])
-
-    const renderFileItemDoc = useCallback(({ item }) => {
+    const renderFileItemDoc = ({ item }) => {
       return (
         <FileItemCommon
-        item={item}
-        setTransferDialog={setDestinationDialogVisible}
-        setMoveOrCopy={setMoveOrCopy}
-        setRenamingFile={setRenamingFile}
-        setRenameDialogVisible={setRenameDialogVisible}
-        setNewFileName={setNewFileName}
-      ></FileItemCommon>
-      )
-    }, []);
-
+          key={`${item.path}`}
+          item={item}
+          multiSelect={multiSelect}
+          toggleSelect={toggleSelect}
+          setTransferDialog={setDestinationDialogVisible}
+          setMoveOrCopy={setMoveOrCopy}
+          setRenamingFile={setRenamingFile}
+          setRenameDialogVisible={setRenameDialogVisible}
+          setNewFileName={setNewFileName}
+          deleteSelectedFiles={deleteSelectedFiles}
+        ></FileItemCommon>
+      );
+    };
     const renderEmptyComponent = useCallback(
       () => (
         <View style={styles.emptyContainer}>
@@ -105,18 +304,67 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
       []
     );
 
+    const getItemLayout = (data, index) => ({
+      length: 75, // item height
+      offset: 75 * index,
+      index,
+    });
+
+    if (loading) {
+      return (
+        <View
+          style={{
+            ...styles.container,
+            backgroundColor: colors.background2,
+            width: '100%',
+          }}
+        >
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
+    }
+
     return (
-      <View style={{ backgroundColor: 'white' }}>
+      <View style={{ backgroundColor: 'white', flex: 1 }}>
+        {/* {['image', 'audio', 'video'].includes(fileType) ? (
+          <MediaHeader
+          colors={colors}
+          handleChooseOption={handleChooseOption}
+          headerTitle={""}
+          onBackPress={onBackPress}
+           />
+        ) : (
+          <Header
+          colors={colors}
+          handleChooseOption={handleChooseOption}
+          headerTitle={""}
+          onBackPress={onBackPress} />
+        )} */}
+        <MultiSelect
+          multiSelect={multiSelect}
+          displaySelectedSize={`${selectedFiles().length} / ${files?.length}`}
+          colors={colors}
+          selectAll={selectAll}
+          cancelMultiSelect={cancelMultiSelect}
+          handleCopyFile={handleCopyFile}
+          handleDeleteFile={handleDeleteFile}
+          handleMoveFile={handleMoveFile}
+          toggleSelectAll={toggleSelectAll}
+        />
         <FlatList
-          data={data}
+          data={files}
           keyExtractor={(item) => `${item?.path}`}
           renderItem={renderFileItemDoc}
-          initialNumToRender={10} // Render một số lượng item ban đầu
+          getItemLayout={getItemLayout}
+          initialNumToRender={5}
+          maxToRenderPerBatch={10}
           windowSize={10}
+          removeClippedSubviews={true}
           ListEmptyComponent={renderEmptyComponent}
         />
 
-        {/* <FileTransferDialog
+        <FsFileTransferDialog
+          fileType={fileType}
           isVisible={destinationDialogVisible}
           setIsVisible={setDestinationDialogVisible}
           moveDir={moveDir}
@@ -124,7 +372,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
           moveSelectedFiles={moveSelectedFiles}
           moveOrCopy={moveOrCopy}
           setMoveOrCopy={setMoveOrCopy}
-        /> */}
+        />
         <Dialog.Container visible={renameDialogVisible}>
           <Dialog.Title style={{ color: 'black' }}>Rename file</Dialog.Title>
           <Dialog.Input

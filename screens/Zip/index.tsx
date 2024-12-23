@@ -23,7 +23,7 @@ const ZipScreen = ({ navigation }) => {
   const [openOption, setOpenOption] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { zipFiles, loading, error } = useAppSelector(
+  const { zip, loading, error } = useAppSelector(
     (state) => state.documentFile
   );
   const layout = useWindowDimensions();
@@ -48,11 +48,11 @@ const ZipScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (hasFetchFile.current) return;
-    if (!zipFiles.length && !hasFetchFile.current) {
+    if (!zip.length && !hasFetchFile.current) {
       dispatch(fetchFiles());
       hasFetchFile.current = true;
     }
-  }, [dispatch, zipFiles]);
+  }, [dispatch, zip]);
 
   const handleSort = (value) => {
     setOpenOption(false);
@@ -74,7 +74,7 @@ const ZipScreen = ({ navigation }) => {
 
   return (
     <>
-      <TabDocFiles fileType="zip" selectAll={selectAll} />
+      <TabDocFiles data={zip} fileType={'zip'} />
       <Modal
         animationType="fade"
         transparent={true}

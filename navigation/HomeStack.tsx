@@ -14,6 +14,7 @@ import { DocScanner } from '../screens/DocScanner';
 import TrashScreen from '../screens/Trash';
 import ApkScreen from '../screens/Apk';
 import ZipScreen from '../screens/Zip';
+import TxtScreen from '../screens/Txt';
 
 
 type HomeStackParamList = {
@@ -26,6 +27,7 @@ type HomeStackParamList = {
   AudioPlayer: any;
   DocScanner: any;
   DocumentScreen: any;
+  TxtScreen: any;
   MiscFileView: any;
   ImageScreen: { fileType: string }
   LargeFilesScanner: { mode: string }
@@ -64,6 +66,7 @@ export const HomeStackNavigator1: React.FC = () => {
       <HomeStack.Screen name="PDFScreen" component={PDFScreen} />
       <HomeStack.Screen name="ApkScreen" component={ApkScreen} />
       <HomeStack.Screen name="ZipScreen" component={ZipScreen} />
+      <HomeStack.Screen name="TxtScreen" component={TxtScreen} />
       <HomeStack.Screen
         name="ImageScreen"
         component={ImageScreen}

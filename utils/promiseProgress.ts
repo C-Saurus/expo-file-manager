@@ -1,7 +1,7 @@
 // https://stackoverflow.com/a/42342373/13565880
 
 export default function allProgress(
-  proms: Promise<void>[],
+  proms: Promise<any>[],
   progress_cb: (arg0: number) => void
 ) {
   let d = 0;

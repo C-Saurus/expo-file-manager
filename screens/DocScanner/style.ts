@@ -59,5 +59,15 @@ export const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
-    }
+    },
+    noAccessContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+      },
+      noAccessText: {
+        marginBottom: 20,
+        fontFamily: 'Poppins_500Medium',
+      },
 });

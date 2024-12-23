@@ -7,6 +7,7 @@ const CustomHeader = ({
   onAddFilePress,
   onAddFolderPress,
   colors,
+  headerTitle
 }) => {
   return (
     <View style={[styles.headerContainer, { backgroundColor: colors.background }]}>
@@ -19,7 +20,7 @@ const CustomHeader = ({
 
       {/* Tiêu đề hoặc khoảng trống */}
       <View style={styles.centerSection}>
-        <Text style={[styles.title, { color: colors.primary }]}>My Header</Text>
+        <Text style={[styles.title, { color: colors.primary }]}>{headerTitle}</Text>
       </View>
 
       {/* Biểu tượng ở bên phải */}

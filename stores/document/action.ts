@@ -27,28 +27,21 @@ export const renameFiles = createAsyncThunk(
   }
 );
 
-export const removeFileToTrash = createAsyncThunk(
-  'files/moveToTrash',
-  async (
-    {
-      filestoBeDeleted,
-      fileType,
-    }: { filestoBeDeleted?: ReadDirItem[]; fileType: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const promises = filestoBeDeleted.map((file) => {
-        return moveFileToTrash(file.path);
-      });
+export const removeFileToTrash = async (
+  filestoBeDeleted?: ReadDirItem[]
+) => {
+  try {
+    const promises = filestoBeDeleted.map((file) => {
+      return moveFileToTrash(file.path);
+    });
 
-      const filestoBeDeletedRes = await Promise.all(promises);
-      return { filestoBeDeletedRes, fileType };
-    } catch (error) {
-      console.log('[ERR]', error);
-      rejectWithValue(error);
-    }
+    const filestoBeDeletedRes = await Promise.all(promises);
+    return filestoBeDeletedRes;
+  } catch (error) {
+    console.log('[ERR]', error);
+    throw error
   }
-);
+}
 
 export const moveFileToCustomeFolderRequest = createAsyncThunk(
   'files/moveFileToCustomeFolder',

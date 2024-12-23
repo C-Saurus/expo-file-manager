@@ -8,7 +8,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { Entypo, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { fetchFiles } from '../../stores/document/action';
@@ -17,13 +16,13 @@ import { TabDocFiles } from '../Document/list';
 import { styles } from '../Document/style';
 import { sortApkByOption } from '../../stores/document/reducer';
 
-const ApkScreen = ({ navigation }) => {
+const TxtScreen = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
   const [openOption, setOpenOption] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { apk, loading, error } = useAppSelector(
+  const { txt, loading, error } = useAppSelector(
     (state) => state.documentFile
   );
   const layout = useWindowDimensions();
@@ -48,14 +47,13 @@ const ApkScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (hasFetchFile.current) return;
-    if (!apk.length && !hasFetchFile.current) {
+    if (!txt.length && !hasFetchFile.current) {
       dispatch(fetchFiles());
       hasFetchFile.current = true;
     }
-  }, [dispatch, apk]);
+  }, [dispatch, txt]);
 
   const handleSort = (value) => {
-    dispatch(sortApkByOption(value))
     setOpenOption(false);
   };
 
@@ -75,7 +73,7 @@ const ApkScreen = ({ navigation }) => {
 
   return (
     <>
-      <TabDocFiles data={apk} selectAll={selectAll} />
+      <TabDocFiles data={txt} fileType={'txt'} />
       <Modal
         animationType="fade"
         transparent={true}
@@ -117,4 +115,4 @@ const ApkScreen = ({ navigation }) => {
   );
 };
 
-export default ApkScreen;
+export default TxtScreen;

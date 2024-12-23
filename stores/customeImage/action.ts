@@ -1,11 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { copyFileToCustomeFolder, getAllCustomeFileByFolder, moveFileToCustomeFolder, moveFileToTrash } from "../../utils/Constants";
+import { copyFileToCustomeFolder, getCustomeFileByFolder, moveFileToCustomeFolder, moveFileToTrash } from "../../utils/Constants";
 import RNFS, { ReadDirItem } from 'react-native-fs';
 
 export const fetchImageFiles = createAsyncThunk(
   'files/fetchImageFiles',
   async (folder: string) => {
-    const files = await getAllCustomeFileByFolder(folder);
+    const files = await getCustomeFileByFolder(folder);
     return files;
   }
 );
@@ -48,16 +48,16 @@ export const removeFileToTrash = createAsyncThunk(
 export const moveFileToCustomeFolderRequest = createAsyncThunk(
   'files/moveFileToCustomeFolder',
   async (
-    { filestoBeDeleted, folder } : { filestoBeDeleted?: ReadDirItem[], folder: string },
+    { filestoBeDeleted, fileType } : { filestoBeDeleted?: ReadDirItem[], fileType: string },
     { rejectWithValue }
   ) => {
     try {
       const promises = filestoBeDeleted.map((file) => {
-        return moveFileToCustomeFolder(file.path, folder)
+        return moveFileToCustomeFolder(file.path, fileType)
       });
 
       const filestoBeDeletedRes = await Promise.all(promises);
-      return {filestoBeDeletedRes, folder}
+      return {filestoBeDeletedRes, fileType}
     } catch (error) {
       console.log("[ERR]", error)
       rejectWithValue(error);

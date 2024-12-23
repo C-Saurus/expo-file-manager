@@ -53,7 +53,6 @@ import { SIZE } from '../../utils/Constants';
 import { TabDocFiles } from '../Document/list';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { HeaderRight } from '../../components/Header';
 import MediaHeader from '../../components/Header/MediaHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

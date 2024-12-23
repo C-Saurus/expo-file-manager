@@ -16,8 +16,7 @@ import { StorageData } from '../../constants/interface';
 import { ENFILETYPE } from '../../constants/enum';
 import { styles } from './style';
 import { bytesToGB } from '../../utils/Filesize';
-import { DATA, DATA_FOLDER } from '../../constants/const';
-import { ScrollView } from 'react-native-gesture-handler';
+import { DATA } from '../../constants/const';
 import { useAppSelector } from '../../hooks/reduxHooks';
 
 export const Home = () => {
@@ -103,28 +102,8 @@ export const Home = () => {
       case ENFILETYPE.ZIP:
         navigation.navigate('ZipScreen');
         break;
-      default:
-        break;
-    }
-  };
-
-  const handleFolderCateogory = (item: any) => {
-    console.log("item",item)
-    switch (Number(item.id)) {
-      case ENFILETYPE.IMAGE:
-        navigation.navigate('ImageScreen');
-        break;
-      case ENFILETYPE.VIDEO:
-        navigation.navigate('VideoScreen');
-        break;
-      case ENFILETYPE.PDF:
-        navigation.navigate('PDFScreen');
-        break;
-      case ENFILETYPE.AUDIO:
-        navigation.navigate('AudioScreen');
-        break;
-      case ENFILETYPE.DOCUMENT:
-        navigation.navigate('DocumentScreen');
+      case ENFILETYPE.TXT:
+        navigation.navigate('TxtScreen');
         break;
       default:
         break;
@@ -210,17 +189,6 @@ export const Home = () => {
           >
             {item.title}
           </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderItemFolder = ({ item }) => {
-    return (
-      <TouchableOpacity onPress={() => handleFolderCateogory(item)}>
-        <View style={styles.itemContainer}>
-          <MaterialIcons name={item.icon} size={30} color="#6200ea" />
-          <Text style={styles.title}>{item.title}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -315,22 +283,6 @@ export const Home = () => {
           showsHorizontalScrollIndicator={false}
         />
       </View>
-      {/* TODO: impliment in another tab */}
-      {/* 
-        <View style={styles.listItemContainerFolder}>
-          <Text style={styles.header}>Folder của tôi</Text>
-          <FlatList
-            data={DATA_FOLDER}
-            renderItem={renderItemFolder}
-            keyExtractor={(item) => item.id}
-            numColumns={4}
-            columnWrapperStyle={styles.row}
-            scrollEnabled={false}
-            horizontal={false}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-          />
-        </View> */}
     </View>
   );
 };

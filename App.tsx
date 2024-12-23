@@ -6,6 +6,7 @@ import Main from './screens/Main';
 import { Text } from 'react-native-paper';
 import { store } from './stores';
 import { cleanOldFiles, createInAppFolder } from './utils/Constants';
+import { createFolders } from './utils/ExpoFileConstant';
 
 LogBox.ignoreLogs(['componentWillMount', 'componentWillReceiveProps']);
 
@@ -32,7 +33,7 @@ const App = () => {
   const setUpApp = async () => {
     const storagePermission =  await requestStoragePermission()
     setPermissionAllow(storagePermission)
-    await createInAppFolder()
+    await createFolders()
   }
 
   useEffect(() => {

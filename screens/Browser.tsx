@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,7 +9,7 @@ import {
   BackHandler,
   TextInput,
   PermissionsAndroid,
-  Text
+  Text,
 } from 'react-native';
 
 import Dialog from 'react-native-dialog';
@@ -18,7 +18,12 @@ import {
   Dialog as GalleryDialog,
   ProgressDialog,
 } from 'react-native-simple-dialogs';
-import { AntDesign, Feather, Ionicons } from '@expo/vector-icons';
+import {
+  AntDesign,
+  Feather,
+  Ionicons,
+  MaterialIcons,
+} from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import FileItem from '../components/Browser/Files/FileItem';
@@ -47,8 +52,20 @@ import { ExtendedAsset, fileItem } from '../types';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { setImages } from '../features/files/imagesSlice';
 import { setSnack, snackActionPayload } from '../features/files/snackbarSlice';
-import { HEIGHT, imageFormats, reExt, SIZE } from '../utils/Constants';
+import {
+  getCustomeFileByFolder,
+  HEIGHT,
+  imageFormats,
+  LOCAL_FOLDER,
+  reExt,
+  SIZE,
+} from '../utils/Constants';
 import CustomHeader from '../components/Header/CommondHeader';
+import { ReadDirItem } from 'react-native-fs';
+import useNewSelectionChange from '../hooks/newUseSelectedChange';
+import { getCategoryByExtension } from '../utils/getFileByCategory';
+import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -57,17 +74,14 @@ type BrowserParamList = {
 type IBrowserProps = StackScreenProps<BrowserParamList, 'Browser'>;
 
 const Browser = ({ route }: IBrowserProps) => {
-  console.log("COME Browser")
+  console.log('COME Browser');
   const dispatch = useAppDispatch();
+  const { top } = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const docDir: string = FileSystem.documentDirectory || '';
-  const [currentDir, setCurrentDir] = useState<string>(
-    route?.params?.prevDir !== undefined ? route?.params?.prevDir : docDir
-  );
+  const currentDir = route?.params?.prevDir;
   const [moveDir, setMoveDir] = useState('');
   const [files, setFiles] = useState<fileItem[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<fileItem[]>([]);
   const [folderDialogVisible, setFolderDialogVisible] = useState(false);
   const [downloadDialogVisible, setDownloadDialogVisible] = useState(false);
   const [renameDialogVisible, setRenameDialogVisible] = useState(false);
@@ -80,29 +94,26 @@ const Browser = ({ route }: IBrowserProps) => {
     useState(false);
   const [newFileActionSheet, setNewFileActionSheet] = useState(false);
   const [moveOrCopy, setMoveOrCopy] = useState('');
-  const { multiSelect, allSelected } = useSelectionChange(files);
+  const [selectAll, setSelectAll] = useState(false);
+  const [multiSelect, setMultiSelect] = useState(false);
+
+  const selectedFiles = () => {
+    return files.filter((file) => file.selected);
+  };
 
   useEffect(() => {
     getFiles();
   }, [currentDir]);
 
-  React.useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      getFiles();
-    });
-
-    return unsubscribe;
-  }, [navigation]);
-
-  useEffect(() => {
-    if (route?.params?.folderName !== undefined) {
-      setCurrentDir((prev) =>
-        prev?.endsWith('/')
-          ? prev + route.params.folderName
-          : prev + '/' + route.params.folderName
-      );
-    }
-  }, [route]);
+  // useEffect(() => {
+  //   if (route?.params?.folderName !== undefined) {
+  //     setCurrentDir((prev) =>
+  //       prev?.endsWith('/')
+  //         ? prev + route.params.folderName
+  //         : prev + '/' + route.params.folderName
+  //     );
+  //   }
+  // }, [route]);
 
   useEffect(() => {
     const backAction = () => {
@@ -162,14 +173,9 @@ const Browser = ({ route }: IBrowserProps) => {
       );
   };
 
-  const toggleSelect = (item: fileItem) => {
-    if (item.selected && selectedFiles.includes(item)) {
-      const index = selectedFiles.indexOf(item);
-      if (index > -1) {
-        selectedFiles.splice(index, 1);
-      }
-    } else if (!item.selected && !selectedFiles.includes(item)) {
-      setSelectedFiles((prev) => [...prev, item]);
+  const toggleSelect = (item: fileItem, multiSelect?: boolean) => {
+    if (multiSelect) {
+      setMultiSelect(true);
     }
     setFiles(
       files.map((i) => {
@@ -182,14 +188,13 @@ const Browser = ({ route }: IBrowserProps) => {
   };
 
   const toggleSelectAll = () => {
-    if (!allSelected) {
+    if (!selectAll) {
       setFiles(
         files.map((item) => {
           item.selected = true;
           return item;
         })
       );
-      setSelectedFiles(files);
     } else {
       setFiles(
         files.map((item) => {
@@ -197,49 +202,48 @@ const Browser = ({ route }: IBrowserProps) => {
           return item;
         })
       );
-      setSelectedFiles([]);
     }
+    setSelectAll((prev) => !prev);
   };
 
   const getFiles = async () => {
+    console.log('currentDIr', currentDir);
     FileSystem.readDirectoryAsync(currentDir)
       .then((dirFiles) => {
-        if (currentDir !== route?.params?.prevDir) {
-          const filteredFiles = dirFiles.filter(
-            (file) => file !== 'RCTAsyncLocalStorage'
-          );
-          const filesProms = filteredFiles.map((fileName) =>
-            FileSystem.getInfoAsync(currentDir + '/' + fileName)
-          );
-          Promise.all(filesProms).then((results) => {
-            let tempfiles: fileItem[] = results.map((file) => {
-              const name = file.uri.endsWith('/')
-                ? file.uri
-                    .slice(0, file.uri.length - 1)
-                    .split('/')
-                    .pop()
-                : file.uri.split('/').pop();
-              return Object({
-                ...file,
-                name,
-                selected: false,
-              });
+        const filteredFiles = dirFiles.filter(
+          (file) => file !== 'RCTAsyncLocalStorage'
+        );
+        const filesProms = filteredFiles.map((fileName) =>
+          FileSystem.getInfoAsync(currentDir + '/' + fileName)
+        );
+        Promise.all(filesProms).then((results) => {
+          let tempfiles: fileItem[] = results.map((file) => {
+            const name = file.uri.endsWith('/')
+              ? file.uri
+                  .slice(0, file.uri.length - 1)
+                  .split('/')
+                  .pop()
+              : file.uri.split('/').pop();
+            return Object({
+              ...file,
+              name,
+              selected: false,
             });
-            setFiles(tempfiles);
-            const tempImageFiles = results.filter((file) => {
-              let fileExtension = file.uri
-                .split('/')
-                .pop()
-                .split('.')
-                .pop()
-                .toLowerCase();
-              if (imageFormats.includes(fileExtension)) {
-                return file;
-              }
-            });
-            dispatch(setImages(tempImageFiles));
           });
-        }
+          setFiles(tempfiles);
+          const tempImageFiles = results.filter((file) => {
+            let fileExtension = file.uri
+              .split('/')
+              .pop()
+              .split('.')
+              .pop()
+              .toLowerCase();
+            if (imageFormats.includes(fileExtension)) {
+              return file;
+            }
+          });
+          dispatch(setImages(tempImageFiles));
+        });
       })
       .catch((_) => {});
   };
@@ -322,8 +326,17 @@ const Browser = ({ route }: IBrowserProps) => {
     const result = await DocumentPicker.getDocumentAsync({
       copyToCacheDirectory: false,
     });
-
+    console.log('result');
     if (result.type === 'success') {
+      const ext = result.mimeType.split('/')[1];
+      const category = getCategoryByExtension(ext);
+      if (category !== route.params.folderName.toLowerCase()) {
+        Toast.show({
+          type: 'error',
+          text1: `Please choose ${route.params.folderName.toLowerCase()} file`,
+        });
+        return;
+      }
       const { exists: fileExists } = await FileSystem.getInfoAsync(
         currentDir + '/' + result.name
       );
@@ -397,6 +410,7 @@ const Browser = ({ route }: IBrowserProps) => {
         setMoveDir('');
         setMoveOrCopy('');
         getFiles();
+        cancelMultiSelect()
       });
     }
     const conflictingFiles = selectedFiles.filter((file) =>
@@ -428,22 +442,22 @@ const Browser = ({ route }: IBrowserProps) => {
     }
   };
 
-  const deleteSelectedFiles = async (file?: fileItem) => {
-    const filestoBeDeleted = file ? [file] : selectedFiles;
-    const deleteProms = filestoBeDeleted.map((file) =>
-      FileSystem.deleteAsync(file.uri)
-    );
+  const deleteSelectedFiles = async () => {
+    const deleteProms = files
+      .filter((file) => file.selected === true)
+      .map((file) => FileSystem.deleteAsync(file.uri));
     Promise.all(deleteProms)
       .then((_) => {
         handleSetSnack({
           message: 'Files deleted!',
         });
-        getFiles();
-        setSelectedFiles([]);
       })
       .catch((err) => {
         console.log(err);
+      })
+      .finally(() => {
         getFiles();
+        cancelMultiSelect()
       });
   };
 
@@ -502,12 +516,63 @@ const Browser = ({ route }: IBrowserProps) => {
   };
 
   const onAddFilePress = () => {
-
-  }
+    setNewFileActionSheet(true);
+  };
 
   const onAddFolderPress = () => {
-    
+    setFolderDialogVisible(true);
+  };
+
+  const cancelMultiSelect = () => {
+    setMultiSelect(false);
+    setSelectAll(false)
+  };
+
+  const handleMoveFile = () => {
+    setMoveOrCopy('Move');
+    setDestinationDialogVisible(true);
   }
+
+  const handleDeleteFile = () => {
+    console.log("COME")
+    setTimeout(() => {
+      Alert.alert(
+        'Confirm Delete',
+        `Are you sure you want to delete ${
+          multiSelect ? 'selected files' : 'this file'
+        }?`,
+        [
+          {
+            text: 'Cancel',
+            onPress: () => {},
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            onPress: () => {
+              deleteSelectedFiles();
+            },
+          },
+        ]
+      );
+    }, 300);
+  }
+
+  const handleCopyFile = () => {
+    setMoveOrCopy('Copy');
+    setDestinationDialogVisible(true);
+  }
+  const renderEmptyComponent = useCallback(
+    () => (
+      <View style={styles.emptyContainer}>
+        <MaterialIcons name="folder-open" size={64} color="gray" />
+        <Text style={styles.emptyText}>
+          {route.params.folderName} file is empty
+        </Text>
+      </View>
+    ),
+    []
+  );
 
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background }}>
@@ -549,7 +614,7 @@ const Browser = ({ route }: IBrowserProps) => {
       <FileTransferDialog
         isVisible={destinationDialogVisible}
         setIsVisible={setDestinationDialogVisible}
-        currentDir={docDir}
+        currentDir={currentDir}
         moveDir={moveDir}
         setMoveDir={setMoveDir}
         moveSelectedFiles={moveSelectedFiles}
@@ -618,40 +683,56 @@ const Browser = ({ route }: IBrowserProps) => {
         onAddFilePress={onAddFilePress}
         onAddFolderPress={onAddFolderPress}
         colors={colors}
+        headerTitle={route.params.folderName}
       />
-      <View style={styles.topButtons}>
-        {multiSelect && (
-          <View style={styles.topRight}>
-            <TouchableOpacity
-              onPress={() => {
-                setDestinationDialogVisible(true);
-                setMoveOrCopy('Move');
-              }}
-            >
+      {multiSelect && (
+        <View style={[styles.nav]}>
+          <View style={styles.navFirst}>
+            <Text style={styles.count}>
+              {selectedFiles().length} / {files?.length}
+            </Text>
+            <Text style={styles.count}>Multiple Select</Text>
+            <TouchableOpacity onPress={() => cancelMultiSelect()}>
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.line}></View>
+          <View style={styles.navFirst}>
+            <TouchableOpacity onPress={handleMoveFile}>
               <MaterialCommunityIcons
                 name="file-move-outline"
-                size={30}
-                color={colors.primary}
+                size={24}
+                color="black"
               />
             </TouchableOpacity>
-
+            <TouchableOpacity onPress={handleCopyFile}>
+              <Ionicons name="copy-outline" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDeleteFile}>
+              <MaterialCommunityIcons
+                name="delete-outline"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
             <TouchableOpacity onPress={toggleSelectAll}>
               <Feather
                 style={{ marginLeft: 10 }}
-                name={allSelected ? 'check-square' : 'square'}
+                name={selectAll ? 'check-square' : 'square'}
                 size={24}
                 color={colors.primary}
               />
             </TouchableOpacity>
           </View>
-        )}
-      </View>
+        </View>
+      )}
       <View style={{ ...styles.fileList }}>
         <FlatList
           data={files}
           showsVerticalScrollIndicator={false}
           renderItem={renderItem}
           keyExtractor={_keyExtractor}
+          ListEmptyComponent={renderEmptyComponent}
         />
       </View>
       {multiSelect && (
@@ -703,7 +784,6 @@ const styles = StyleSheet.create({
   },
   fileList: {
     flex: 1,
-    marginTop: 15,
     marginHorizontal: 5,
   },
   bottomMenu: {
@@ -723,6 +803,41 @@ const styles = StyleSheet.create({
     width: SIZE,
     padding: 0,
     margin: 0,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: 'gray',
+    marginTop: 10,
+  },
+  nav: {
+    flex: 1,
+    position: 'absolute',
+    right: 0,
+    left: 0,
+    bottom: 0,
+    zIndex: 10,
+    justifyContent: 'space-between',
+    backgroundColor: '#4cabebfd',
+  },
+  navFirst: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+    paddingHorizontal: 16,
+  },
+  count: {
+    fontSize: 16,
+  },
+  line: {
+    height: 1,
+    backgroundColor: '#1f3442fd',
   },
 });
 

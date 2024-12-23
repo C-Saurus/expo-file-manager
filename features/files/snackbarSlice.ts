@@ -23,6 +23,7 @@ export const snackbarSlice = createSlice({
   initialState,
   reducers: {
     setSnack: (state, action: PayloadAction<snackActionPayload>) => {
+      console.log("action", action)
       state.isVisible = true;
       state.message = action.payload.message;
       state.label = action.payload.label;

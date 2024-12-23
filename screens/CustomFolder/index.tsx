@@ -9,50 +9,66 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LOCAL_FOLDER } from '../../utils/Constants';
+import { LOCAL_EXPO_FOLDER } from '../../utils/ExpoFileConstant';
 
 const fileTypes = [
   {
     id: '1',
     type: 'Image',
-    icon: 'image-outline',
-    color: '#FF6F61',
+    icon: 'image-outline', // Icon phù hợp cho ảnh
+    color: '#FF7043', // Màu cam sáng, tượng trưng cho hình ảnh
     description: 'View your images',
   },
   {
     id: '2',
     type: 'Video',
-    icon: 'videocam-outline',
-    color: '#FFD54F',
+    icon: 'videocam-outline', // Icon phù hợp cho video
+    color: '#FFA726', // Màu cam nhạt, gợi nhớ đến ánh sáng từ video
     description: 'Explore videos',
   },
   {
     id: '3',
     type: 'Audio',
-    icon: 'musical-notes-outline',
-    color: '#4CAF50',
+    icon: 'musical-notes-outline', // Icon nốt nhạc
+    color: '#66BB6A', // Màu xanh lá, gợi cảm giác tươi mới và sống động
     description: 'Listen to your audio files',
   },
   {
     id: '4',
-    type: 'PDF',
-    icon: 'document-text-outline',
-    color: '#42A5F5',
+    type: 'Pdf',
+    icon: 'document-text-outline', // Icon văn bản cho PDF
+    color: '#29B6F6', // Màu xanh dương, quen thuộc với PDF
     description: 'Manage your PDFs',
   },
   {
     id: '5',
     type: 'Doc',
-    icon: 'document-outline',
-    color: '#AB47BC',
+    icon: 'document-outline', // Icon tài liệu, phù hợp với Word
+    color: '#8E24AA', // Màu tím, tương đồng với Microsoft Word
     description: 'Access Word documents',
+  },
+  {
+    id: '6',
+    type: 'Txt',
+    icon: 'clipboard-outline', // Icon clipboard, tượng trưng cho text file
+    color: '#546E7A', // Màu xám xanh, nhẹ nhàng và trung tính
+    description: 'Manage text files',
+  },
+  {
+    id: '7',
+    type: 'Excel-Csv',
+    icon: 'grid-outline', // Icon lưới, phù hợp với bảng tính
+    color: '#FFD54F', // Màu vàng, thường liên kết với dữ liệu bảng tính
+    description: 'Access Excel/CSV files',
   },
 ];
 
 const MenuScreen = ({ navigation }) => {
-  const handlePress = (type) => {
+  const handlePress = (type: string) => {
     navigation.navigate('Browser', {
-      folderName: '',
-      prevDir: '',
+      folderName: type,
+      prevDir: `${LOCAL_EXPO_FOLDER}${type}`,
     });
   };
 

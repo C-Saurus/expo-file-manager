@@ -36,8 +36,7 @@ const HomeStackNavigator: React.FC = () => {
       <HomeStack.Screen
         name="Browser"
         options={({ route }) => ({
-          title: route?.params?.prevDir.split('/').pop() || 'Gallery',
-          presentation: 'transparentModal',
+          title: route?.params?.folderName || 'File Manager',
         })}
         component={Browser}
       />

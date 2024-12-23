@@ -56,6 +56,7 @@
     "react-native-simple-dialogs": "^1.5.0",
     "react-native-svg": "13.4.0",
     "react-native-tab-view": "^4.0.1",
+    "react-native-toast-message": "^2.2.1",
     "react-native-webview": "11.23.1",
     "react-redux": "^7.2.5",
     "rn-pdf-reader-js": "^4.1.1",

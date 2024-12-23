@@ -6,7 +6,7 @@ export const DATA = [
   { id: '4', title: 'Ứng dụng', icon: 'apps', color: '#d631ce' },
   { id: '5', title: 'Tệp zip', icon: 'archive', color: '#57595f' },
   { id: '6', title: 'Các tài liệu', icon: 'description', color: '#3165d6' },
-  { id: '7', title: 'Tải xuống', icon: 'get-app', color: '#3fd631' },
+  { id: '7', title: 'File text', icon: 'text-fields', color: '#3fd631' },
 ];
 
 export const FILE_TYPES = {

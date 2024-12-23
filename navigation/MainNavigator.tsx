@@ -39,8 +39,8 @@ export const MainNavigator: React.FC = () => {
             iconName = 'ios-cloud-download';
           } else if (route.name === 'My Folder') {
             iconName = 'browsers-outline';
-          } else if (route.name === 'FileTransfer') {
-            iconName = 'ios-documents-outline';
+          } else if (route.name === 'Web') {
+            iconName = 'ios-globe';
           } else if (route.name === 'Test') {
             iconName = focused ? 'ios-home' : 'ios-home';
           }
@@ -52,7 +52,7 @@ export const MainNavigator: React.FC = () => {
     >
       <Tab.Screen name="Home" component={HomeStackNavigator1} />
       <Tab.Screen name="My Folder" component={HomeStackNavigator} />
-      <Tab.Screen name="FileTransfer" component={FileTransfer} />
+      <Tab.Screen name="Web" component={Web} />
       <Tab.Screen name="Settings" component={SettingsStackNavigator} />
     </Tab.Navigator>
   );

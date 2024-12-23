@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Image, Button, TextInput, FlatList, Alert, Text, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
+import { View, Image, Button, TextInput, FlatList, Alert, Text, TouchableOpacity, ActivityIndicator, Modal, Linking } from 'react-native';
 import DocumentScanner from 'react-native-document-scanner-plugin';
 import { createPdf } from 'react-native-images-to-pdf';
 import { DocumentDirectoryPath } from 'react-native-fs';
@@ -7,14 +7,26 @@ import { styles } from './style';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { v4 as uuidv4 } from 'uuid';
+import { BarCodeScanner } from 'expo-barcode-scanner';
+import { useAppSelector } from '../../hooks/reduxHooks';
 
 export const DocScanner = () => {
   const navigation = useNavigation<StackNavigationProp<any>>();
+  const { colors } = useAppSelector((state) => state.theme.theme);
   const [scannedImages, setScannedImages] = useState<string[]>([]);
   const generateUniquePdfName = () => `${uuidv4()}`;
   const [pdfName, setPdfName] = useState(generateUniquePdfName());
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasPermission, setHasPermission] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+    })();
+  }, []);
+
 
   const scanDocument = async () => {
     try {
@@ -52,6 +64,21 @@ export const DocScanner = () => {
   useEffect(() => {
     scanDocument();
   }, []);
+
+  if (!hasPermission && hasPermission !== null)
+      return (
+        <View
+          style={{
+            ...styles.noAccessContainer,
+            backgroundColor: colors.background,
+          }}
+        >
+          <Text style={{ ...styles.noAccessText, color: colors.primary }}>
+            {'Camera Access Denied'}
+          </Text>
+          <Button title="Go to Settings" onPress={() => Linking.openSettings()} />
+        </View>
+      );
 
   if (isPreviewMode) {
     return (

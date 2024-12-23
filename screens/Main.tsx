@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { LogBox, View } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
-import { Snackbar } from 'react-native-paper';
 import {
   NavigationContainer,
   DarkTheme,
@@ -29,6 +28,7 @@ import { setLightTheme, setDarkTheme } from '../features/files/themeSlice';
 import { hideSnack } from '../features/files/snackbarSlice';
 
 import LockScreen from '../screens/LockScreen';
+import Toast from 'react-native-toast-message';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -93,8 +93,8 @@ export default function Main() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <Snackbar
-        visible={isSnackVisible}
+      {/* <Snackbar
+        visible={true}
         style={{ backgroundColor: theme.colors.background3 }}
         theme={{
           colors: { surface: theme.colors.text },
@@ -107,15 +107,23 @@ export default function Main() {
                 label: snackLabel,
                 onPress: () => {},
               }
-            : null
+            : {
+              label: 'snackLabel',
+              onPress: () => {},
+            }
         }
       >
         {snackMessage}
-      </Snackbar>
+      </Snackbar> */}
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
       <NavigationContainer theme={theme.dark ? DarkTheme : DefaultTheme}>
         <MainNavigator />
       </NavigationContainer>
+      <Toast 
+        position='bottom'
+        autoHide
+        bottomOffset={20}
+      />
     </View>
   );
 }

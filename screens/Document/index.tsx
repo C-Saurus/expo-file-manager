@@ -44,9 +44,9 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   const [openOption, setOpenOption] = useState(false);
   const [index, setIndex] = useState(0); // Tab index
   const [routes] = useState([
-    //{ key: 'doc', title: 'DOC' },
-    { key: 'txt', title: 'TXT' },
-    // { key: 'sheet', title: 'CSV/Excel' },
+    { key: 'doc', title: 'Doc' },
+    //{ key: 'txt', title: 'TXT' },
+    { key: 'sheet', title: 'CSV/Excel' },
   ]);
   const { colors } = useAppSelector((state) => state.theme.theme);
   const {
@@ -100,13 +100,13 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   const renderScene = useCallback(
     ({ route }) => {
       switch (route.key) {
-        // case 'doc':
-        //   return <TabDocFiles data={doc} selectAll={selectAll} />;
-        case 'txt':
-          return <TabDocFiles data={txt} selectAll={selectAll} />;
-          // case 'sheet':
-          //   return <TabDocFiles data={txt} selectAll={selectAll} />;
-          // default:
+        case 'doc':
+          return <TabDocFiles data={doc} />;
+        //case 'txt':
+          //return <TabDocFiles data={txt} />;
+        case 'sheet':
+          return <TabDocFiles data={txt} />;
+        default:
           return null;
       }
     },
@@ -162,7 +162,7 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   }
 
   return (
-    <View>
+    <View style={{ flex: 1}}>
       {isMultiSelect && currentSelectFileType && (
         <View style={[styles.nav, { top: top - useHeaderHeight() + 10 }]}>
           <View style={styles.navFirst}>

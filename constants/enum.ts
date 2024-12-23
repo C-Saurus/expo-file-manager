@@ -6,5 +6,5 @@ export enum ENFILETYPE {
   APP,
   ZIP,
   DOCUMENT,
-  DOWNLOAD,
+  TXT,
 }

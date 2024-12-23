@@ -31,7 +31,7 @@ type Props = {
   item: fileItem;
   currentDir: string;
   multiSelect: boolean;
-  toggleSelect: (arg0: fileItem) => void;
+  toggleSelect: (arg0: fileItem, arg1?: boolean) => void;
   setTransferDialog: (arg0: boolean) => void;
   setMoveOrCopy: (arg0: string) => void;
   deleteSelectedFiles: (arg0?: fileItem) => void;
@@ -52,7 +52,6 @@ export default function FileItem({
   setRenameDialogVisible,
   setNewFileName,
 }: Props) {
-  console.log("item", item.name)
   console.log("current", currentDir)
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
@@ -61,7 +60,7 @@ export default function FileItem({
   const itemMime = mime.lookup(item.uri) || ' ';
   const itemType: string = item.isDirectory ? 'dir' : itemMime.split('/')[0];
   const itemFormat: string = item.isDirectory ? 'dir' : itemMime.split('/')[1];
-  console.log("itemMime", itemMime)
+
   const ThumbnailImage = ({ uri }) => {
     return (
       <Image
@@ -112,7 +111,7 @@ export default function FileItem({
       if (item.isDirectory) {
         navigation.push('Browser', {
           folderName: item.name,
-          prevDir: docDir,
+          prevDir: `${item.name}/${item.name}`,
         });
       } else if (itemType === 'image') {
         navigation.push('ImageGalleryView', {
@@ -187,11 +186,9 @@ export default function FileItem({
             });
           } else if (buttonIndex === 2) {
             setMoveOrCopy('Copy');
-            if (!multiSelect) toggleSelect(item);
             setTransferDialog(true);
           } else if (buttonIndex === 1) {
             setMoveOrCopy('Move');
-            if (!multiSelect) toggleSelect(item);
             setTransferDialog(true);
           } else if (buttonIndex === 0) {
             setRenamingFile(item);
@@ -211,7 +208,7 @@ export default function FileItem({
           onPress={onPressHandler}
           onLongPress={() => {
             if (!multiSelect) {
-              toggleSelect(item);
+              toggleSelect(item, true);
             }
           }}
         >
@@ -240,16 +237,22 @@ export default function FileItem({
             backgroundColor: colors.background,
           }}
         >
-          <TouchableOpacity onPress={() => setItemActionsOpen(true)}>
+          <TouchableOpacity
+            onPress={() =>
+              !multiSelect ? setItemActionsOpen(true) : toggleSelect(item)
+            }
+          >
             <View style={styles.fileMenu}>
-              {!item.selected ? (
+              {!multiSelect ? (
                 <Feather
                   name="more-horizontal"
                   size={24}
                   color={colors.primary}
                 />
-              ) : (
+              ) : item.selected ? (
                 <Feather name="check-square" size={24} color={colors.primary} />
+              ) : (
+                <Feather name="square" size={24} color={colors.primary} />
               )}
             </View>
           </TouchableOpacity>
