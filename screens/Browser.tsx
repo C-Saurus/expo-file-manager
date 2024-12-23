@@ -18,19 +18,13 @@ import {
   Dialog as GalleryDialog,
   ProgressDialog,
 } from 'react-native-simple-dialogs';
-import {
-  AntDesign,
-  Feather,
-  Ionicons,
-  MaterialIcons,
-} from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import FileItem from '../components/Browser/Files/FileItem';
 import Pickimages from '../components/Browser/PickImages';
 import ActionSheet from '../components/ActionSheet';
 
-import useSelectionChange from '../hooks/useSelectionChange';
 import allProgress from '../utils/promiseProgress';
 
 import { NewFolderDialog } from '../components/Browser/NewFolderDialog';
@@ -52,17 +46,8 @@ import { ExtendedAsset, fileItem } from '../types';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { setImages } from '../features/files/imagesSlice';
 import { setSnack, snackActionPayload } from '../features/files/snackbarSlice';
-import {
-  getCustomeFileByFolder,
-  HEIGHT,
-  imageFormats,
-  LOCAL_FOLDER,
-  reExt,
-  SIZE,
-} from '../utils/Constants';
+import { HEIGHT, imageFormats, reExt, SIZE } from '../utils/Constants';
 import CustomHeader from '../components/Header/CommondHeader';
-import { ReadDirItem } from 'react-native-fs';
-import useNewSelectionChange from '../hooks/newUseSelectedChange';
 import { getCategoryByExtension } from '../utils/getFileByCategory';
 import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -542,7 +527,7 @@ const Browser = ({ route }: IBrowserProps) => {
       default:
         break;
     }
-    setOpenOption(false)
+    setOpenOption(false);
   };
 
   const onAddFilePress = () => {

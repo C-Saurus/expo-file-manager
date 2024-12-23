@@ -23,119 +23,31 @@ export const documentSlice = createSlice({
     error: null,
   },
   reducers: {
-    setMultiSelect: (state, { payload }) => {
-      const ext = payload.split('.').pop();
-      const category = getCategoryByExtension(ext);
-      console.log("currentSelectFileType", state.currentSelectFileType);
-      console.log("isMultiSelect", new Date());
-      if (!state.currentSelectFileType) {
-        state.currentSelectFileType = category
-      }
-      if (state.isMultiSelect) {
-        const fileIndex = state.selectedFile.findIndex((item) => item.path === payload);
-        if (fileIndex !== -1) {
-          // Xóa file nếu đã tồn tại
-          state.selectedFile.splice(fileIndex, 1);
-        } else {
-          // Thêm file nếu chưa tồn tại
-          state.selectedFile = [...state.selectedFile, payload];
-        }
-      } else {
-        console.log("COME");
-        state.isMultiSelect = true
-        state.selectedFile = [payload];
-        console.log("currentSelectFileType", state.currentSelectFileType);
-        console.log("isMultiSelect", state.isMultiSelect);
-      }
-
-    },
-    setSelectAll: (state) => {
-      if (state.isMultiSelect) {
-        state.selectedFile = state[state.currentSelectFileType]
-      }
-    },
-    cancelMultiSelect: (state) => {
-      if (state.isMultiSelect) {
-        state.selectAll = false
-        state.selectedFile = []
-        state.currentSelectFileType = undefined
-      }
-      state.isMultiSelect = false
-    },
-    sortDocumentByOption: (state, { payload }) => {
-      switch (payload) {
+    sortByOption: (state, { payload }) => {
+      console.log("payload", payload)
+      const { value, type } = payload
+      switch (value) {
         case 1:
-          console.log("sortDocumentByOption start", new Date());
-          state.doc = [...state.doc].sort((a, b) =>
-            a.name.localeCompare(b.name)
-          );
-          console.log("sortDocumentByOption end", new Date());
-          break;
-        case 2:
-          state.doc = state.doc.sort((a, b) => a.size - b.size);
-          break;
-        default:
-          break;
-      }
-    },
-    sortTxtByOption: (state, { payload }) => {
-      switch (payload) {
-        case 1:
-          state.txt = state.txt.sort((a, b) =>
+          console.log("COME")
+          state[type] = [...state[type]].sort((a, b) =>
             a.name.localeCompare(b.name)
           );
           break;
         case 2:
-          state.txt = state.txt.sort((a, b) => a.size - b.size);
+          state[type] = [...state[type]].sort((a, b) =>
+            b.name.localeCompare(a.name)
+          );
+          break;
+        case 3:
+          state[type] = state[type].sort((a, b) => a.size - b.size);
+          break;
+        case 4:
+          state[type] = state[type].sort((a, b) => b.size - a.size);
           break;
         default:
           break;
       }
-    },
-    sortCsvExcelByOption: (state, { payload }) => {
-      switch (payload) {
-        case 1:
-          state.csvExcel = state.csvExcel.sort((a, b) =>
-            a.name.localeCompare(b.name)
-          );
-          break;
-        case 2:
-          state.csvExcel = state.csvExcel.sort(
-            (a, b) => a.size - b.size
-          );
-          break;
-        default:
-          break;
-      }
-    },
-    sortPdfByOption: (state, { payload }) => {
-      switch (payload) {
-        case 1:
-          state.pdf = state.pdf.sort((a, b) =>
-            a.name.localeCompare(b.name)
-          );
-          break;
-        case 2:
-          state.pdf = state.pdf.sort((a, b) => a.size - b.size);
-          break;
-        default:
-          break;
-      }
-    },
-    sortApkByOption: (state, { payload }) => {
-      switch (payload) {
-        case 1:
-          state.apk = state.apk.sort((a, b) =>
-            a.name.localeCompare(b.name)
-          );
-          break;
-        case 2:
-          state.apk = state.apk.sort((a, b) => a.size - b.size);
-          break;
-        default:
-          break;
-      }
-    },
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -162,14 +74,7 @@ export const documentSlice = createSlice({
   },
 });
 export const {
-  setMultiSelect,
-  setSelectAll,
-  cancelMultiSelect,
-  sortDocumentByOption,
-  sortTxtByOption,
-  sortCsvExcelByOption,
-  sortPdfByOption,
-  sortApkByOption,
+  sortByOption,
 } = documentSlice.actions;
 export const selectDocument = (state: RootState) => state.documentFile;
 

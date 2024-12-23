@@ -57,12 +57,48 @@ export const HomeStackNavigator1: React.FC = () => {
         name="LargeFilesScanner"
         component={LargeFilesScanner}
       />
-      <HomeStack.Screen name="TrashScreen" component={TrashScreen} />
-      <HomeStack.Screen name="DocScanner" component={DocScanner} />
-      <HomeStack.Screen name="PDFScreen" component={PDFScreen} />
-      <HomeStack.Screen name="ApkScreen" component={ApkScreen} />
-      <HomeStack.Screen name="ZipScreen" component={ZipScreen} />
-      <HomeStack.Screen name="TxtScreen" component={TxtScreen} />
+      <HomeStack.Screen 
+        name="TrashScreen" 
+        component={TrashScreen} />
+      <HomeStack.Screen 
+        name="DocScanner"
+        options={({ route }) => ({
+          headerShown: false,
+          presentation: 'transparentModal',
+        })}
+        component={DocScanner} />
+      <HomeStack.Screen
+        name="PDFScreen"
+        options={({ route }) => ({
+          headerShown: false,
+          presentation: 'transparentModal',
+        })}
+        component={PDFScreen}
+      />
+      <HomeStack.Screen
+        name="ApkScreen"
+        options={({ route }) => ({
+          headerShown: false,
+          presentation: 'transparentModal',
+        })}
+        component={ApkScreen}
+      />
+      <HomeStack.Screen
+        name="ZipScreen"
+        options={({ route }) => ({
+          headerShown: false,
+          presentation: 'transparentModal',
+        })}
+        component={ZipScreen}
+      />
+      <HomeStack.Screen
+        name="TxtScreen"
+        options={({ route }) => ({
+          headerShown: false,
+          presentation: 'transparentModal',
+        })}
+        component={TxtScreen}
+      />
       <HomeStack.Screen
         name="ImageScreen"
         component={ImageScreen}
@@ -103,7 +139,14 @@ export const HomeStackNavigator1: React.FC = () => {
         })}
         component={ImageGalleryView}
       />
-      <HomeStack.Screen name="DocumentScreen" component={DocumentScreen} />
+      <HomeStack.Screen
+        name="DocumentScreen"
+        options={({ route }) => ({
+          headerShown: false,
+          presentation: 'transparentModal',
+        })}
+        component={DocumentScreen}
+      />
       <HomeStack.Screen
         name="MiscFileView"
         options={({ route }) => ({

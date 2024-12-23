@@ -26,24 +26,20 @@ import {
 import { fetchFiles } from '../../stores/document/action';
 import { ActivityIndicator } from 'react-native-paper';
 import { TabDocFiles } from './list';
-import {
-  cancelMultiSelect,
-  setSelectAll,
-  sortCsvExcelByOption,
-  sortDocumentByOption,
-  sortTxtByOption,
-} from '../../stores/document/reducer';
+import { sortByOption } from '../../stores/document/reducer';
 import { styles } from './style';
 import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Header from '../../components/Header';
+import { SIZE } from '../../utils/Constants';
 
 export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
   const [openOption, setOpenOption] = useState(false);
-  const [index, setIndex] = useState(0); // Tab index
+  const [index, setIndex] = useState(0);
+  const { top } = useSafeAreaInsets();
   const [routes] = useState([
     { key: 'doc', title: 'Doc' },
     //{ key: 'txt', title: 'TXT' },
@@ -108,7 +104,10 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
     []
   );
 
-  const handleSort = (value: number) => {};
+  const handleSort = (value: number) => {
+    dispatch(sortByOption({ value: value, type: index ? 'csvExcel' : 'doc' }));
+    setOpenOption(false);
+  };
 
   const onBackPress = () => {
     if (navigation.canGoBack()) {
@@ -134,11 +133,18 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View
+      style={{
+        paddingTop: top,
+        flex: 1,
+        width: SIZE,
+        backgroundColor: colors.background,
+      }}
+    >
       <Header
         colors={colors}
         handleChooseOption={handleChooseOption}
-        headerTitle={index ? 'Csv-Excel' : 'Doc'}
+        headerTitle={'Document'}
         onBackPress={onBackPress}
       />
       <TabView

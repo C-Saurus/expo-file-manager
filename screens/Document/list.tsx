@@ -1,20 +1,10 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Platform,
-  Pressable,
-  StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 
@@ -26,20 +16,17 @@ import { ReadDirItem } from 'react-native-fs';
 import FileItemCommon from '../../components/Browser/Files/FileItemCommon';
 import Dialog from 'react-native-dialog';
 import { styles } from './style';
-import { FileTransferDialog } from '../../components/Browser/FileTransferDialog';
 import { FsFileTransferDialog } from '../../components/Browser/FsFileTransferDialog';
 import { MultiSelect } from '../../components/Modals/MultiSelectModal';
-import CustomHeader from '../../components/Header/CommondHeader';
 import { useNavigation } from '@react-navigation/native';
-import allProgress from '../../utils/promiseProgress';
 import Header from '../../components/Header';
-import MediaHeader from '../../components/Header/MediaHeader';
 import {
   copyFileToCustomeFolder,
   getCustomeFileByFolder,
   moveFileToCustomeFolder,
 } from '../../utils/Constants';
 import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type TabDocFilesProps = {
   data: ReadDirItem[];
@@ -50,6 +37,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
   ({ data, fileType }) => {
     const navigation = useNavigation();
     const dispatch = useAppDispatch();
+    const { top } = useSafeAreaInsets();
     const { colors } = useAppSelector((state) => state.theme.theme);
     const [renameDialogVisible, setRenameDialogVisible] = useState(false);
     const [newFileName, setNewFileName] = useState('');
@@ -62,6 +50,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     const [selectAll, setSelectAll] = useState(false);
     const [multiSelect, setMultiSelect] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [openOption, setOpenOption] = useState(false);
     const renameInputRef = useRef<TextInput>(null);
     const [files, setFiles] = useState<
       (ReadDirItem & { selected?: boolean })[]
@@ -73,6 +62,10 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         };
       })
     );
+
+    useEffect(() => {
+      console.log('TabDocFiles');
+    }, [data]);
 
     const selectedFiles = () => {
       return files.filter((file) => file.selected);
@@ -110,6 +103,30 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         // Nếu không thể quay lại (root screen), xử lý thêm ở đây nếu cần
         console.log('Cannot go back, you are on the root screen.');
       }
+    };
+
+    const handleChooseOption = () => {
+      setOpenOption((prev) => !prev);
+    };
+
+    const handleSort = (value: number) => {
+      switch (value) {
+        case 1:
+          setFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
+          break;
+        case 2:
+          setFiles(files.sort((a, b) => b.name.localeCompare(a.name)));
+          break;
+        case 3:
+          setFiles(files.sort((a, b) => a.size - b.size));
+          break;
+        case 4:
+          setFiles(files.sort((a, b) => b.size - a.size));
+          break;
+        default:
+          break;
+      }
+      setOpenOption(false);
     };
 
     const cancelMultiSelect = () => {
@@ -326,21 +343,21 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     }
 
     return (
-      <View style={{ backgroundColor: 'white', flex: 1 }}>
-        {/* {['image', 'audio', 'video'].includes(fileType) ? (
-          <MediaHeader
-          colors={colors}
-          handleChooseOption={handleChooseOption}
-          headerTitle={""}
-          onBackPress={onBackPress}
-           />
-        ) : (
+      <View
+        style={{
+          backgroundColor: 'white',
+          flex: 1,
+          paddingTop: ['pdf', 'txt', 'zip', 'apk'].includes(fileType) ? top : 0,
+        }}
+      >
+        {['pdf', 'txt', 'zip', 'apk'].includes(fileType) && (
           <Header
-          colors={colors}
-          handleChooseOption={handleChooseOption}
-          headerTitle={""}
-          onBackPress={onBackPress} />
-        )} */}
+            colors={colors}
+            handleChooseOption={handleChooseOption}
+            headerTitle={fileType}
+            onBackPress={onBackPress}
+          />
+        )}
         <MultiSelect
           multiSelect={multiSelect}
           displaySelectedSize={`${selectedFiles().length} / ${files?.length}`}
@@ -401,11 +418,11 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
           <Dialog.Button label="Rename" onPress={() => onRename()} />
         </Dialog.Container>
 
-        {/* <DisplayOptionModal
+        <DisplayOptionModal
           openOption={openOption}
           setOpenOption={setOpenOption}
           handleSort={handleSort}
-        /> */}
+        />
       </View>
     );
   }

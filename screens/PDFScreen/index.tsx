@@ -1,52 +1,20 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
   View,
 } from 'react-native';
-import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { Entypo, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { fetchFiles } from '../../stores/document/action';
 import { ActivityIndicator } from 'react-native-paper';
 import { TabDocFiles } from '../Document/list';
 import { styles } from '../Document/style';
-import { sortPdfByOption } from '../../stores/document/reducer';
-import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
 
-const PDFScreen = ({ navigation }) => {
+const PDFScreen = () => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
-  const [openOption, setOpenOption] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
   const { colors } = useAppSelector((state) => state.theme.theme);
   const { pdf, loading, error } = useAppSelector(
     (state) => state.documentFile
   );
-  const layout = useWindowDimensions();
-
-  const handleChooseOption = () => {
-    setOpenOption(!openOption);
-  };
-
-  useEffect(() => {
-    // Cập nhật headerRight khi màn hình này được render
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity onPress={handleChooseOption}>
-          <Entypo name="dots-three-vertical" size={24} color="black" />
-        </TouchableOpacity>
-      ),
-      headerRightContainerStyle: {
-        marginRight: 15,
-      },
-    });
-  }, [navigation, openOption]);
-
   useEffect(() => {
     if (hasFetchFile.current) return;
     if (!pdf.length && !hasFetchFile.current) {
@@ -54,11 +22,6 @@ const PDFScreen = ({ navigation }) => {
       hasFetchFile.current = true;
     }
   }, [dispatch, pdf]);
-
-  const handleSort = (value) => {
-    dispatch(sortPdfByOption(value))
-    setOpenOption(false);
-  };
 
   if (loading) {
     return (
@@ -74,16 +37,8 @@ const PDFScreen = ({ navigation }) => {
     );
   }
 
-  console.log("RE_RENDER_PDF");
   return (
-    <>
-      <TabDocFiles data={pdf} selectAll={selectAll} />
-      <DisplayOptionModal
-        openOption={openOption}
-        setOpenOption={setOpenOption}
-        handleSort={handleSort}
-      />
-    </>
+    <TabDocFiles data={pdf} fileType={'pdf'} />
   );
 };
 

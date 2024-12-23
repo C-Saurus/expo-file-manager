@@ -57,10 +57,12 @@ import MediaHeader from '../../components/Header/MediaHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { setImages } from '../../features/files/imagesSlice';
 import { useDispatch } from 'react-redux';
+import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
+import { sortByOption } from '../../stores/document/reducer';
 
 export const ImageScreen = ({ route, navigation }) => {
   const { fileType } = route.params;
-    const { top } = useSafeAreaInsets();
+  const { top } = useSafeAreaInsets();
   const dispatch = useAppDispatch()
   const { colors } = useAppSelector((state) => state.theme.theme);
   const { image, video, audio } = useAppSelector((state) => state.documentFile);
@@ -83,6 +85,10 @@ export const ImageScreen = ({ route, navigation }) => {
     () => fileMap[fileType] || fileMap['default'],
     [video, image, audio, fileType]
   );
+
+  useEffect(() => {
+    console.log("data", data.length)
+  }, [data])
 
   useEffect(() => {
     dispatch(setImages(image.map((item) => {
@@ -147,12 +153,18 @@ export const ImageScreen = ({ route, navigation }) => {
     requestMediaPermission();
   }, []);
 
-  const layout = useWindowDimensions();
-  useEffect(() => {
-    console.log('ImageScreen');
-  }, []);
+  const handleSort = (value: number) => {
+    dispatch(
+      sortByOption({
+        value: value,
+        type: fileType === 'photo' ? 'image' : fileType,
+      })
+    );
+    setOpenOption(false)
+  };
 
-  console.log('ImageScreen-Rerender');
+  const layout = useWindowDimensions();
+
   if (!isMediaGranted && isMediaGranted !== null)
     return (
       <View
@@ -175,7 +187,7 @@ export const ImageScreen = ({ route, navigation }) => {
           return !viewMode ? (
             <PhotosByDate fileType={fileType} />
           ) : (
-            <TabDocFiles data={data} />
+            <TabDocFiles data={data} fileType={fileType}/>
           );
         case 'second':
           return <PhotosByAlbum fileType={fileType} />;
@@ -183,12 +195,8 @@ export const ImageScreen = ({ route, navigation }) => {
           return null;
       }
     },
-    [viewMode]
+    [viewMode, data, fileType]
   );
-  // const renderScene = SceneMap({
-  //   first: PhotosByDate,
-  //   second: PhotosByAlbum,
-  // });
 
   const renderTabBar = (props) => (
     <TabBar
@@ -200,8 +208,14 @@ export const ImageScreen = ({ route, navigation }) => {
   );
 
   return (
-    <View style={{ paddingTop: top,  flex: 1,
-      width: SIZE, backgroundColor: colors.background}}>
+    <View
+      style={{
+        paddingTop: top,
+        flex: 1,
+        width: SIZE,
+        backgroundColor: colors.background,
+      }}
+    >
       <MediaHeader
         onBackPress={onBackPress}
         index={index}
@@ -218,6 +232,11 @@ export const ImageScreen = ({ route, navigation }) => {
         renderScene={renderScene}
         onIndexChange={setIndex}
         initialLayout={{ width: layout.width }}
+      />
+      <DisplayOptionModal
+        openOption={openOption}
+        setOpenOption={setOpenOption}
+        handleSort={handleSort}
       />
     </View>
   );
