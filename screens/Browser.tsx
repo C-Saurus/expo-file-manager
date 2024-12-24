@@ -530,6 +530,10 @@ const Browser = ({ route }: IBrowserProps) => {
     setOpenOption(false);
   };
 
+  const handleSearch = () => {
+
+  }
+
   const onAddFilePress = () => {
     setNewFileActionSheet(true);
   };
@@ -695,9 +699,9 @@ const Browser = ({ route }: IBrowserProps) => {
       />
       <CustomHeader
         onBackPress={onBackPress}
-        onAddFilePress={onAddFilePress}
         onAddFolderPress={onAddFolderPress}
         handleChooseOption={handleChooseOption}
+        handleSearch={handleSearch}
         colors={colors}
         headerTitle={route.params.folderName}
       />

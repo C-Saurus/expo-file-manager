@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Text,
   View,
-  StyleSheet,
   Image,
   TouchableOpacity,
   Alert,
@@ -24,13 +23,16 @@ import { styles } from '.';
 type Props = {
   item: ReadDirItem & { selected?: boolean };
   multiSelect: boolean;
-  toggleSelect: (arg0: ReadDirItem & { selected?: boolean }, arg1?: boolean) => void;
+  toggleSelect: (
+    arg0: ReadDirItem & { selected?: boolean },
+    arg1?: boolean
+  ) => void;
   setTransferDialog: (arg0: boolean) => void;
   setMoveOrCopy: (arg0: string) => void;
   setRenamingFile: (arg0: ReadDirItem & { selected?: boolean }) => void;
   setRenameDialogVisible: (arg0: boolean) => void;
   setNewFileName: (arg0: string) => void;
-  deleteSelectedFiles :(arg0?: ReadDirItem & { selected?: boolean }) => void;
+  deleteSelectedFiles: (arg0?: ReadDirItem & { selected?: boolean }) => void;
 };
 
 export default function FileItemCommon({
@@ -42,7 +44,7 @@ export default function FileItemCommon({
   setRenamingFile,
   setRenameDialogVisible,
   setNewFileName,
-  deleteSelectedFiles
+  deleteSelectedFiles,
 }: Props) {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
@@ -96,19 +98,19 @@ export default function FileItemCommon({
         navigation.push('ImageGalleryView', {
           folderName: item.name,
           prevDir: ``,
-          uriValue: `file://${item.path}`
+          uriValue: `file://${item.path}`,
         });
       } else if (itemType === 'video') {
         navigation.push('VideoPlayer', {
           folderName: item.name,
           prevDir: ``,
-          uriValue: `file://${item.path}`
+          uriValue: `file://${item.path}`,
         });
       } else if (itemType === 'audio') {
         navigation.push('AudioPlayer', {
           folderName: item.name,
           prevDir: ``,
-          uriValue: `file://${item.path}`
+          uriValue: `file://${item.path}`,
         });
       } else {
         navigation.push('MiscFileView', {
@@ -130,20 +132,43 @@ export default function FileItemCommon({
         }
         numberOfLinesTitle={multiSelect ? undefined : 1}
         visible={itemActionsOpen}
-        actionItems={['Rename', 'Copy', 'Move', 'Share', 'Delete', 'Assume', 'Cancel']}
-        itemIcons={[
-          'edit',
-          'file-copy',
-          'drive-file-move',
-          'share',
-          'delete',
-          'flash-on',
-          'close',
-        ]}
+        actionItems={
+          ['image', 'video', 'audio'].includes(itemType)
+            ? ['Rename', 'Copy', 'Move', 'Share', 'Delete', 'Cancel']
+            : [
+                'Rename',
+                'Copy',
+                'Move',
+                'Share',
+                'Delete',
+                'Summarize',
+                'Cancel',
+              ]
+        }
+        itemIcons={
+          ['image', 'video', 'audio'].includes(itemType)
+            ? [
+                'edit',
+                'file-copy',
+                'drive-file-move',
+                'share',
+                'delete',
+                'close',
+              ]
+            : [
+                'edit',
+                'file-copy',
+                'drive-file-move',
+                'share',
+                'delete',
+                'flash-on',
+                'close',
+              ]
+        }
         onClose={setItemActionsOpen}
         onItemPressed={(buttonIndex) => {
           if (buttonIndex === 5) {
-            navigation.push('AIFileAssume', {
+            navigation.push('AIFileSummarize', {
               filePath: item.path,
             });
           }
@@ -182,14 +207,14 @@ export default function FileItemCommon({
               );
           } else if (buttonIndex === 2) {
             if (!multiSelect) {
-              toggleSelect(item)
+              toggleSelect(item);
             }
             setMoveOrCopy('Move');
             setTransferDialog(true);
-            console.log("setTransferDialog")
+            console.log('setTransferDialog');
           } else if (buttonIndex === 1) {
             if (!multiSelect) {
-              toggleSelect(item)
+              toggleSelect(item);
             }
             setMoveOrCopy('Copy');
             setTransferDialog(true);
@@ -238,7 +263,11 @@ export default function FileItemCommon({
             backgroundColor: colors.background,
           }}
         >
-          <TouchableOpacity onPress={() => !multiSelect ? setItemActionsOpen(true) : toggleSelect(item)}>
+          <TouchableOpacity
+            onPress={() =>
+              !multiSelect ? setItemActionsOpen(true) : toggleSelect(item)
+            }
+          >
             <View style={styles.fileMenu}>
               {!multiSelect ? (
                 <Feather

@@ -16,7 +16,7 @@ import ApkScreen from '../screens/Apk';
 import ZipScreen from '../screens/Zip';
 import TxtScreen from '../screens/Txt';
 import ImageGalleryView from '../screens/ImageGalleryView';
-import AIFileAssume from '../screens/AIFileAssume';
+import AIFileSummarize from '../screens/AIFileAssume';
 
 type HomeStackParamList = {
   HomeMain: any;
@@ -33,7 +33,7 @@ type HomeStackParamList = {
   ImageGalleryView: any;
   ImageScreen: { fileType: string };
   LargeFilesScanner: { mode: number };
-  AIFileAssume: { filePath: string };
+  AIFileSummarize: { filePath: string };
 };
 
 const HomeStack = createStackNavigator<HomeStackParamList>();
@@ -163,10 +163,10 @@ export const HomeStackNavigator1: React.FC = () => {
         component={MiscFileView}
       />
       <HomeStack.Screen
-        name="AIFileAssume"
-        component={AIFileAssume}
+        name="AIFileSummarize"
+        component={AIFileSummarize}
         options={({ route }) => ({
-          title: 'File Assume',
+          title: 'File Summarize',
           presentation: 'transparentModal',
         })}
       />

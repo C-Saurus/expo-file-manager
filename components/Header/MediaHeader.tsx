@@ -1,6 +1,10 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { AntDesign, Entypo, Feather, FontAwesome, Ionicons } from '@expo/vector-icons';
+import {
+  Entypo,
+  FontAwesome,
+  Ionicons,
+} from '@expo/vector-icons';
 
 const MediaHeader = ({
   onBackPress,
@@ -9,15 +13,17 @@ const MediaHeader = ({
   index,
   handleChooseMode,
   handleChooseOption,
-  headerTitle
+  handleSearch,
+  headerTitle,
 }) => {
-
-    const capitalizeFirstLetter = (str) => {
-        if (!str) return ''; // Kiểm tra chuỗi rỗng hoặc undefined
-        return str.charAt(0).toUpperCase() + str.slice(1);
-      };
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return ''; // Kiểm tra chuỗi rỗng hoặc undefined
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
   return (
-    <View style={[styles.headerContainer, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.headerContainer, { backgroundColor: colors.background }]}
+    >
       {/* Nút Back */}
       <View style={styles.leftSection}>
         <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
@@ -27,31 +33,38 @@ const MediaHeader = ({
 
       {/* Tiêu đề hoặc khoảng trống */}
       <View style={styles.centerSection}>
-        <Text style={[styles.title, { color: colors.primary }]}>{capitalizeFirstLetter(headerTitle)}</Text>
+        <Text style={[styles.title, { color: colors.primary }]}>
+          {capitalizeFirstLetter(headerTitle)}
+        </Text>
       </View>
 
       {/* Biểu tượng ở bên phải */}
       <View
-      style={[styles.headerIconContainer, { display: index ? 'none' : 'flex' }]}
-    >
-      {viewMode === 0 ? (
-        <TouchableOpacity onPress={handleChooseMode}>
-          <FontAwesome name="th-list" size={24} color="black" />
+        style={[
+          styles.headerIconContainer,
+          { display: index ? 'none' : 'flex' },
+        ]}
+      >
+        <TouchableOpacity onPress={handleSearch}>
+          <Ionicons name="search" size={24} color="black" />
         </TouchableOpacity>
-      ) : (
-        <TouchableOpacity onPress={handleChooseMode}>
-          <FontAwesome name="th" size={24} color="black" />
-        </TouchableOpacity>
-      )}
-      {viewMode === 1 && (
+        {viewMode === 0 ? (
+          <TouchableOpacity onPress={handleChooseMode}>
+            <FontAwesome name="th-list" size={24} color="black" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={handleChooseMode}>
+            <FontAwesome name="th" size={24} color="black" />
+          </TouchableOpacity>
+        )}
+        
         <TouchableOpacity
           style={{ marginLeft: 12 }}
           onPress={handleChooseOption}
         >
           <Entypo name="dots-three-vertical" size={24} color="black" />
         </TouchableOpacity>
-      )}
-    </View>
+      </View>
     </View>
   );
 };

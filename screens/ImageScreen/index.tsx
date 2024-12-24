@@ -106,6 +106,10 @@ export const ImageScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleSearch = () => {
+
+  }
+
   const onBackPress = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -224,6 +228,7 @@ export const ImageScreen = ({ route, navigation }) => {
         colors={colors}
         viewMode={viewMode}
         headerTitle={fileType}
+        handleSearch={handleSearch}
       />
       <TabView
         lazy

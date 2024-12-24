@@ -6,15 +6,17 @@ const Header = ({
   onBackPress,
   colors,
   handleChooseOption,
-  headerTitle
+  headerTitle,
+  handleSearch,
 }) => {
-
-    const capitalizeFirstLetter = (str) => {
-        if (!str) return ''; // Kiểm tra chuỗi rỗng hoặc undefined
-        return str.charAt(0).toUpperCase() + str.slice(1);
-      };
+  const capitalizeFirstLetter = (str) => {
+    if (!str) return ''; // Kiểm tra chuỗi rỗng hoặc undefined
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
   return (
-    <View style={[styles.headerContainer, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.headerContainer, { backgroundColor: colors.background }]}
+    >
       {/* Nút Back */}
       <View style={styles.leftSection}>
         <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
@@ -24,17 +26,20 @@ const Header = ({
 
       {/* Tiêu đề hoặc khoảng trống */}
       <View style={styles.centerSection}>
-        <Text style={[styles.title, { color: colors.primary }]}>{capitalizeFirstLetter(headerTitle)}</Text>
+        <Text style={[styles.title, { color: colors.primary }]}>
+          {capitalizeFirstLetter(headerTitle)}
+        </Text>
       </View>
 
       {/* Biểu tượng ở bên phải */}
-      <View
-      style={[styles.headerIconContainer]}
-    >
-      <TouchableOpacity onPress={handleChooseOption}>
-        <Entypo name="dots-three-vertical" size={24} color="black" />
-      </TouchableOpacity>
-    </View>
+      <View style={[styles.headerIconContainer]}>
+        <TouchableOpacity onPress={handleSearch}>
+          <Ionicons name="search" size={24} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleChooseOption}>
+          <Entypo name="dots-three-vertical" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

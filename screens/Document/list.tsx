@@ -274,6 +274,10 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
       []
     );
 
+    const handleSearch = () => {
+
+    }
+
     useEffect(() => {
       if (renameDialogVisible && Platform.OS === 'android') {
         setTimeout(() => {
@@ -356,6 +360,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
             handleChooseOption={handleChooseOption}
             headerTitle={fileType}
             onBackPress={onBackPress}
+            handleSearch={handleSearch}
           />
         )}
         <MultiSelect

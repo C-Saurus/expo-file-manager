@@ -104,6 +104,10 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
     []
   );
 
+  const handleSearch = () => {
+
+  }
+
   const handleSort = (value: number) => {
     dispatch(sortByOption({ value: value, type: index ? 'csvExcel' : 'doc' }));
     setOpenOption(false);
@@ -146,6 +150,7 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
         handleChooseOption={handleChooseOption}
         headerTitle={'Document'}
         onBackPress={onBackPress}
+        handleSearch={handleSearch}
       />
       <TabView
         lazy={true}

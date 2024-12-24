@@ -7,7 +7,7 @@ import { useAppSelector } from '../hooks/reduxHooks';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import Config from 'react-native-config';
 
-const AIFileAssume = ({ route }) => {
+const AIFileSummarize = ({ route }) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   // const [isOnline, setIsOnline] = useState(true);
   const { filePath } = route.params;
@@ -88,4 +88,4 @@ const AIFileAssume = ({ route }) => {
   );
 };
 
-export default AIFileAssume;
+export default AIFileSummarize;

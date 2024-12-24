@@ -8,6 +8,7 @@ import {
   Button,
   Alert,
   NativeModules,
+  TouchableOpacity,
 } from 'react-native';
 import RNFS from 'react-native-fs';
 import {
@@ -21,12 +22,27 @@ import {
   setSnack,
   snackActionPayload,
 } from '../../features/files/snackbarSlice';
-import { useAppDispatch } from '../../hooks/reduxHooks';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { bytesToGB } from '../../utils/Filesize';
+import { getCategoryByExtension } from '../../utils/getFileByCategory';
+import {
+  Feather,
+  FontAwesome5,
+  MaterialCommunityIcons,
+} from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+
+const getFileExtension = (fileName: string): string => {
+  const ext = fileName.split('.').pop();
+  return getCategoryByExtension(ext);
+};
 
 const TrashScreen = () => {
   const dispatch = useAppDispatch();
   const [files, setFiles] = useState([]);
+  const navigation = useNavigation<any>();
+
+  const { colors } = useAppSelector((state) => state.theme.theme);
 
   useEffect(() => {
     const loadTrashFiles = async () => {
@@ -40,7 +56,8 @@ const TrashScreen = () => {
             name: file.name,
             size: bytesToGB(file.size),
             timeLeft: calculateDaysLeft(file.mtime),
-            selected: false
+            selected: false,
+            type: getFileExtension(file.path),
           }))
         );
       } catch (error) {
@@ -62,15 +79,17 @@ const TrashScreen = () => {
   };
 
   const toggleSelectFile = (path) => {
-    setFiles((prev) => prev.map((item) => {
-      if (item.path === path) {
-        return {
-          ...item,
-          selected: !item.selected
+    setFiles((prev) =>
+      prev.map((item) => {
+        if (item.path === path) {
+          return {
+            ...item,
+            selected: !item.selected,
+          };
         }
-      }
-      return item
-    }))
+        return item;
+      })
+    );
   };
 
   const handleSetSnack = (data: snackActionPayload) => {
@@ -104,7 +123,9 @@ const TrashScreen = () => {
         onPress: async () => {
           try {
             const { FileDeletionNativeModule } = NativeModules;
-            const selectedFiles = files.filter((item) => item.selected === true)
+            const selectedFiles = files.filter(
+              (item) => item.selected === true
+            );
             await Promise.all(
               selectedFiles.map(async (file) => {
                 try {
@@ -125,17 +146,19 @@ const TrashScreen = () => {
               })
             );
 
-            const updatedLargeFiles = files.filter(
-              (file) =>
-                !selectedFiles.some(
-                  (selectedFile) => selectedFile.path === file.path
-                )
-            ).map((item) => {
-              return {
-                ...item,
-                selected: false
-              }
-            });
+            const updatedLargeFiles = files
+              .filter(
+                (file) =>
+                  !selectedFiles.some(
+                    (selectedFile) => selectedFile.path === file.path
+                  )
+              )
+              .map((item) => {
+                return {
+                  ...item,
+                  selected: false,
+                };
+              });
 
             setFiles(updatedLargeFiles);
 
@@ -146,6 +169,68 @@ const TrashScreen = () => {
         },
       },
     ]);
+  };
+
+  const ThumbnailImage = ({ uri }) => {
+    return <Image style={styles.image} source={{ uri: `file://${uri}` }} />;
+  };
+
+  const ItemThumbnail = (item) => {
+    switch (item.type) {
+      case 'image':
+      case 'video':
+        return <ThumbnailImage uri={item.path} />;
+      case 'audio':
+        return (
+          <FontAwesome5 name="file-audio" size={35} color={colors.primary} />
+        );
+      case 'font':
+        return <FontAwesome5 name="font" size={35} color={colors.primary} />;
+      case 'application':
+        return (
+          <MaterialCommunityIcons
+            name={'file-outline'}
+            size={35}
+            color={colors.primary}
+          />
+        );
+      case 'text':
+        return (
+          <MaterialCommunityIcons
+            name={'file-outline'}
+            size={35}
+            color={colors.primary}
+          />
+        );
+      default:
+        return <Feather name="file" size={35} color={colors.primary} />;
+    }
+  };
+
+  const onPressHandler = (item) => {
+    if (item.type === 'image') {
+      navigation.push('ImageGalleryView', {
+        folderName: item.name,
+        prevDir: ``,
+        uriValue: `file://${item.path}`,
+      });
+    } else if (item.type === 'video') {
+      navigation.push('VideoPlayer', {
+        folderName: item.name,
+        prevDir: ``,
+        uriValue: `file://${item.path}`,
+      });
+    } else if (item.type === 'audio') {
+      navigation.push('AudioPlayer', {
+        folderName: item.name,
+        prevDir: ``,
+        uriValue: `file://${item.path}`,
+      });
+    } else {
+      navigation.push('MiscFileView', {
+        folderName: item.path,
+      });
+    }
   };
 
   const renderEmptyComponent = () => (
@@ -160,15 +245,16 @@ const TrashScreen = () => {
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
-      <Image
-        source={require('~/../../assets/trash.jpg')}
-        style={styles.avatar}
-      />
-      <View style={styles.infoContainer}>
-        <Text style={styles.fileName}>{item.name}</Text>
-        <Text style={styles.timeLeft}>{item.timeLeft}</Text>
-      </View>
-      <Text style={styles.fileSize}>{item.size}</Text>
+      <TouchableOpacity onPress={() => onPressHandler(item)}>
+        <View style={styles.itemThumbnail}>
+          <ItemThumbnail item={item} />
+        </View>
+        <View style={styles.infoContainer}>
+          <Text style={styles.fileName}>{item.name}</Text>
+          <Text style={styles.timeLeft}>{item.timeLeft}</Text>
+        </View>
+        <Text style={styles.fileSize}>{item.size}</Text>
+      </TouchableOpacity>
       <Checkbox
         status={item.selected ? 'checked' : 'unchecked'}
         onPress={() => toggleSelectFile(item.path)}
@@ -255,8 +341,32 @@ const styles = StyleSheet.create({
   },
   btnContainer: {
     justifyContent: 'space-between',
-    flexDirection: 'row'
-  }
+    flexDirection: 'row',
+  },
+  image: {
+    margin: 1,
+    width: 40,
+    height: 50,
+    resizeMode: 'cover',
+    borderRadius: 5,
+  },
+  itemThumbnail: {
+    height: '100%',
+    marginLeft: 8,
+    width: '17%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    height: '100%',
+    width: '83%',
+    overflow: 'hidden',
+  },
 });
 
 export default TrashScreen;

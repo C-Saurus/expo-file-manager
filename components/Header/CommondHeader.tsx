@@ -4,14 +4,16 @@ import { AntDesign, Entypo, Feather, Ionicons } from '@expo/vector-icons';
 
 const CustomHeader = ({
   onBackPress,
-  onAddFilePress,
+  handleSearch,
   onAddFolderPress,
   handleChooseOption,
   colors,
-  headerTitle
+  headerTitle,
 }) => {
   return (
-    <View style={[styles.headerContainer, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.headerContainer, { backgroundColor: colors.background }]}
+    >
       {/* Nút Back */}
       <View style={styles.leftSection}>
         <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
@@ -21,17 +23,22 @@ const CustomHeader = ({
 
       {/* Tiêu đề hoặc khoảng trống */}
       <View style={styles.centerSection}>
-        <Text style={[styles.title, { color: colors.primary }]}>{headerTitle}</Text>
+        <Text style={[styles.title, { color: colors.primary }]}>
+          {headerTitle}
+        </Text>
       </View>
 
       {/* Biểu tượng ở bên phải */}
       <View style={styles.rightSection}>
+        <TouchableOpacity onPress={handleSearch}>
+          <Ionicons name="search" size={24} color="black" />
+        </TouchableOpacity>
         <TouchableOpacity onPress={onAddFolderPress} style={styles.iconButton}>
           <Feather name="folder-plus" size={30} color={colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleChooseOption}>
           <Entypo name="dots-three-vertical" size={24} color="black" />
-      </TouchableOpacity>
+        </TouchableOpacity>
       </View>
     </View>
   );
