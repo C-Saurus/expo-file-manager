@@ -32,7 +32,7 @@ type HomeStackParamList = {
   MiscFileView: any;
   ImageGalleryView: any;
   ImageScreen: { fileType: string };
-  LargeFilesScanner: { mode: string };
+  LargeFilesScanner: { mode: number };
   AIFileAssume: { filePath: string };
 };
 
@@ -55,6 +55,13 @@ export const HomeStackNavigator1: React.FC = () => {
       />
       <HomeStack.Screen
         name="LargeFilesScanner"
+        options={({ route }) => ({
+          title:
+            route.params.mode === 0
+              ? 'Tệp tin lớn'
+              : 'Tệp trùng lặp',
+          animationTypeForReplace: 'pop',
+        })}
         component={LargeFilesScanner}
       />
       <HomeStack.Screen 

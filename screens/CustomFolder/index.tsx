@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,10 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LOCAL_FOLDER } from '../../utils/Constants';
+import * as SecureStore from 'expo-secure-store';
 import { LOCAL_EXPO_FOLDER } from '../../utils/ExpoFileConstant';
+import useLock from '../../hooks/useLock';
+import LockScreen from '../LockScreen';
 
 const fileTypes = [
   {
@@ -65,6 +67,23 @@ const fileTypes = [
 ];
 
 const MenuScreen = ({ navigation }) => {
+  const { locked, setLocked } = useLock();
+
+  const getPassCodeStatus = async () => {
+    const hasPassCode = await SecureStore.getItemAsync('hasPassCode');
+    if (JSON.parse(hasPassCode)) {
+      setLocked(true);
+      return true;
+    } else {
+      setLocked(false);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    getPassCodeStatus();
+  }, []);
+
   const handlePress = (type: string) => {
     navigation.navigate('Browser', {
       folderName: type,
@@ -82,6 +101,10 @@ const MenuScreen = ({ navigation }) => {
       <Text style={styles.cardDescription}>{item.description}</Text>
     </TouchableOpacity>
   );
+
+  if (locked) {
+    return <LockScreen setLocked={setLocked} />;
+  }
 
   return (
     <View style={styles.container}>

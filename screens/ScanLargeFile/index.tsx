@@ -161,33 +161,6 @@ const LargeFilesScanner = ({ route, navigation }) => {
     }
   };
 
-  const requestExternalStoragePermission = async () => {
-    if (Platform.OS === 'android' && Platform.Version >= 30) {
-      try {
-        const granted = await PermissionsAndroid.request(
-          'android.permission.MANAGE_EXTERNAL_STORAGE' as Permission,
-          {
-            title: "Manage External Storage Permission",
-            message: "This app needs access to manage external storage to delete files.",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Cancel",
-            buttonPositive: "OK",
-          }
-        );
-        console.log("granted", granted);
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert('Permission Denied', 'You need to grant manage external storage permission to delete files.');
-          return false;
-        }
-        return true;
-      } catch (err) {
-        console.warn(err);
-        return false;
-      }
-    }
-    return true;
-  };
-
   const handleDeleteSelectedFiles = async (): Promise<void> => {
     Alert.alert(
       'Xóa tệp tin',
@@ -243,12 +216,6 @@ const LargeFilesScanner = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{mode === 0 ? "Tệp tin lớn hơn 50MB" : "Tệp tin trùng lặp"}</Text>
-        <TouchableOpacity>
-          <Ionicons name="search" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
       <FlatList
         data={sortedFiles()}
         keyExtractor={(item) => item.path}

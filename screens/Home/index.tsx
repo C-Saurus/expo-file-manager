@@ -1,6 +1,5 @@
 import {
   FlatList,
-  Image,
   LogBox,
   Text,
   TouchableOpacity,
@@ -9,10 +8,9 @@ import {
 import * as Progress from 'react-native-progress';
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import RNFS, { FSInfoResult, ReadDirItem } from 'react-native-fs';
+import RNFS, { FSInfoResult } from 'react-native-fs';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
-import { StorageData } from '../../constants/interface';
 import { ENFILETYPE } from '../../constants/enum';
 import { styles } from './style';
 import { bytesToGB } from '../../utils/Filesize';
@@ -121,7 +119,7 @@ export const Home = () => {
     },
     {
       id: 1,
-      title: 'Filter Duplicate',
+      title: 'File trùng lặp',
       icon: 'filter',
       iconLib: 'MaterialIcons',
       background: theme.dark ? '#172020' : '#ebf7f7',
