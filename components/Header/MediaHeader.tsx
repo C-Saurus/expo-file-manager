@@ -45,7 +45,7 @@ const MediaHeader = ({
           { display: index ? 'none' : 'flex' },
         ]}
       >
-        <TouchableOpacity onPress={handleSearch}>
+        <TouchableOpacity style={{ paddingRight: 16 }} onPress={handleSearch}>
           <Ionicons name="search" size={24} color="black" />
         </TouchableOpacity>
         {viewMode === 0 ? (

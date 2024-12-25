@@ -34,10 +34,10 @@ const CustomHeader = ({
           <Ionicons name="search" size={24} color="black" />
         </TouchableOpacity>
         <TouchableOpacity onPress={onAddFolderPress} style={styles.iconButton}>
-          <Feather name="folder-plus" size={30} color={colors.primary} />
+          <Feather name="folder-plus" size={26} color={colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleChooseOption}>
-          <Entypo name="dots-three-vertical" size={24} color="black" />
+          <Entypo name="dots-three-vertical" size={23} color="black" />
         </TouchableOpacity>
       </View>
     </View>
@@ -76,7 +76,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   iconButton: {
-    marginLeft: 15,
+    marginLeft: 12,
+    marginRight: 8
   },
 });
 

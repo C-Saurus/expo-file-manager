@@ -33,7 +33,7 @@ const Header = ({
 
       {/* Biểu tượng ở bên phải */}
       <View style={[styles.headerIconContainer]}>
-        <TouchableOpacity onPress={handleSearch}>
+        <TouchableOpacity style={{ paddingRight: 10 }} onPress={handleSearch}>
           <Ionicons name="search" size={24} color="black" />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleChooseOption}>
