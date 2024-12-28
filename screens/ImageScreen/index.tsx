@@ -208,6 +208,8 @@ export const ImageScreen = ({ route, navigation }) => {
       indicatorStyle={{ backgroundColor: 'blue' }}
       style={{ backgroundColor: 'white' }}
       activeColor="blue"
+      inactiveColor={colors.text}
+      labelStyle={{ color: colors.text }}
     />
   );
 

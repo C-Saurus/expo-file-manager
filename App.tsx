@@ -19,7 +19,6 @@ const App = () => {
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE],
         );
-        console.log("granted", granted);
         return true;
       } catch (err) {
         console.warn(err);

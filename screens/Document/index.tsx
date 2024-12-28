@@ -98,7 +98,7 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
         indicatorStyle={{ backgroundColor: 'blue' }}
         style={{ backgroundColor: 'white' }}
         activeColor="blue"
-        inactiveColor="gray"
+        inactiveColor={colors.text}
       />
     ),
     []

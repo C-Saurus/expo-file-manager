@@ -32,20 +32,18 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
             File file = new File(filePath);
             Uri contentUri = MediaStore.Files.getContentUri("external");
 
-            // Lấy ID từ file path
             Long mediaId = getMediaId(file);
             if (mediaId == null) {
                 Log.d(getName(), "Không thể tìm thấy media ID cho file: " + filePath);
                 callback.invoke(false);
                 return;
             }
+            Log.d((getName()), mediaId.toString());
 
-            // Tạo URI cho file dựa trên ID
             Uri itemUri = ContentUris.withAppendedId(contentUri, mediaId);
 
-            // Xóa file qua ContentResolver
             int rows = getReactApplicationContext().getContentResolver().delete(itemUri, null, null);
-
+            Log.d((getName()), "Deleted successfully: " + rows);
             if (rows > 0) {
                 Log.d(getName(), "Deleted successfully: " + filePath);
                 callback.invoke(true);

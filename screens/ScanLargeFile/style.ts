@@ -24,8 +24,8 @@ export const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
   },
   fileName: {
-    marginLeft: 10,
     fontSize: 16,
+    overflow: 'hidden',
   },
   loadingContainer: {
     flex: 1,
@@ -42,5 +42,27 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: 'gray',
     marginTop: 10,
+  },
+  image: {
+    margin: 1,
+    width: 40,
+    height: 40,
+    resizeMode: 'cover',
+    borderRadius: 5,
+  },
+  itemThumbnail: {
+    width: '16%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    width: '84%',
+    overflow: 'hidden',
+    paddingEnd: 2
   },
 });

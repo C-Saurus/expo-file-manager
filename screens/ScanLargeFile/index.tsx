@@ -85,7 +85,12 @@ const LargeFilesScanner = ({ route, navigation }) => {
             // 50MB
             setLargeFiles((prev) => [
               ...prev,
-              { name: item.name, size: stats.size, path: item.path },
+              {
+                name: item.name,
+                size: item.size,
+                path: item.path,
+                type: getFileExtension(item.name),
+              },
             ]);
           }
         } else if (item.isDirectory()) {
@@ -100,7 +105,6 @@ const LargeFilesScanner = ({ route, navigation }) => {
   const scanAllFiles = async (dirPath: string): Promise<FileItem[]> => {
     const items = await RNFS.readDir(dirPath);
     let files: FileItem[] = [];
-
     for (const item of items) {
       if (item.isFile()) {
         const file: FileItem = {
@@ -111,7 +115,6 @@ const LargeFilesScanner = ({ route, navigation }) => {
         };
         files.push(file);
       } else if (item.isDirectory()) {
-        // Đệ quy quét thư mục con
         const subFiles = await scanAllFiles(item.path);
         files = [...files, ...subFiles];
       }
@@ -120,9 +123,9 @@ const LargeFilesScanner = ({ route, navigation }) => {
   };
 
   const scanDuplicateFiles = async (): Promise<void> => {
-    const allFiles = await scanAllFiles(RNFS.ExternalDirectoryPath);
+    const allFiles = await scanAllFiles(RNFS.ExternalStorageDirectoryPath);
     const fileMap: { [key: string]: FileItem[] } = {};
-
+    console.log('scanDuplicateFiles', allFiles);
     for (const file of allFiles) {
       const key = `${file.type}-${file.size}`; // Tạo key dựa trên loại và kích thước
 
@@ -166,10 +169,10 @@ const LargeFilesScanner = ({ route, navigation }) => {
 
   const sortedFiles = () => {
     switch (mode) {
-      case 1:
+      case 0:
         largeFiles.sort((a, b) => b.size - a.size);
         return largeFiles;
-      case 2:
+      case 1:
         return duplicateFiles;
       default:
         return largeFiles;
@@ -224,7 +227,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
                   const result = await FileDeletionNativeModule.deleteMediaFile(
                     file.path,
                     (res: any) => {
-                      console.log('res', res);
+                      console.log('res FileDeletionNativeModule', res);
                     }
                   );
                   console.log(
@@ -262,6 +265,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
   };
 
   const ItemThumbnail = (item) => {
+    console.log('item', item);
     switch (item.type) {
       case 'image':
       case 'video':
@@ -322,13 +326,19 @@ const LargeFilesScanner = ({ route, navigation }) => {
               status={!!selectedFiles.includes(item) ? 'checked' : 'unchecked'}
               onPress={() => handleSelectFile(item)}
             />
-            <TouchableOpacity onPress={() => onPressHandler(item)}>
+            <TouchableOpacity
+              style={{ flex: 1, flexDirection: 'row' }}
+              onPress={() => onPressHandler(item)}
+            >
               <View style={styles.itemThumbnail}>
                 <ItemThumbnail item={item} />
               </View>
-              <Text style={styles.fileName}>{`${item.name} - ${bytesToMB(
-                item.size
-              )} MB`}</Text>
+              <View style={styles.itemDetails}>
+                <Text style={styles.fileName}>{`${item.path}`}</Text>
+                <Text style={{ fontSize: 10 }}>{`${bytesToMB(
+                  item.size
+                )} MB`}</Text>
+              </View>
             </TouchableOpacity>
           </View>
         )}

@@ -81,7 +81,7 @@ export default function AudioPlayer({ route }) {
       {/* Hình ảnh trung tâm */}
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/ic_pause.png')}
+          source={require('../../assets/audio-player.png')}
           style={styles.image}
         />
       </View>
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderRadius: 175,
-    backgroundColor: 'red'
+    backgroundColor: 'white'
   },
   fileName: {
     fontSize: 18,

@@ -5,7 +5,6 @@ import mammoth from 'mammoth';
 import RNFS from 'react-native-fs';
 import { useAppSelector } from '../hooks/reduxHooks';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
-import Config from 'react-native-config';
 
 const AIFileSummarize = ({ route }) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
@@ -15,7 +14,6 @@ const AIFileSummarize = ({ route }) => {
   const [loading, setLoading] = useState<boolean>();
   useEffect(() => {
     const genAI = new GoogleGenerativeAI("AIzaSyDRma76Lm6bRPUKo33DXpXRdRdx3hVy3Lg");
-    console.log("process.env.GERMINI_API_KEY", Config.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     console.log('readFileAndSendToGemini', filePath);

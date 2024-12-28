@@ -23,7 +23,7 @@ import {
   snackActionPayload,
 } from '../../features/files/snackbarSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { bytesToGB } from '../../utils/Filesize';
+import { bytesToGB, bytesToMB } from '../../utils/Filesize';
 import { getCategoryByExtension } from '../../utils/getFileByCategory';
 import {
   Feather,
@@ -245,15 +245,17 @@ const TrashScreen = () => {
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
-      <TouchableOpacity onPress={() => onPressHandler(item)}>
+      <TouchableOpacity
+        style={{ flex: 1, flexDirection: 'row' }}
+        onPress={() => onPressHandler(item)}
+      >
         <View style={styles.itemThumbnail}>
           <ItemThumbnail item={item} />
         </View>
-        <View style={styles.infoContainer}>
-          <Text style={styles.fileName}>{item.name}</Text>
-          <Text style={styles.timeLeft}>{item.timeLeft}</Text>
+        <View style={styles.itemDetails}>
+          <Text style={styles.fileName}>{`${item.name}`}</Text>
+          <Text style={{ fontSize: 10 }}>{`${bytesToMB(item.size)} MB`}</Text>
         </View>
-        <Text style={styles.fileSize}>{item.size}</Text>
       </TouchableOpacity>
       <Checkbox
         status={item.selected ? 'checked' : 'unchecked'}
@@ -310,7 +312,7 @@ const styles = StyleSheet.create({
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    paddingBottom: 8,
     borderBottomWidth: 1,
     borderColor: '#ddd',
   },
@@ -351,9 +353,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   itemThumbnail: {
-    height: '100%',
-    marginLeft: 8,
-    width: '17%',
+    width: '18%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -363,8 +363,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     justifyContent: 'center',
-    height: '100%',
-    width: '83%',
+    width: '82%',
     overflow: 'hidden',
   },
 });

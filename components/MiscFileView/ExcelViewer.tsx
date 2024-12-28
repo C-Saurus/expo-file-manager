@@ -28,7 +28,6 @@ const ExcelViewer = ({ filePath }) => {
             }).join('')}
           </table>
         `;
-        // Sử dụng WebView để hiển thị nội dung
         setHtmlContent(htmlContent);
       })
       .catch((error) => {
