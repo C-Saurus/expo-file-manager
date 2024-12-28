@@ -12,7 +12,7 @@ const TxtScreen = () => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { txt, loading, error } = useAppSelector(
+  const { txt, error } = useAppSelector(
     (state) => state.documentFile
   );
 
@@ -24,20 +24,6 @@ const TxtScreen = () => {
       hasFetchFile.current = true;
     }
   }, [dispatch, txt]);
-
-  if (loading) {
-    return (
-      <View
-        style={{
-          ...styles.container,
-          backgroundColor: colors.background2,
-          width: '100%',
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
 
   return (
     <TabDocFiles data={txt} fileType={'txt'} />

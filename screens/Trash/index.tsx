@@ -129,12 +129,9 @@ const TrashScreen = () => {
             await Promise.all(
               selectedFiles.map(async (file) => {
                 try {
-                  const result = await FileDeletionNativeModule.deleteMediaFile(
-                    file.path,
-                    (res: any) => {
-                      console.log('res', res);
-                    }
-                  );
+                  console.log("DELETE TRASH", file.path);
+                  const result = await RNFS.unlink(file.path);
+                  await RNFS.scanFile(file.path);
                   console.log(
                     `Deleted successfully: ${file.path} with result: ${result}`
                   );

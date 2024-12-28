@@ -122,20 +122,6 @@ export const DocumentScreen: React.FC<any> = React.memo(({ navigation }) => {
     }
   };
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          ...styles.container,
-          backgroundColor: colors.background2,
-          width: '100%',
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View
       style={{

@@ -80,11 +80,13 @@ export const restoreFile = async (fileName) => {
   }
 };
 
-export const moveFileToTrash = async (filePath) => {
+export const moveFileToTrash = async (filePath: string) => {
   try {
     await ensureTrashFolderExists();
     const fileName = filePath.split('/').pop();
     const destination = `${TRASH_FOLDER}/${fileName}`;
+    console.log("filePath", filePath);
+    console.log("destination", destination);
     await RNFS.moveFile(filePath, destination);
     return filePath
   } catch (error) {
