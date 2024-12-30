@@ -20,7 +20,7 @@ import { SIZE } from '../../utils/Constants';
 type FileTransferDialogProps = {
   isVisible: boolean;
   setIsVisible: (value: boolean) => void;
-  currentDir: string;
+  currentDir?: string;
   moveDir: string;
   setMoveDir: any;
   moveSelectedFiles: (destination: string) => void;
@@ -31,7 +31,7 @@ type FileTransferDialogProps = {
 export const FileTransferDialog = ({
   isVisible,
   setIsVisible,
-  currentDir,
+  currentDir = '',
   moveDir,
   setMoveDir,
   moveSelectedFiles,

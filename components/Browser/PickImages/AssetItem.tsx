@@ -4,25 +4,50 @@ import { Ionicons } from '@expo/vector-icons';
 import { SIZE } from '../../../utils/Constants';
 import { ExtendedAsset } from '../../../types';
 import { MediaType } from 'expo-media-library';
+import { useNavigation } from '@react-navigation/native';
 const audioThumbnails = require('~/../../assets/audio-thubnails.jpg');
 const ITEM_SIZE = SIZE / 3;
 
 type AssetProps = {
   item: ExtendedAsset;
+  itemType?: string;
   toggleSelect: (asset: ExtendedAsset, multiSelect?: boolean) => void;
 };
 
 export const AssetItem = ({
   item: asset,
+  itemType,
   toggleSelect,
 }: AssetProps) => {
+  const navigation = useNavigation<any>();
+  const onPressHandler = (item) => {
+    if (itemType === 'image') {
+      navigation.push('ImageGalleryView', {
+        folderName: item.filename,
+        prevDir: ``,
+        uriValue: item.uri,
+      });
+    } else if (itemType === 'video') {
+      navigation.push('VideoPlayer', {
+        folderName: item.filename,
+        prevDir: ``,
+        uriValue: item.uri,
+      });
+    } else if (itemType === 'audio') {
+      navigation.push('AudioPlayer', {
+        folderName: item.filename,
+        prevDir: ``,
+        uriValue: item.uri,
+      });
+    }
+  };
   return (
     <View style={styles.thumbnailContainer}>
       <TouchableOpacity
         key={asset.id}
         style={styles.assetContainer}
         activeOpacity={0.8}
-        onPress={() => toggleSelect(asset, true)}
+        onPress={() => onPressHandler(asset)}
       >
         <View>
           <Image
@@ -55,10 +80,19 @@ export const AssetItem = ({
         )}
         <View style={styles.checkCircleContainer}>
           <TouchableOpacity onPress={() => toggleSelect(asset, true)}>
-            <View style={[styles.checkCircleBG, {backgroundColor: asset.selected ? '#0595F5' : 'gray'}]}>
-            {asset.selected && (
-              <Ionicons name="checkmark-done-outline" size={20} color="blue" />
-            )}
+            <View
+              style={[
+                styles.checkCircleBG,
+                { backgroundColor: asset.selected ? '#0595F5' : 'gray', opacity: asset.selected ? 1 : 0.5 },
+              ]}
+            >
+              {asset.selected && (
+                <Ionicons
+                  name="checkmark-done-outline"
+                  size={20}
+                  color="blue"
+                />
+              )}
             </View>
           </TouchableOpacity>
         </View>
@@ -99,7 +133,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: 'white',
-    opacity: 0.5,
   },
   thumbnailContainer: {
     display: 'flex',

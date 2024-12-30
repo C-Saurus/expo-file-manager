@@ -135,6 +135,12 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     const cancelMultiSelect = () => {
       setMultiSelect(false);
       setSelectAll(false);
+      setFiles(
+        files.map((item) => {
+          item.selected = false;
+          return item;
+        })
+      );
     };
 
     const handleMoveFile = () => {

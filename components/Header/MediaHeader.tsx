@@ -39,7 +39,7 @@ const MediaHeader = ({
             placeholder="Search files..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch} // Kích hoạt tìm kiếm khi nhấn Enter
+            onSubmitEditing={() => handleSearch(searchQuery)} // Kích hoạt tìm kiếm khi nhấn Enter
           />
           <TouchableOpacity
             style={[

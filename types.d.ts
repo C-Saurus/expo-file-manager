@@ -39,6 +39,7 @@ export type ExtendedAsset = {
   albumId?: string | undefined;
   name?: string;
   selected?: boolean;
+  size?: number
 };
 
 export type customAlbum = {

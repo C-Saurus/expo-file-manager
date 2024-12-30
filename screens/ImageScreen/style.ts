@@ -61,7 +61,17 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
-
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: 'gray',
+    marginTop: 10,
+  },
   dateGroup: {
     marginBottom: 20,
   },
@@ -75,7 +85,8 @@ export const styles = StyleSheet.create({
   dateTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 10,
+    marginTop: 10
   },
   albumList: {
     width: SIZE,

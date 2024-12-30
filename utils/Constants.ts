@@ -149,6 +149,16 @@ export const getCustomeFileByFolder = async (folder: string) => {
   }
 };
 
+export const getLocalFileSize = async (uri: string) => {
+  try {
+    const stats = await RNFS.stat(uri);
+    return stats.size; // File size in bytes
+  } catch (error) {
+    console.error('Error fetching local file size:', error);
+    return null;
+  }
+};
+
 export const fileIcons = {
   json: 'code-json',
   pdf: 'file-pdf-box',

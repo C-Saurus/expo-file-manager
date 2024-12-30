@@ -29,7 +29,7 @@ import { styles } from '.';
 
 type Props = {
   item: fileItem;
-  currentDir: string;
+  currentDir?: string;
   multiSelect: boolean;
   toggleSelect: (arg0: fileItem, arg1?: boolean) => void;
   setTransferDialog: (arg0: boolean) => void;
@@ -42,7 +42,7 @@ type Props = {
 
 export default function FileItem({
   item,
-  currentDir,
+  currentDir = '',
   multiSelect,
   toggleSelect,
   setTransferDialog,
@@ -52,8 +52,8 @@ export default function FileItem({
   setRenameDialogVisible,
   setNewFileName,
 }: Props) {
-  console.log("current", currentDir)
-  console.log("item", item.name);
+  console.log('current', currentDir);
+  console.log('item', item.name);
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
@@ -128,7 +128,7 @@ export default function FileItem({
         navigation.push('AudioPlayer', {
           folderName: item.name,
           prevDir: `${docDir}`,
-          uriValue: ''
+          uriValue: '',
         });
       } else {
         navigation.push('MiscFileView', {
@@ -151,15 +151,39 @@ export default function FileItem({
         }
         numberOfLinesTitle={multiSelect ? undefined : 1}
         visible={itemActionsOpen}
-        actionItems={['Rename', 'Move', 'Copy', 'Share', 'Delete', 'Cancel']}
-        itemIcons={[
-          'edit',
-          'drive-file-move',
-          'file-copy',
-          'share',
-          'delete',
-          'close',
-        ]}
+        actionItems={
+          ['image', 'video', 'audio'].includes(itemType)
+            ? ['Rename', 'Copy', 'Move', 'Share', 'Delete', 'Cancel']
+            : [
+                'Rename',
+                'Copy',
+                'Move',
+                'Share',
+                'Delete',
+                'Summarize',
+                'Cancel',
+              ]
+        }
+        itemIcons={
+          ['image', 'video', 'audio'].includes(itemType)
+            ? [
+                'edit',
+                'file-copy',
+                'drive-file-move',
+                'share',
+                'delete',
+                'close',
+              ]
+            : [
+                'edit',
+                'file-copy',
+                'drive-file-move',
+                'share',
+                'delete',
+                'flash-on',
+                'close',
+              ]
+        }
         onClose={setItemActionsOpen}
         onItemPressed={(buttonIndex) => {
           if (buttonIndex === 4) {
@@ -268,4 +292,3 @@ export default function FileItem({
     </View>
   );
 }
-

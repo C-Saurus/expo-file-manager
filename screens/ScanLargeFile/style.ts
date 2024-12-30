@@ -22,6 +22,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+    paddingVertical: 8
   },
   fileName: {
     fontSize: 12,
