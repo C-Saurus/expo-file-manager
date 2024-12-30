@@ -16,7 +16,7 @@ import Constants from 'expo-constants';
 import { useAppSelector } from '../hooks/reduxHooks';
 
 const Web: React.FC = () => {
-  const { colors } = useAppSelector((state) => state.theme.theme);
+  const { theme } = useAppSelector((state) => state.theme);
   const [target, setTarget] = useState('https://google.com/');
   const [url, setUrl] = useState(target);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -75,12 +75,12 @@ const Web: React.FC = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.searchBar}>
         <TextInput
           style={[
             styles.searchBarInput,
-            { borderColor: colors.primary, color: colors.text },
+            { borderColor: theme.colors.primary, color: theme.colors.text },
           ]}
           selection={!isFocused ? { start: 0, end: 0 } : null}
           blurOnSubmit
@@ -100,7 +100,7 @@ const Web: React.FC = () => {
             {
               width: `${loadingProgress * 100}%`,
               opacity: loadingBarVisible ? 1 : 0,
-              backgroundColor: colors.primary,
+              backgroundColor: theme.colors.primary,
             },
           ]}
         ></View>
@@ -109,14 +109,14 @@ const Web: React.FC = () => {
             position: 'absolute',
             right: 10,
             borderRadius: 5,
-            backgroundColor: colors.background,
+            backgroundColor: theme.colors.background,
           }}
         >
           <TouchableOpacity onPress={() => setTarget(url)}>
             <Ionicons
               name={'arrow-forward-circle-outline'}
               size={35}
-              color={colors.text}
+              color={theme.colors.text}
             />
           </TouchableOpacity>
         </View>
@@ -125,6 +125,7 @@ const Web: React.FC = () => {
         allowsLinkPreview
         ref={browserRef}
         source={{ uri: target }}
+        forceDarkOn={theme.dark}
         pullToRefreshEnabled
         pagingEnabled
         setSupportMultipleWindows={false}
@@ -149,17 +150,17 @@ const Web: React.FC = () => {
           <Ionicons
             name="ios-arrow-back"
             size={32}
-            color={canGoBack ? colors.primary : colors.background}
+            color={canGoBack ? theme.colors.primary : theme.colors.background}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={reloadPage}>
-          <Ionicons name="ios-refresh" size={32} color={colors.text} />
+          <Ionicons name="ios-refresh" size={32} color={theme.colors.text} />
         </TouchableOpacity>
         <TouchableOpacity onPress={goForward}>
           <Ionicons
             name="ios-arrow-forward"
             size={32}
-            color={canGoForward ? colors.primary : colors.background}
+            color={canGoForward ? theme.colors.primary : theme.colors.background}
           />
         </TouchableOpacity>
       </View>

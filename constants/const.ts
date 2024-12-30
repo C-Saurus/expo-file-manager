@@ -1,12 +1,12 @@
 export const DATA = [
-  { id: '0', title: 'Hình ảnh', icon: 'photo-library', color: '#3194d6' },
+  { id: '0', title: 'Images', icon: 'photo-library', color: '#3194d6' },
   { id: '1', title: 'Video', icon: 'videocam', color: '#da4256' },
-  { id: '2', title: 'Âm thanh', icon: 'audiotrack', color: '#d69c31' },
+  { id: '2', title: 'Audio', icon: 'audiotrack', color: '#d69c31' },
   { id: '3', title: 'PDF', icon: 'picture-as-pdf', color: '#d63131' },
-  { id: '4', title: 'Ứng dụng', icon: 'apps', color: '#d631ce' },
-  { id: '5', title: 'Tệp zip', icon: 'archive', color: '#57595f' },
-  { id: '6', title: 'Các tài liệu', icon: 'description', color: '#3165d6' },
-  { id: '7', title: 'File text', icon: 'text-fields', color: '#3fd631' },
+  { id: '4', title: 'Apps', icon: 'apps', color: '#d631ce' },
+  { id: '5', title: 'Zip', icon: 'archive', color: '#57595f' },
+  { id: '6', title: 'Document', icon: 'description', color: '#3165d6' },
+  { id: '7', title: 'Text', icon: 'text-fields', color: '#3fd631' },
 ];
 
 export const FILE_TYPES = {

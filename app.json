@@ -5,9 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/iconn.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/iconn.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFF"
     },
@@ -23,7 +23,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/iconn.png",
         "backgroundColor": "#FFF"
       },
       "package": "com.datvh.filemanager"

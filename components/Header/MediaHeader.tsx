@@ -28,22 +28,30 @@ const MediaHeader = ({
     <View style={{ backgroundColor: colors.background }}>
       {isSearching ? (
         // Thanh search
-        <View style={styles.searchContainer}>
+        <View
+          style={[
+            styles.searchContainer,
+            { backgroundColor: colors.background },
+          ]}
+        >
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.background3 }]}
             placeholder="Search files..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch} // Kích hoạt tìm kiếm khi nhấn Enter
           />
           <TouchableOpacity
-            style={styles.cancelButton}
+            style={[
+              styles.cancelButton,
+              { backgroundColor: colors.background },
+            ]}
             onPress={() => {
               setIsSearching(false);
               setSearchQuery(''); // Reset thanh search
             }}
           >
-            <Text style={styles.cancelText}>Cancel</Text>
+            <Text style={[styles.cancelText]}>Cancel</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -78,20 +86,24 @@ const MediaHeader = ({
               style={{ paddingRight: 16 }}
               onPress={() => setIsSearching(true)}
             >
-              <Ionicons name="search" size={24} color="black" />
+              <Ionicons name="search" size={24} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleChooseMode}>
               <FontAwesome
                 name={viewMode ? 'th' : 'th-list'}
                 size={24}
-                color="black"
+                color={colors.primary}
               />
             </TouchableOpacity>
             <TouchableOpacity
               style={{ marginLeft: 12 }}
               onPress={handleChooseOption}
             >
-              <Entypo name="dots-three-vertical" size={24} color="black" />
+              <Entypo
+                name="dots-three-vertical"
+                size={24}
+                color={colors.primary}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -148,7 +160,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     paddingHorizontal: 10,
-    height: 40,
+    height: 60,
   },
   searchInput: {
     flex: 1,

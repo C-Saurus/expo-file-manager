@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,8 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { LOCAL_EXPO_FOLDER } from '../../utils/ExpoFileConstant';
-import useLock from '../../hooks/useLock';
-import LockScreen from '../LockScreen';
+import { useAppSelector } from '../../hooks/reduxHooks';
 
 const fileTypes = [
   {
@@ -34,56 +32,48 @@ const fileTypes = [
     type: 'Audio',
     icon: 'musical-notes-outline', // Icon nốt nhạc
     color: '#66BB6A', // Màu xanh lá, gợi cảm giác tươi mới và sống động
-    description: 'Listen to your audio files',
+    description: 'Listen to audio files',
   },
   {
     id: '4',
-    type: 'Pdf',
+    type: 'PDF',
     icon: 'document-text-outline', // Icon văn bản cho PDF
     color: '#29B6F6', // Màu xanh dương, quen thuộc với PDF
-    description: 'Manage your PDFs',
+    description: 'Manage PDF files',
   },
   {
     id: '5',
-    type: 'Doc',
+    type: 'Word',
     icon: 'document-outline', // Icon tài liệu, phù hợp với Word
     color: '#8E24AA', // Màu tím, tương đồng với Microsoft Word
     description: 'Access Word documents',
   },
   {
     id: '6',
-    type: 'Txt',
+    type: 'Text',
     icon: 'clipboard-outline', // Icon clipboard, tượng trưng cho text file
     color: '#546E7A', // Màu xám xanh, nhẹ nhàng và trung tính
-    description: 'Manage text files',
+    description: 'Handle text files',
   },
   {
     id: '7',
-    type: 'Excel-Csv',
+    type: 'Excel/CSV',
     icon: 'grid-outline', // Icon lưới, phù hợp với bảng tính
     color: '#FFD54F', // Màu vàng, thường liên kết với dữ liệu bảng tính
-    description: 'Access Excel/CSV files',
+    description: 'Work with Excel/CSV files',
+  },
+  {
+    id: '8',
+    type: 'Custom',
+    icon: 'cube-outline', // Icon khối, phù hợp với file tùy chỉnh
+    color: 'gray', // Màu vàng đậm, gợi cảm giác đặc biệt
+    description: 'Your custom files',
   },
 ];
 
+
 const MenuScreen = ({ navigation }) => {
-  const { locked, setLocked } = useLock();
-
-  const getPassCodeStatus = async () => {
-    const hasPassCode = await SecureStore.getItemAsync('hasPassCode');
-    if (JSON.parse(hasPassCode)) {
-      setLocked(true);
-      return true;
-    } else {
-      setLocked(false);
-      return false;
-    }
-  };
-
-  useEffect(() => {
-    getPassCodeStatus();
-  }, []);
-
+  const { colors } = useAppSelector((state) => state.theme.theme);
   const handlePress = (type: string) => {
     navigation.navigate('Browser', {
       folderName: type,
@@ -102,12 +92,8 @@ const MenuScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  if (locked) {
-    return <LockScreen setLocked={setLocked} />;
-  }
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={fileTypes}
         renderItem={renderItem}
@@ -152,8 +138,8 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginTop: 5,
     color: '#fff',
-    marginTop: 10,
   },
   cardDescription: {
     fontSize: 14,

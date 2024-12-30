@@ -5,7 +5,7 @@ import { useAppSelector } from '../../hooks/reduxHooks';
 import { ActivityIndicator, View } from 'react-native';
 
 const ExcelViewer = ({ filePath }) => { 
-    const { colors } = useAppSelector((state) => state.theme.theme);
+    const { theme } = useAppSelector((state) => state.theme);
   // const [isOnline, setIsOnline] = useState(true);
   const [htmlContent, setHtmlContent] = useState('');
   const [loading, setLoading] = useState<boolean>();
@@ -41,11 +41,11 @@ const ExcelViewer = ({ filePath }) => {
       <View
         style={{
           flex: 1,
-          backgroundColor: colors.background2,
+          backgroundColor: theme.colors.background2,
           width: '100%',
         }}
       >
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -53,6 +53,7 @@ const ExcelViewer = ({ filePath }) => {
   return (
     <View style={{ flex: 1 }}>
       <WebView
+        forceDarkOn={theme.dark}
         originWhitelist={['*']}
         source={{ html: htmlContent }}
         style={{ flex: 1 }}

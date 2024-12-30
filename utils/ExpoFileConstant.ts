@@ -9,6 +9,7 @@ const FOLDER_PATHS = [
   `${FileSystem.documentDirectory}Doc`,
   `${FileSystem.documentDirectory}Txt`,
   `${FileSystem.documentDirectory}Excel-Csv`,
+  `${FileSystem.documentDirectory}Custom`,
 ];
 
 export const createFolders = async () => {

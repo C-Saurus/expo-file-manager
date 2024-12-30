@@ -39,6 +39,9 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     const dispatch = useAppDispatch();
     const { top } = useSafeAreaInsets();
     const { colors } = useAppSelector((state) => state.theme.theme);
+    const externalLoading = useAppSelector(
+        (state) => state.documentFile.loading
+      );
     const [renameDialogVisible, setRenameDialogVisible] = useState(false);
     const [newFileName, setNewFileName] = useState('');
     const [renamingFile, setRenamingFile] = useState<ReadDirItem>();
@@ -193,7 +196,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
       destination: string
     ) => {
       const transferPromises = selectedFiles.map((file) => {
-        if (moveOrCopy === 'Copy')
+        if (moveOrCopy === 'Move')
           return moveFileToCustomeFolder(file.path, destination);
         else return copyFileToCustomeFolder(file.path, destination);
       });
@@ -332,7 +335,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
       index,
     });
 
-    if (loading) {
+    if (loading || externalLoading) {
       return (
         <View
           style={{
@@ -349,7 +352,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     return (
       <View
         style={{
-          backgroundColor: 'white',
+          backgroundColor: colors.background,
           flex: 1,
           paddingTop: ['pdf', 'txt', 'zip', 'apk'].includes(fileType) ? top : 0,
         }}

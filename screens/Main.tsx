@@ -89,6 +89,10 @@ export default function Main() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
+  useEffect(() => {
+    getPassCodeStatus();
+  }, []);
+
   if (locked && fontsLoaded) {
     return <LockScreen setLocked={setLocked} />;
   }

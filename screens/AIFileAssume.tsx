@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Linking, ActivityIndicator, Text, ScrollView } from 'react-native';
-import WebView from 'react-native-webview';
+import { View, ActivityIndicator, Text, ScrollView } from 'react-native';
 import mammoth from 'mammoth';
 import RNFS from 'react-native-fs';
 import { useAppSelector } from '../hooks/reduxHooks';

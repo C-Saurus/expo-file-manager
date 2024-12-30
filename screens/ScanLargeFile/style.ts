@@ -4,6 +4,7 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    paddingTop: 8,
     backgroundColor: '#ffffff',
   },
   header: {
@@ -19,12 +20,11 @@ export const styles = StyleSheet.create({
   fileItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
   fileName: {
-    fontSize: 16,
+    fontSize: 12,
     overflow: 'hidden',
   },
   loadingContainer: {
@@ -61,8 +61,8 @@ export const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     justifyContent: 'center',
-    width: '84%',
+    width: '86%',
     overflow: 'hidden',
-    paddingEnd: 2
+    marginHorizontal: 10,
   },
 });

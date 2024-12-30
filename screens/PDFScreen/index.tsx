@@ -12,7 +12,7 @@ const PDFScreen = () => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const { pdf, loading, error } = useAppSelector(
+  const { pdf, error } = useAppSelector(
     (state) => state.documentFile
   );
   useEffect(() => {
@@ -22,20 +22,6 @@ const PDFScreen = () => {
       hasFetchFile.current = true;
     }
   }, [dispatch, pdf]);
-
-  if (loading) {
-    return (
-      <View
-        style={{
-          ...styles.container,
-          backgroundColor: colors.background2,
-          width: '100%',
-        }}
-      >
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
 
   return (
     <TabDocFiles data={pdf} fileType={'pdf'} />

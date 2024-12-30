@@ -29,7 +29,6 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import useBiometrics from '../../hooks/useBiometrics';
 import { setSnack } from '../../features/files/snackbarSlice';
-import { SIZE } from '../../utils/Constants';
 
 function Settings() {
   const navigation = useNavigation<StackNavigationProp<any>>();
@@ -91,6 +90,7 @@ function Settings() {
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể gửi mã xác thực. Vui lòng thử lại.');
     } finally {
+      setError('');
       setLoading(false);
     }
   };
@@ -107,26 +107,34 @@ function Settings() {
     setLoading(false);
   };
 
+  const handleCloseModal = () => {
+    console.log('COME');
+    setModalConfirmVisible(false);
+    setModalVisible(false);
+    setError('');
+    setEmail('');
+    setCode('');
+  };
+
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       {/* Preferences Section */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: theme.colors.background2 }]}>
         <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
           THEME
         </Text>
         <Pressable
           style={[
             styles.sectionItem,
-            { backgroundColor: theme.colors.background2 },
+            { backgroundColor: theme.colors.background },
           ]}
         >
           <View style={styles.iconWrapper}>
             <Feather
               name={theme.dark ? 'moon' : 'sun'}
               size={24}
-              color={theme.colors.primary}
             />
           </View>
           <Text
@@ -155,14 +163,14 @@ function Settings() {
       </View>
 
       {/* Security Section */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: theme.colors.background2 }]}>
         <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
           SECURITY
         </Text>
         <Pressable
           style={[
             styles.sectionItem,
-            { backgroundColor: theme.colors.background2 },
+            { backgroundColor: theme.colors.background },
           ]}
           onPress={handleCheckEmail}
         >
@@ -170,7 +178,6 @@ function Settings() {
             <Feather
               name={pinActive ? 'lock' : 'unlock'}
               size={24}
-              color={theme.colors.primary}
             />
           </View>
           <Text
@@ -187,14 +194,13 @@ function Settings() {
         <Pressable
           style={[
             styles.sectionItem,
-            { backgroundColor: theme.colors.background2 },
+            { backgroundColor: theme.colors.background },
           ]}
         >
           <View style={styles.iconWrapper}>
             <FontAwesome5
               name="fingerprint"
               size={24}
-              color={theme.colors.primary}
             />
           </View>
           <Text
@@ -220,11 +226,16 @@ function Settings() {
           />
         </Pressable>
       </View>
+      {loading && !modalConfirmVisible && !modalVisible && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      )}
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={handleCloseModal}
         style={{
           flex: 1,
           justifyContent: 'center',
@@ -237,7 +248,7 @@ function Settings() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Email to Recovery</Text>
               <TouchableOpacity
-                onPress={() => setModalVisible(false)}
+                onPress={handleCloseModal}
                 style={styles.closeIcon}
               >
                 <Ionicons name="close" size={24} color="#333" />
@@ -259,10 +270,13 @@ function Settings() {
               />
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
               <TouchableOpacity
+                disabled={loading}
                 style={styles.button}
                 onPress={handleSendVerification}
               >
-                <Text style={styles.buttonText}>Gửi mã xác thực</Text>
+                <Text style={styles.buttonText}>
+                  {loading ? 'Loading...' : 'Send'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -272,7 +286,7 @@ function Settings() {
         animationType="slide"
         transparent={true}
         visible={modalConfirmVisible}
-        onRequestClose={() => setModalConfirmVisible(false)}
+        onRequestClose={handleCloseModal}
         style={{
           flex: 1,
           justifyContent: 'center',
@@ -285,7 +299,7 @@ function Settings() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Enter your recieved code</Text>
               <TouchableOpacity
-                onPress={() => setModalConfirmVisible(false)}
+                onPress={handleCloseModal}
                 style={styles.closeIcon}
               >
                 <Ionicons name="close" size={24} color="#333" />
@@ -307,20 +321,18 @@ function Settings() {
               />
               {error ? <Text style={styles.errorText}>{error}</Text> : null}
               <TouchableOpacity
+                disabled={loading}
                 style={styles.button}
                 onPress={handleVerifyCode}
               >
-                <Text style={styles.buttonText}>Xác nhận</Text>
+                <Text style={styles.buttonText}>
+                  {loading ? 'Loading...' : 'Confirm'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-        </View>
-      )}
     </View>
   );
 }
@@ -427,7 +439,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#d4a666',
+    backgroundColor: 'tomato',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,

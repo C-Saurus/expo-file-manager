@@ -75,7 +75,7 @@ const TrashScreen = () => {
         ),
       0
     );
-    return `${days} ngày còn lại`;
+    return `${days} days`;
   };
 
   const toggleSelectFile = (path) => {
@@ -172,7 +172,7 @@ const TrashScreen = () => {
     return <Image style={styles.image} source={{ uri: `file://${uri}` }} />;
   };
 
-  const ItemThumbnail = (item) => {
+  const ItemThumbnail = ({ item }) => {
     switch (item.type) {
       case 'image':
       case 'video':
@@ -233,7 +233,7 @@ const TrashScreen = () => {
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Image
-        source={require('~/../../assets/trash.jpg')}
+        source={require('~/../../assets/trash.png')}
         style={styles.emptyIcon}
       />
       <Text style={styles.emptyText}>Thùng rác trống</Text>
@@ -250,19 +250,22 @@ const TrashScreen = () => {
           <ItemThumbnail item={item} />
         </View>
         <View style={styles.itemDetails}>
-          <Text style={styles.fileName}>{`${item.name}`}</Text>
-          <Text style={{ fontSize: 10 }}>{`${bytesToMB(item.size)} MB`}</Text>
+          <Text style={[styles.fileName, {color: colors.secondary}]}>{`${item.name}`}</Text>
+          <Text style={{ fontSize: 10, color: colors.secondary }}>{`${bytesToMB(item.size)} MB`}</Text>
+          <Text style={{ fontSize: 10, color: colors.secondary }}>{`${item.timeLeft} to delete`}</Text>
         </View>
       </TouchableOpacity>
       <Checkbox
-        status={item.selected ? 'checked' : 'unchecked'}
-        onPress={() => toggleSelectFile(item.path)}
-      />
+          color={colors.primary}
+          status={item.selected ? 'checked' : 'unchecked'}
+          onPress={() => toggleSelectFile(item.path)}
+          uncheckedColor={colors.primary}
+        />
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: colors.background}]}>
       <FlatList
         data={files}
         keyExtractor={(item) => item.path}
@@ -272,12 +275,12 @@ const TrashScreen = () => {
       />
       <View style={styles.btnContainer}>
         <Button
-          title="Xóa tệp"
+          title="Delete"
           disabled={files.filter((item) => item.selected === true).length <= 0}
           onPress={handleDeleteSelectedFiles}
         />
         <Button
-          title="Khôi phục"
+          title="Recovery"
           disabled={files.filter((item) => item.selected === true).length <= 0}
           onPress={restoreSelectedFiles}
         />

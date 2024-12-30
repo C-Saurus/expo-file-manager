@@ -111,7 +111,7 @@ export const Home = () => {
   const DATATOOL = [
     {
       id: 0,
-      title: 'Tệp lớn',
+      title: 'Big file',
       icon: 'insert-drive-file',
       iconLib: 'MaterialIcons',
       background: theme.dark ? '#1c1f22' : '#f0f2f7',
@@ -119,7 +119,7 @@ export const Home = () => {
     },
     {
       id: 1,
-      title: 'File trùng lặp',
+      title: 'Duplicate file',
       icon: 'filter',
       iconLib: 'MaterialIcons',
       background: theme.dark ? '#172020' : '#ebf7f7',
@@ -127,7 +127,7 @@ export const Home = () => {
     },
     {
       id: 2,
-      title: 'TrashScreen',
+      title: 'Trash',
       icon: 'trash',
       iconLib: 'FontAwesome5',
       background: theme.dark ? '#1f181c' : '#f7f0f4',
@@ -135,7 +135,7 @@ export const Home = () => {
     },
     {
       id: 3,
-      title: 'DocScanner',
+      title: 'Scanner',
       icon: 'expand',
       iconLib: 'FontAwesome5',
       background: theme.dark ? '#27241f' : '#faf5ed',
@@ -212,7 +212,7 @@ export const Home = () => {
               { color: theme.dark ? 'white' : 'black' },
             ]}
           >
-            Lưu trữ nội bộ
+            Storages
           </Text>
           <Text
             style={[
@@ -246,16 +246,13 @@ export const Home = () => {
       </View>
 
       <FlatList
-        style={{ padding: 8 }}
+        style={{ padding: 8}}
         data={DATA}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         numColumns={4}
         columnWrapperStyle={styles.row}
-        scrollEnabled={false}
-        horizontal={false}
-        showsVerticalScrollIndicator={false}
-        showsHorizontalScrollIndicator={false}
+
       />
 
       <View
@@ -267,7 +264,7 @@ export const Home = () => {
         <Text
           style={[styles.header, { color: theme.dark ? 'white' : 'black' }]}
         >
-          Công cụ
+          Tools
         </Text>
         <FlatList
           data={DATATOOL}

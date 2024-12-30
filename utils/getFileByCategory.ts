@@ -18,6 +18,7 @@ export const getCategoryByExtension = (extension: string) => {
     fileExtensionCategorys
   )) {
     if (extensions.includes(extension.toLowerCase())) {
+      console.log("crete", category);
       return category;
     }
   }

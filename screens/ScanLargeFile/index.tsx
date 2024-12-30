@@ -30,6 +30,7 @@ import { useAppSelector } from '../../hooks/reduxHooks';
 
 const getFileExtension = (fileName: string): string => {
   const ext = fileName.split('.').pop();
+  console.log("ext", ext);
   return getCategoryByExtension(ext);
 };
 
@@ -42,7 +43,6 @@ const LargeFilesScanner = ({ route, navigation }) => {
   const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
-    console.log('mode', mode);
     try {
       startScanning();
     } catch (error) {
@@ -53,7 +53,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
       setSelectedFiles([]);
       setLargeFiles([]);
     };
-  }, [mode]);
+  }, []);
 
   const startScanning = async () => {
     setIsScanning(true);
@@ -81,7 +81,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
       for (const item of items) {
         if (item.isFile()) {
           const stats = await RNFS.stat(item?.path);
-          if (stats && stats?.size >= 50 * 1024 * 1024) {
+          if (stats && stats?.size >= 1024 * 1024) {
             // 50MB
             setLargeFiles((prev) => [
               ...prev,
@@ -125,7 +125,6 @@ const LargeFilesScanner = ({ route, navigation }) => {
   const scanDuplicateFiles = async (): Promise<void> => {
     const allFiles = await scanAllFiles(RNFS.ExternalStorageDirectoryPath);
     const fileMap: { [key: string]: FileItem[] } = {};
-    console.log('scanDuplicateFiles', allFiles);
     for (const file of allFiles) {
       const key = `${file.type}-${file.size}`; // Tạo key dựa trên loại và kích thước
 
@@ -180,6 +179,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
   };
 
   const onPressHandler = (item) => {
+    console.log("itemmmmm", item.type);
     if (item.type === 'image') {
       navigation.push('ImageGalleryView', {
         folderName: item.name,
@@ -264,8 +264,8 @@ const LargeFilesScanner = ({ route, navigation }) => {
     return <Image style={styles.image} source={{ uri: `file://${uri}` }} />;
   };
 
-  const ItemThumbnail = (item) => {
-    console.log('item', item);
+  const ItemThumbnail = ({ item }) => {
+    console.log("item.type", item.type);
     switch (item.type) {
       case 'image':
       case 'video':
@@ -316,16 +316,12 @@ const LargeFilesScanner = ({ route, navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={sortedFiles()}
         keyExtractor={(item) => item.path}
         renderItem={({ item }) => (
           <View style={styles.fileItem}>
-            <Checkbox
-              status={!!selectedFiles.includes(item) ? 'checked' : 'unchecked'}
-              onPress={() => handleSelectFile(item)}
-            />
             <TouchableOpacity
               style={{ flex: 1, flexDirection: 'row' }}
               onPress={() => onPressHandler(item)}
@@ -333,13 +329,19 @@ const LargeFilesScanner = ({ route, navigation }) => {
               <View style={styles.itemThumbnail}>
                 <ItemThumbnail item={item} />
               </View>
-              <View style={styles.itemDetails}>
-                <Text style={styles.fileName}>{`${item.path}`}</Text>
-                <Text style={{ fontSize: 10 }}>{`${bytesToMB(
+              <View style={[styles.itemDetails]}>
+                <Text numberOfLines={2} style={[styles.fileName, {color: colors.primary}]}>{item.path}</Text>
+                <Text style={{ fontSize: 10, color: colors.primary }}>{`${bytesToMB(
                   item.size
                 )} MB`}</Text>
               </View>
             </TouchableOpacity>
+            <Checkbox
+              color={colors.primary}
+              uncheckedColor={colors.primary}
+              status={!!selectedFiles.includes(item) ? 'checked' : 'unchecked'}
+              onPress={() => handleSelectFile(item)}
+            />
           </View>
         )}
         ListEmptyComponent={renderEmptyComponent}

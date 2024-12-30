@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
-    marginTop: 10
+    marginTop: 16
   },
   size: {
     fontSize: 12,
