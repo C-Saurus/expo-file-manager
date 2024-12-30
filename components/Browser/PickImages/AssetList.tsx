@@ -62,7 +62,6 @@ export const AssetList = ({
         <AssetItem
           item={item}
           toggleSelect={toggleSelect}
-          isSelecting={false}
         />
       )}
       keyExtractor={(item) => `${albumId}-${item.id}`}

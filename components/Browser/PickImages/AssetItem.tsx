@@ -9,13 +9,11 @@ const ITEM_SIZE = SIZE / 3;
 
 type AssetProps = {
   item: ExtendedAsset;
-  isSelecting: boolean;
   toggleSelect: (asset: ExtendedAsset, multiSelect?: boolean) => void;
 };
 
 export const AssetItem = ({
   item: asset,
-  isSelecting,
   toggleSelect,
 }: AssetProps) => {
   return (
@@ -24,10 +22,7 @@ export const AssetItem = ({
         key={asset.id}
         style={styles.assetContainer}
         activeOpacity={0.8}
-        onLongPress={() => toggleSelect(asset, true)}
-        onPress={() => {
-          isSelecting ? toggleSelect(asset, true) : toggleSelect(asset);
-        }}
+        onPress={() => toggleSelect(asset, true)}
       >
         <View>
           <Image
@@ -53,24 +48,20 @@ export const AssetItem = ({
           )}
         </View>
 
-        {
-          asset.mediaType === MediaType.video && (
-            <View
-              style={styles.playButton}
-            >
-              <View style={styles.playIcon} />
-            </View>
-          )
-        }
-
-        {isSelecting && (
-          <View style={styles.checkCircleContainer}>
-            <View style={styles.checkCircleBG}></View>
-            {asset.selected && (
-              <Ionicons name="checkmark-done" size={20} color="white" />
-            )}
+        {asset.mediaType === MediaType.video && (
+          <View style={styles.playButton}>
+            <View style={styles.playIcon} />
           </View>
         )}
+        <View style={styles.checkCircleContainer}>
+          <TouchableOpacity onPress={() => toggleSelect(asset, true)}>
+            <View style={[styles.checkCircleBG, {backgroundColor: asset.selected ? '#0595F5' : 'gray'}]}>
+            {asset.selected && (
+              <Ionicons name="checkmark-done-outline" size={20} color="blue" />
+            )}
+            </View>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -96,22 +87,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
-    bottom: 5,
+    top: 0,
     right: 0,
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
   },
   checkCircleBG: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
+    marginRight: 6,
     borderRadius: 12,
-    backgroundColor: 'gray',
     borderWidth: 1.5,
     borderColor: 'white',
-    opacity: 0.9,
+    opacity: 0.5,
   },
   thumbnailContainer: {
     display: 'flex',
