@@ -209,9 +209,9 @@ export const ImageScreen = ({ route, navigation }) => {
   const renderTabBar = (props) => (
     <TabBar
       {...props}
-      indicatorStyle={{ backgroundColor: 'blue' }}
-      style={{ backgroundColor: 'white' }}
-      activeColor="blue"
+      indicatorStyle={{ backgroundColor: 'tomato' }}
+      style={{ backgroundColor: colors.background }}
+      activeColor={'tomato'}
       inactiveColor={colors.text}
     />
   );

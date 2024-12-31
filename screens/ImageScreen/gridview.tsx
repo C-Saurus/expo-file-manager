@@ -91,7 +91,14 @@ export const PhotosByDate: React.FC<{
           ? assets.filter((file) => file.selected === true)
           : [item];
         console.log('deleteFile', deleteFile);
-        const res = await removeFileToTrash(deleteFile);
+        const res = await removeFileToTrash(deleteFile.map((item) => {
+          return (
+            {
+              ...item,
+              path: item.uri.slice(7)
+            }
+          )
+        }));
         console.log('res', res);
         const filesAfterDelete = assets
           .filter((file) => !res.includes(file.uri))

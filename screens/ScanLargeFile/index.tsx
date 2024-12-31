@@ -104,6 +104,13 @@ const LargeFilesScanner = ({ route, navigation }) => {
 
   const scanAllFiles = async (dirPath: string): Promise<FileItem[]> => {
     const items = await RNFS.readDir(dirPath);
+    if (dirPath.includes('/Android/data') || dirPath.includes('/Android/obb')) {
+      console.warn(`Skipping restricted directory: ${dirPath}`);
+      return;
+    }
+    if (!items.length) {
+      return
+    }
     let files: FileItem[] = [];
     for (const item of items) {
       if (item.isFile()) {
@@ -113,6 +120,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
           path: item.path,
           type: getFileExtension(item.name),
         };
+        console.log("file", file);
         files.push(file);
       } else if (item.isDirectory()) {
         const subFiles = await scanAllFiles(item.path);
@@ -133,7 +141,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
       }
       fileMap[key].push(file);
     }
-
+    console.log("scanDuplicateFiles");
     // So sánh các file cùng loại và cùng kích thước
     const duplicates: FileItem[] = [];
     for (const files of Object.values(fileMap)) {

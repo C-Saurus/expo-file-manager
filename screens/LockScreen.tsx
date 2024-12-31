@@ -101,6 +101,10 @@ const LockScreen = ({ setLocked }: ILockScreenProps) => {
     }
   };
 
+  const handleForgotPIN = () => {
+
+  }
+
   const PinDot = ({ filled, index }: { filled: boolean; index: number }) => {
     return (
       <View
@@ -195,6 +199,9 @@ const LockScreen = ({ setLocked }: ILockScreenProps) => {
               </Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity style={{ paddingTop: 10}} onPress={handleForgotPIN}>
+          <Text style={{ color: colors.secondary }}>Forgot PIN ?</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

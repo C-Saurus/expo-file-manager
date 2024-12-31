@@ -50,6 +50,7 @@ const TrashScreen = () => {
         await ensureTrashFolderExists();
         await cleanOldFiles();
         const trashFiles = await RNFS.readDir(TRASH_FOLDER);
+        console.log("trashFiles", trashFiles);
         setFiles(
           trashFiles.map((file) => ({
             path: file.path,

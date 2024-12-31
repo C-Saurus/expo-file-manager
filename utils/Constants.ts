@@ -82,6 +82,7 @@ export const restoreFile = async (fileName) => {
 
 export const moveFileToTrash = async (filePath: string) => {
   try {
+    console.log('filePath', filePath);
     await ensureTrashFolderExists();
     const fileName = filePath.split('/').pop();
     const destination = `${TRASH_FOLDER}/${fileName}`;
