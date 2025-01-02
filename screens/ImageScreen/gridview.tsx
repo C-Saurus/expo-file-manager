@@ -18,7 +18,7 @@ import { removeFileToTrash } from '../../stores/document/action';
 import { FsFileTransferDialog } from '../../components/Browser/FsFileTransferDialog';
 import Dialog from 'react-native-dialog';
 import { MaterialIcons } from '@expo/vector-icons';
-import FileItemMedia from '../../components/Browser/Files/FileItemMedia';
+import { FileItemMedia } from '../../components/Browser/Files/FileItemMedia';
 
 export const PhotosByDate: React.FC<{
   fileType: string;
@@ -44,11 +44,9 @@ export const PhotosByDate: React.FC<{
     const [newFileName, setNewFileName] = useState('');
     const [renamingFile, setRenamingFile] = useState<ExtendedAsset>();
     const [initialSelectionDone, setInitialSelectionDone] = useState(false);
+    const listSelected = useRef([]);
+    const [selectedSize, setSelectedSize] = useState(0);
     const renameInputRef = useRef<TextInput>(null);
-
-    const selectedFiles = () => {
-      return assets.filter((file) => file.selected);
-    };
 
     useEffect(() => {
       groupPhotosByDate();
@@ -84,47 +82,45 @@ export const PhotosByDate: React.FC<{
       setRenamingFile(undefined);
     };
 
-    const deleteSelectedFiles = async (item?: any) => {
-      try {
-        setLoading(true);
-        const deleteFile = multiSelect
-          ? assets.filter((file) => file.selected === true)
-          : [item];
-        console.log('deleteFile', deleteFile);
-        const res = await removeFileToTrash(deleteFile.map((item) => {
-          return (
-            {
-              ...item,
-              path: item.uri.slice(7)
-            }
-          )
-        }));
-        console.log('res', res);
-        const filesAfterDelete = assets
-          .filter((file) => !res.includes(file.uri))
-          .map((file) => {
-            return {
-              ...file,
-              selected: false,
-            };
-          });
-        setAssets(filesAfterDelete);
-        cancelMultiSelect();
-      } catch (error) {
-        console.error('Lỗi khi di chuyển file:', error);
-      }
-      setLoading(false);
-    };
+    const deleteSelectedFiles = useCallback(
+      async (item?: ExtendedAsset) => {
+        try {
+          setLoading(true);
+          const deleteFile = listSelected.current.length
+            ? listSelected.current
+            : [item.uri];
+          console.log('deleteFile', deleteFile);
+          const res = await removeFileToTrash(
+            deleteFile.map((item) => {
+              return {
+                ...item,
+                path: item.uri.slice(7),
+              };
+            })
+          );
+          console.log('res', res);
+          const filesAfterDelete = assets
+            .filter((file) => !res.includes(file.uri))
+            .map((file) => {
+              return {
+                ...file,
+                selected: false,
+              };
+            });
+          setAssets(filesAfterDelete);
+          cancelMultiSelect();
+        } catch (error) {
+          console.error('Lỗi khi di chuyển file:', error);
+        }
+        setLoading(false);
+      },
+      [assets]
+    );
 
     const cancelMultiSelect = () => {
       setMultiSelect(false);
       setSelectAll(false);
-      setAssets(
-        assets.map((item) => {
-          item.selected = false;
-          return item;
-        })
-      );
+      listSelected.current = [];
     };
 
     const handleMoveFile = () => {
@@ -164,21 +160,14 @@ export const PhotosByDate: React.FC<{
 
     const toggleSelectAll = () => {
       if (!selectAll) {
-        setAssets(
-          assets.map((item) => {
-            item.selected = true;
-            return item;
-          })
-        );
+        listSelected.current = assets.map((file) => {
+          return file.uri;
+        });
       } else {
-        setAssets(
-          assets.map((item) => {
-            item.selected = false;
-            return item;
-          })
-        );
+        listSelected.current = [];
       }
       setSelectAll((prev) => !prev);
+      setSelectedSize(listSelected.current.length);
     };
 
     const executeTransfer = async (
@@ -211,7 +200,7 @@ export const PhotosByDate: React.FC<{
     };
 
     const moveSelectedFiles = async (destination: string) => {
-      const selectedFiles = assets.filter((file) => file.selected);
+      const selectedFiles = listSelected.current;
       console.log('destination', destination.slice(7));
       const destinationFolderFiles = await getCustomeFileByFolder(
         destination.slice(7)
@@ -262,19 +251,24 @@ export const PhotosByDate: React.FC<{
       setLoading(false);
     };
 
-    const toggleSelect = (item: ExtendedAsset, multiSelectEmit?: boolean) => {
-      if (multiSelectEmit) {
-        setMultiSelect(true);
-      }
-      setAssets(
-        assets.map((i) => {
-          if (item === i) {
-            i.selected = !i.selected;
-          }
-          return i;
-        })
-      );
-    };
+    const toggleSelect = useCallback(
+      (item: ExtendedAsset, multiSelectEmit?: boolean) => {
+        console.log('==toggleSelect==1');
+        if (multiSelect) {
+          setMultiSelect(true);
+          console.log('==toggleSelect==2');
+        }
+        if (listSelected.current.includes(item.uri)) {
+          listSelected.current = listSelected.current.filter(
+            (f) => f !== item.uri
+          );
+        } else {
+          listSelected.current.push(item.uri);
+        }
+        setSelectedSize(listSelected.current.length);
+      },
+      []
+    );
 
     const renderPhotoItem = useCallback(
       ({ item }) =>
@@ -305,6 +299,7 @@ export const PhotosByDate: React.FC<{
     const renderFileItemMedia = ({ item }: { item: ExtendedAsset }) => (
       <FileItemMedia
         item={item}
+        selectAll={selectAll}
         toggleSelect={toggleSelect}
         multiSelect={multiSelect}
         setTransferDialog={setDestinationDialogVisible}
@@ -372,7 +367,7 @@ export const PhotosByDate: React.FC<{
         )}
         <MultiSelect
           multiSelect={multiSelect}
-          displaySelectedSize={`${selectedFiles().length} / ${assets?.length}`}
+          displaySelectedSize={`${selectedSize} / ${assets?.length}`}
           colors={colors}
           selectAll={selectAll}
           cancelMultiSelect={cancelMultiSelect}

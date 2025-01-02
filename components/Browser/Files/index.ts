@@ -38,11 +38,11 @@ export const styles = StyleSheet.create({
       alignItems: 'flex-start',
       justifyContent: 'center',
       height: '100%',
-      width: '83%',
+      width: '80%',
       overflow: 'hidden',
     },
     itemActionButton: {
-      width: '8%',
+      width: '10%',
       height: '100%',
     },
     image: {
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
       borderRadius: 5,
     },
     fileMenu: {
-      marginRight: 5,
+      marginRight: 8,
       height: 60,
       display: 'flex',
       justifyContent: 'center',

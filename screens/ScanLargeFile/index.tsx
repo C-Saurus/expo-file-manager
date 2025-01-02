@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,6 @@ import {
   TouchableOpacity,
   Alert,
   Button,
-  PermissionsAndroid,
-  Platform,
-  Permission,
   NativeModules,
   Image,
 } from 'react-native';
@@ -18,7 +15,6 @@ import { styles } from './style';
 import {
   Feather,
   FontAwesome5,
-  Ionicons,
   MaterialCommunityIcons,
   MaterialIcons,
 } from '@expo/vector-icons';
@@ -27,10 +23,10 @@ import { FileItem } from '../../constants/interface';
 import { bytesToMB } from '../../utils/Filesize';
 import { getCategoryByExtension } from '../../utils/getFileByCategory';
 import { useAppSelector } from '../../hooks/reduxHooks';
+import { Item } from './item';
 
 const getFileExtension = (fileName: string): string => {
   const ext = fileName.split('.').pop();
-  console.log("ext", ext);
   return getCategoryByExtension(ext);
 };
 
@@ -39,8 +35,9 @@ const LargeFilesScanner = ({ route, navigation }) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [largeFiles, setLargeFiles] = useState<FileItem[]>([]);
   const [duplicateFiles, setDuplicateFiles] = useState<FileItem[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<FileItem[]>([]);
+  const [selected, setSelected] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState(false);
+  const selectedFile = useRef<string[]>([]);
 
   useEffect(() => {
     try {
@@ -50,8 +47,8 @@ const LargeFilesScanner = ({ route, navigation }) => {
     }
     return () => {
       setDuplicateFiles([]);
-      setSelectedFiles([]);
       setLargeFiles([]);
+      selectedFile.current = [];
     };
   }, []);
 
@@ -106,10 +103,10 @@ const LargeFilesScanner = ({ route, navigation }) => {
     const items = await RNFS.readDir(dirPath);
     if (dirPath.includes('/Android/data') || dirPath.includes('/Android/obb')) {
       console.warn(`Skipping restricted directory: ${dirPath}`);
-      return;
+      return [];
     }
     if (!items.length) {
-      return
+      return [];
     }
     let files: FileItem[] = [];
     for (const item of items) {
@@ -120,9 +117,10 @@ const LargeFilesScanner = ({ route, navigation }) => {
           path: item.path,
           type: getFileExtension(item.name),
         };
-        console.log("file", file);
+        console.log('file', file);
         files.push(file);
       } else if (item.isDirectory()) {
+        console.log('xxx');
         const subFiles = await scanAllFiles(item.path);
         files = [...files, ...subFiles];
       }
@@ -132,16 +130,17 @@ const LargeFilesScanner = ({ route, navigation }) => {
 
   const scanDuplicateFiles = async (): Promise<void> => {
     const allFiles = await scanAllFiles(RNFS.ExternalStorageDirectoryPath);
+    console.log('allFiles', allFiles);
     const fileMap: { [key: string]: FileItem[] } = {};
     for (const file of allFiles) {
-      const key = `${file.type}-${file.size}`; // Tạo key dựa trên loại và kích thước
+      const key = `${file.type}`; // Tạo key dựa trên loại và kích thước
 
       if (!fileMap[key]) {
         fileMap[key] = [];
       }
       fileMap[key].push(file);
     }
-    console.log("scanDuplicateFiles");
+    console.log('scanDuplicateFiles', fileMap);
     // So sánh các file cùng loại và cùng kích thước
     const duplicates: FileItem[] = [];
     for (const files of Object.values(fileMap)) {
@@ -186,40 +185,21 @@ const LargeFilesScanner = ({ route, navigation }) => {
     }
   };
 
-  const onPressHandler = (item) => {
-    console.log("itemmmmm", item.type);
-    if (item.type === 'image') {
-      navigation.push('ImageGalleryView', {
-        folderName: item.name,
-        prevDir: ``,
-        uriValue: `file://${item.path}`,
-      });
-    } else if (item.type === 'video') {
-      navigation.push('VideoPlayer', {
-        folderName: item.name,
-        prevDir: ``,
-        uriValue: `file://${item.path}`,
-      });
-    } else if (item.type === 'audio') {
-      navigation.push('AudioPlayer', {
-        folderName: item.name,
-        prevDir: ``,
-        uriValue: `file://${item.path}`,
-      });
+  const handleSelectFile = useCallback((file: FileItem) => {
+    if (selectedFile.current.includes(file.path)) {
+      selectedFile.current = selectedFile.current.filter(
+        (f) => f !== file.path
+      );
     } else {
-      navigation.push('MiscFileView', {
-        folderName: item.path,
-      });
+      selectedFile.current.push(file.path);
     }
-  };
-
-  const handleSelectFile = (file: FileItem) => {
-    if (selectedFiles.includes(file)) {
-      setSelectedFiles(selectedFiles.filter((f) => f !== file));
+    console.log('selectedFile.current', selectedFile.current);
+    if (selectedFile.current.length > 0) {
+      setSelected(true);
     } else {
-      setSelectedFiles([...selectedFiles, file]);
+      setSelected(false);
     }
-  };
+  }, []);
 
   const handleDeleteSelectedFiles = async (): Promise<void> => {
     Alert.alert('Xóa tệp tin', 'Bạn có chắc chắn muốn xóa các tệp đã chọn?', [
@@ -228,36 +208,40 @@ const LargeFilesScanner = ({ route, navigation }) => {
         text: 'Xóa',
         onPress: async () => {
           try {
+            console.log('listtttttttttttt', selectedFile.current);
             const { FileDeletionNativeModule } = NativeModules;
             await Promise.all(
-              selectedFiles.map(async (file) => {
+              selectedFile.current.map(async (file) => {
                 try {
                   const result = await FileDeletionNativeModule.deleteMediaFile(
-                    file.path,
+                    file,
                     (res: any) => {
                       console.log('res FileDeletionNativeModule', res);
                     }
                   );
                   console.log(
-                    `Deleted successfully: ${file.path} with result: ${result}`
+                    `Deleted successfully: ${file} with result: ${result}`
                   );
+                  if (result) {
+                    Alert.alert('Thành công', 'Các tệp đã được xóa.');
+                  } else {
+                    Alert.alert('Lỗi', 'Không thể xóa các tệp');
+                  }
                 } catch (error) {
-                  console.error(
-                    `Failed to delete: ${file.path} - ${error.message}`
-                  );
+                  console.error(`Failed to delete: ${file} - ${error.message}`);
                 }
               })
             );
 
             const updatedLargeFiles = largeFiles.filter(
               (file) =>
-                !selectedFiles.some(
-                  (selectedFile) => selectedFile.path === file.path
+                !selectedFile.current.some(
+                  (selectedFilePath) => selectedFilePath === file.path
                 )
             );
 
             setLargeFiles(updatedLargeFiles);
-            setSelectedFiles([]);
+            selectedFile.current = [];
 
             Alert.alert('Thành công', 'Các tệp đã được xóa.');
           } catch (error) {
@@ -268,42 +252,9 @@ const LargeFilesScanner = ({ route, navigation }) => {
     ]);
   };
 
-  const ThumbnailImage = ({ uri }) => {
-    return <Image style={styles.image} source={{ uri: `file://${uri}` }} />;
-  };
-
-  const ItemThumbnail = ({ item }) => {
-    console.log("item.type", item.type);
-    switch (item.type) {
-      case 'image':
-      case 'video':
-        return <ThumbnailImage uri={item.path} />;
-      case 'audio':
-        return (
-          <FontAwesome5 name="file-audio" size={35} color={colors.primary} />
-        );
-      case 'font':
-        return <FontAwesome5 name="font" size={35} color={colors.primary} />;
-      case 'application':
-        return (
-          <MaterialCommunityIcons
-            name={'file-outline'}
-            size={35}
-            color={colors.primary}
-          />
-        );
-      case 'text':
-        return (
-          <MaterialCommunityIcons
-            name={'file-outline'}
-            size={35}
-            color={colors.primary}
-          />
-        );
-      default:
-        return <Feather name="file" size={35} color={colors.primary} />;
-    }
-  };
+  const renderItem = ({ item }) => (
+    <Item item={item} handleSelectFile={handleSelectFile} />
+  );
 
   if (isScanning) {
     return (
@@ -328,35 +279,12 @@ const LargeFilesScanner = ({ route, navigation }) => {
       <FlatList
         data={sortedFiles()}
         keyExtractor={(item) => item.path}
-        renderItem={({ item }) => (
-          <View style={styles.fileItem}>
-            <TouchableOpacity
-              style={{ flex: 1, flexDirection: 'row' }}
-              onPress={() => onPressHandler(item)}
-            >
-              <View style={styles.itemThumbnail}>
-                <ItemThumbnail item={item} />
-              </View>
-              <View style={[styles.itemDetails]}>
-                <Text numberOfLines={2} style={[styles.fileName, {color: colors.primary}]}>{item.path}</Text>
-                <Text style={{ fontSize: 10, color: colors.primary }}>{`${bytesToMB(
-                  item.size
-                )} MB`}</Text>
-              </View>
-            </TouchableOpacity>
-            <Checkbox
-              color={colors.primary}
-              uncheckedColor={colors.primary}
-              status={!!selectedFiles.includes(item) ? 'checked' : 'unchecked'}
-              onPress={() => handleSelectFile(item)}
-            />
-          </View>
-        )}
+        renderItem={renderItem}
         ListEmptyComponent={renderEmptyComponent}
       />
       <Button
         title="Xóa các tệp đã chọn"
-        disabled={selectedFiles.length <= 0}
+        disabled={!selected}
         onPress={handleDeleteSelectedFiles}
       />
     </View>

@@ -13,7 +13,6 @@ import { FlatList } from 'react-native-gesture-handler';
 import { MaterialIcons } from '@expo/vector-icons';
 import { removeFileToTrash, renameFiles } from '../../stores/document/action';
 import { ReadDirItem } from 'react-native-fs';
-import FileItemCommon from '../../components/Browser/Files/FileItemCommon';
 import Dialog from 'react-native-dialog';
 import { styles } from './style';
 import { FsFileTransferDialog } from '../../components/Browser/FsFileTransferDialog';
@@ -27,6 +26,7 @@ import {
 } from '../../utils/Constants';
 import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FileItemCommon } from '../../components/Browser/Files/FileItemCommon';
 
 type TabDocFilesProps = {
   data: ReadDirItem[];
@@ -40,8 +40,8 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     const { top } = useSafeAreaInsets();
     const { colors } = useAppSelector((state) => state.theme.theme);
     const externalLoading = useAppSelector(
-        (state) => state.documentFile.loading
-      );
+      (state) => state.documentFile.loading
+    );
     const [renameDialogVisible, setRenameDialogVisible] = useState(false);
     const [newFileName, setNewFileName] = useState('');
     const [renamingFile, setRenamingFile] = useState<ReadDirItem>();
@@ -65,39 +65,38 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         };
       })
     );
+    const listSelected = useRef([]);
+    const [selectedSize, setSelectedSize] = useState(0)
 
     useEffect(() => {
       console.log('TabDocFiles');
     }, [data]);
 
-    const selectedFiles = () => {
-      return files.filter((file) => file.selected);
-    };
-
-    const deleteSelectedFiles = async (item?: ReadDirItem) => {
+    const deleteSelectedFiles = useCallback(async (item?: ReadDirItem) => {
       try {
         setLoading(true);
-        const deleteFile = multiSelect
-          ? files.filter((file) => file.selected === true)
-          : [item];
+        const deleteFile = listSelected.current.length
+          ? listSelected.current
+          : [item.path];
         console.log('deleteFile', deleteFile);
         const res = await removeFileToTrash(deleteFile);
         console.log('res', res);
-        const filesAfterDelete = files
-          .filter((file) => !res.includes(file.path))
-          .map((file) => {
-            return {
-              ...file,
-              selected: false,
-            };
-          });
-        setFiles(filesAfterDelete);
+        setFiles((prev) =>
+          prev
+            .filter((file) => !res.includes(file.path))
+            .map((file) => {
+              return {
+                ...file,
+                selected: false,
+              };
+            })
+        );
         cancelMultiSelect();
       } catch (error) {
         console.error('Lỗi khi di chuyển file:', error);
       }
       setLoading(false);
-    };
+    }, []);
 
     const onBackPress = () => {
       if (navigation.canGoBack()) {
@@ -135,12 +134,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     const cancelMultiSelect = () => {
       setMultiSelect(false);
       setSelectAll(false);
-      setFiles(
-        files.map((item) => {
-          item.selected = false;
-          return item;
-        })
-      );
+      listSelected.current = [];
     };
 
     const handleMoveFile = () => {
@@ -180,31 +174,24 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
 
     const toggleSelectAll = () => {
       if (!selectAll) {
-        setFiles(
-          files.map((item) => {
-            item.selected = true;
-            return item;
-          })
-        );
+        listSelected.current = files.map((file) => {
+          return file.path;
+        });
       } else {
-        setFiles(
-          files.map((item) => {
-            item.selected = false;
-            return item;
-          })
-        );
+        listSelected.current = [];
       }
       setSelectAll((prev) => !prev);
+      setSelectedSize(listSelected.current.length)
     };
 
     const executeTransfer = async (
-      selectedFiles: ReadDirItem[],
+      selectedFiles: string[],
       destination: string
     ) => {
       const transferPromises = selectedFiles.map((file) => {
         if (moveOrCopy === 'Move')
-          return moveFileToCustomeFolder(file.path, destination);
-        else return copyFileToCustomeFolder(file.path, destination);
+          return moveFileToCustomeFolder(file, destination);
+        else return copyFileToCustomeFolder(file, destination);
       });
       const res = await Promise.all(transferPromises);
       const filesAfterDelete =
@@ -227,7 +214,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     };
 
     const moveSelectedFiles = async (destination: string) => {
-      const selectedFiles = files.filter((file) => file.selected);
+      const selectedFiles = listSelected.current;
       console.log('destination', destination.slice(7));
       const destinationFolderFiles = await getCustomeFileByFolder(
         destination.slice(7)
@@ -235,7 +222,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
       const conflictingFiles = selectedFiles.filter(
         (file) =>
           destinationFolderFiles.findIndex(
-            (destinationFile) => destinationFile.path === file.path
+            (destinationFile) => destinationFile.path === file
           ) !== -1
       );
       const confLen = conflictingFiles.length;
@@ -265,27 +252,25 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     };
 
     const toggleSelect = useCallback(
-      (item: ReadDirItem & { selected?: boolean }, multiSelect?: boolean) => {
+      (item: ReadDirItem, multiSelect?: boolean) => {
         console.log('==toggleSelect==1');
         if (multiSelect) {
           setMultiSelect(true);
           console.log('==toggleSelect==2');
         }
-        setFiles(
-          files.map((i) => {
-            if (item === i) {
-              i.selected = !i.selected;
-            }
-            return i;
-          })
-        );
+        if (listSelected.current.includes(item.path)) {
+          listSelected.current = listSelected.current.filter(
+            (f) => f !== item.path
+          );
+        } else {
+          listSelected.current.push(item.path);
+        }
+        setSelectedSize(listSelected.current.length)
       },
       []
     );
 
-    const handleSearch = () => {
-
-    }
+    const handleSearch = () => {};
 
     useEffect(() => {
       if (renameDialogVisible && Platform.OS === 'android') {
@@ -305,7 +290,18 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         renamingFile.path.lastIndexOf('/')
       );
       const newPath = `${directoryPath}/${newFileName}`;
-      dispatch(renameFiles({ oldPath: renamingFile.path, newPath }));
+      setFiles((prev) =>
+        prev.map((file) => {
+          if (file.path === renamingFile.path) {
+            return {
+              ...file,
+              name: newFileName,
+              path: newPath
+            }
+          }
+          return file
+        })
+      );
       setRenamingFile(undefined);
     };
 
@@ -315,6 +311,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
           key={`${item.path}`}
           item={item}
           multiSelect={multiSelect}
+          selectAll={selectAll}
           toggleSelect={toggleSelect}
           setTransferDialog={setDestinationDialogVisible}
           setMoveOrCopy={setMoveOrCopy}
@@ -374,7 +371,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         )}
         <MultiSelect
           multiSelect={multiSelect}
-          displaySelectedSize={`${selectedFiles().length} / ${files?.length}`}
+          displaySelectedSize={`${selectedSize} / ${files?.length}`}
           colors={colors}
           selectAll={selectAll}
           cancelMultiSelect={cancelMultiSelect}

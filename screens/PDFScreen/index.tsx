@@ -11,7 +11,6 @@ import { styles } from '../Document/style';
 const PDFScreen = () => {
   const dispatch = useAppDispatch();
   const hasFetchFile = useRef(false);
-  const { colors } = useAppSelector((state) => state.theme.theme);
   const { pdf, error } = useAppSelector(
     (state) => state.documentFile
   );

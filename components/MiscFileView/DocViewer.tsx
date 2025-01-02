@@ -6,7 +6,7 @@ import RNFS from 'react-native-fs';
 import { useAppSelector } from '../../hooks/reduxHooks';
 
 const DocViewer = ({ filePath }) => {
-  const { theme } = useAppSelector((state) => state.theme);
+  const { colors } = useAppSelector((state) => state.theme.theme);
   // const [isOnline, setIsOnline] = useState(true);
   const [htmlContent, setHtmlContent] = useState('');
   const [loading, setLoading] = useState<boolean>();
@@ -35,11 +35,10 @@ const DocViewer = ({ filePath }) => {
   };
 
   const convertDocxToHtml = (filePath: string) => {
-    console.log('filePath', filePath);
     RNFS.readFile(filePath, 'base64')
       .then((base64Data) => {
         const buffer = Buffer.from(base64Data, 'base64');
-        const arrayBuffer = bufferToArrayBuffer(buffer); // Chuyển đổi thành ArrayBuffer
+        const arrayBuffer = bufferToArrayBuffer(buffer);
         return mammoth.convertToHtml({
           arrayBuffer: arrayBuffer as ArrayBuffer,
         });
@@ -48,7 +47,7 @@ const DocViewer = ({ filePath }) => {
         setHtmlContent(result.value);
       })
       .catch((error) => {
-        console.error('Error loading DOCX file:', error);
+        console.error('Error loading docx file:', error);
       })
       .finally(() => {
         setLoading(false);
@@ -69,19 +68,18 @@ const DocViewer = ({ filePath }) => {
       <View
         style={{
           flex: 1,
-          backgroundColor: theme.colors.background2,
+          backgroundColor: colors.background2,
           width: '100%',
         }}
       >
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={{ flex: 1 }}>
       <WebView
-        forceDarkOn={theme.dark}
         originWhitelist={['*']}
         source={{ html: htmlContent }}
         style={{ flex: 1 }}

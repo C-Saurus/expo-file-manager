@@ -21,7 +21,6 @@ import {
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import FileItem from '../components/Browser/Files/FileItem';
 import Pickimages from '../components/Browser/PickImages';
 import ActionSheet from '../components/ActionSheet';
 
@@ -52,6 +51,7 @@ import { getCategoryByExtension } from '../utils/getFileByCategory';
 import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DisplayOptionModal } from '../components/Modals/DisplayOptionModal';
+import { FileItem } from '../components/Browser/Files/FileItem';
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -82,24 +82,12 @@ const Browser = ({ route }: IBrowserProps) => {
   const [selectAll, setSelectAll] = useState(false);
   const [multiSelect, setMultiSelect] = useState(false);
   const [openOption, setOpenOption] = useState(false);
-
-  const selectedFiles = () => {
-    return files.filter((file) => file.selected);
-  };
+  const [selectedSize, setSelectedSize] = useState(0);
+  const listSelected = useRef([]);
 
   useEffect(() => {
     getFiles();
   }, [currentDir]);
-
-  // useEffect(() => {
-  //   if (route?.params?.folderName !== undefined) {
-  //     setCurrentDir((prev) =>
-  //       prev?.endsWith('/')
-  //         ? prev + route.params.folderName
-  //         : prev + '/' + route.params.folderName
-  //     );
-  //   }
-  // }, [route]);
 
   useEffect(() => {
     const backAction = () => {
@@ -121,6 +109,7 @@ const Browser = ({ route }: IBrowserProps) => {
       currentDir={currentDir}
       toggleSelect={toggleSelect}
       multiSelect={multiSelect}
+      selectAll={selectAll}
       setTransferDialog={setDestinationDialogVisible}
       setMoveOrCopy={setMoveOrCopy}
       deleteSelectedFiles={deleteSelectedFiles}
@@ -159,37 +148,30 @@ const Browser = ({ route }: IBrowserProps) => {
       );
   };
 
-  const toggleSelect = (item: fileItem, multiSelect?: boolean) => {
+  const toggleSelect = useCallback((item: fileItem, multiSelect?: boolean) => {
+    console.log('==toggleSelect==1');
     if (multiSelect) {
       setMultiSelect(true);
+      console.log('==toggleSelect==2');
     }
-    setFiles(
-      files.map((i) => {
-        if (item === i) {
-          i.selected = !i.selected;
-        }
-        return i;
-      })
-    );
-  };
+    if (listSelected.current.includes(item.uri)) {
+      listSelected.current = listSelected.current.filter((f) => f !== item.uri);
+    } else {
+      listSelected.current.push(item.uri);
+    }
+    setSelectedSize(listSelected.current.length);
+  }, []);
 
   const toggleSelectAll = () => {
     if (!selectAll) {
-      setFiles(
-        files.map((item) => {
-          item.selected = true;
-          return item;
-        })
-      );
+      listSelected.current = files.map((file) => {
+        return file.uri;
+      });
     } else {
-      setFiles(
-        files.map((item) => {
-          item.selected = false;
-          return item;
-        })
-      );
+      listSelected.current = [];
     }
     setSelectAll((prev) => !prev);
+    setSelectedSize(listSelected.current.length);
   };
 
   const getFiles = async () => {
@@ -212,7 +194,6 @@ const Browser = ({ route }: IBrowserProps) => {
             return Object({
               ...file,
               name,
-              selected: false,
             });
           });
           setFiles(tempfiles);
@@ -377,7 +358,7 @@ const Browser = ({ route }: IBrowserProps) => {
   };
 
   const moveSelectedFiles = async (destination: string) => {
-    const selectedFiles = files.filter((file) => file.selected);
+    const selectedFiles = listSelected.current;
     const destinationFolderFiles = await FileSystem.readDirectoryAsync(
       destination
     );
@@ -431,10 +412,8 @@ const Browser = ({ route }: IBrowserProps) => {
     }
   };
 
-  const deleteSelectedFiles = async (item?: fileItem) => {
-    const deleteFile = multiSelect
-      ? files.filter((file) => file.selected === true)
-      : [item];
+  const deleteSelectedFiles = useCallback(async (item?: fileItem) => {
+    const deleteFile = multiSelect ? listSelected.current : [item.uri];
     const deleteProms = deleteFile.map((file) =>
       FileSystem.deleteAsync(file.uri)
     );
@@ -450,7 +429,7 @@ const Browser = ({ route }: IBrowserProps) => {
         getFiles();
         cancelMultiSelect();
       });
-  };
+  }, []);
 
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
 
@@ -530,9 +509,7 @@ const Browser = ({ route }: IBrowserProps) => {
     setOpenOption(false);
   };
 
-  const handleSearch = () => {
-
-  }
+  const handleSearch = () => {};
 
   const onAddFilePress = () => {
     setNewFileActionSheet(true);
@@ -709,7 +686,7 @@ const Browser = ({ route }: IBrowserProps) => {
         <View style={[styles.nav]}>
           <View style={styles.navFirst}>
             <Text style={styles.count}>
-              {selectedFiles().length} / {files?.length}
+              {selectedSize} / {files?.length}
             </Text>
             <Text style={styles.count}>Multiple Select</Text>
             <TouchableOpacity onPress={() => cancelMultiSelect()}>

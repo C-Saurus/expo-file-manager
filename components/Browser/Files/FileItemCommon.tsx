@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text, View, Image, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
@@ -13,25 +13,28 @@ import { useAppDispatch, useAppSelector } from '../../../hooks/reduxHooks';
 import { fileIcons } from '../../../utils/Constants';
 import { ReadDirItem } from 'react-native-fs';
 import { styles } from '.';
+import { Checkbox } from 'react-native-paper';
 
 type Props = {
-  item: ReadDirItem & { selected?: boolean };
+  item: ReadDirItem;
   multiSelect: boolean;
+  selectAll: boolean;
   toggleSelect: (
-    arg0: ReadDirItem & { selected?: boolean },
+    arg0: ReadDirItem,
     arg1?: boolean
   ) => void;
   setTransferDialog: (arg0: boolean) => void;
   setMoveOrCopy: (arg0: string) => void;
-  setRenamingFile: (arg0: ReadDirItem & { selected?: boolean }) => void;
+  setRenamingFile: (arg0: ReadDirItem) => void;
   setRenameDialogVisible: (arg0: boolean) => void;
   setNewFileName: (arg0: string) => void;
-  deleteSelectedFiles: (arg0?: ReadDirItem & { selected?: boolean }) => void;
+  deleteSelectedFiles: (arg0?: ReadDirItem) => void;
 };
 
-export default function FileItemCommon({
+export const FileItemCommon: React.FC<Props> = React.memo(({
   item,
   multiSelect,
+  selectAll,
   toggleSelect,
   setTransferDialog,
   setMoveOrCopy,
@@ -39,19 +42,20 @@ export default function FileItemCommon({
   setRenameDialogVisible,
   setNewFileName,
   deleteSelectedFiles,
-}: Props) {
+}) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const navigation = useNavigation<StackNavigationProp<any>>();
   const [itemActionsOpen, setItemActionsOpen] = useState(false);
   const itemMime = mime.lookup(item.path) || ' ';
   const itemType: string = item.isDirectory ? 'dir' : itemMime.split('/')[0];
   const itemFormat: string = item.isDirectory ? 'dir' : itemMime.split('/')[1];
+  const [selected, setSelected] = useState(false)
 
-  const ThumbnailImage = ({ uri }) => {
+  const ThumbnailImage = useCallback(({ uri }) => {
     return <Image style={styles.image} source={{ uri: `file://${uri}` }} />;
-  };
+  }, [])
 
-  const ItemThumbnail = () => {
+  const ItemThumbnail = useCallback(() => {
     switch (itemType) {
       case 'dir':
         return <Feather name="folder" size={35} color={colors.primary} />;
@@ -83,7 +87,7 @@ export default function FileItemCommon({
       default:
         return <Feather name="file" size={35} color={colors.primary} />;
     }
-  };
+  }, [colors])
 
   const onPressHandler = () => {
     console.log('multiSelect', multiSelect);
@@ -113,8 +117,40 @@ export default function FileItemCommon({
       }
     } else {
       toggleSelect(item);
+      setSelected((prev) => !prev)
     }
   };
+
+  const renderItemContent = useMemo(
+    () => (
+      <TouchableOpacity
+        style={styles.itemLeft}
+        activeOpacity={0.5}
+        onPress={onPressHandler}
+        onLongPress={() => {
+          console.log('onLongPress', multiSelect);
+          setSelected(true);
+          toggleSelect(item, true);
+        }}
+      >
+        <View style={styles.itemThumbnail}>
+          {itemType && <ItemThumbnail />}
+        </View>
+        <View style={styles.itemDetails}>
+          <Text
+            numberOfLines={1}
+            style={{ ...styles.fileName, color: colors.primary }}
+          >
+            {decodeURI(item.name)}
+          </Text>
+          <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
+            {humanFileSize(item.size)}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ),
+    []
+  );
 
   return (
     <View style={styles.container}>
@@ -187,6 +223,7 @@ export default function FileItemCommon({
           } else if (buttonIndex === 2) {
             if (!multiSelect) {
               toggleSelect(item);
+              setSelected((prev) => !prev)
             }
             setMoveOrCopy('Move');
             setTransferDialog(true);
@@ -194,6 +231,7 @@ export default function FileItemCommon({
           } else if (buttonIndex === 1) {
             if (!multiSelect) {
               toggleSelect(item);
+              setSelected((prev) => !prev)
             }
             setMoveOrCopy('Copy');
             setTransferDialog(true);
@@ -209,32 +247,7 @@ export default function FileItemCommon({
         titleStyle={{ color: colors.secondary }}
       />
       <View style={styles.itemContainer}>
-        <TouchableOpacity
-          style={styles.itemLeft}
-          activeOpacity={0.5}
-          onPress={onPressHandler}
-          onLongPress={() => {
-            console.log('onLongPress', multiSelect);
-            if (!multiSelect) {
-              toggleSelect(item, true);
-            }
-          }}
-        >
-          <View style={styles.itemThumbnail}>
-            {itemType && <ItemThumbnail />}
-          </View>
-          <View style={styles.itemDetails}>
-            <Text
-              numberOfLines={1}
-              style={{ ...styles.fileName, color: colors.primary }}
-            >
-              {decodeURI(item.name)}
-            </Text>
-            <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
-              {humanFileSize(item.size)}
-            </Text>
-          </View>
-        </TouchableOpacity>
+        {renderItemContent}
         {/**Item Action Button */}
         <View
           style={{
@@ -243,9 +256,9 @@ export default function FileItemCommon({
           }}
         >
           <TouchableOpacity
-            onPress={() =>
-              !multiSelect ? setItemActionsOpen(true) : toggleSelect(item)
-            }
+            onPress={() => {
+              !multiSelect && setItemActionsOpen(true)
+            }}
           >
             <View style={styles.fileMenu}>
               {!multiSelect ? (
@@ -254,10 +267,17 @@ export default function FileItemCommon({
                   size={24}
                   color={colors.primary}
                 />
-              ) : item.selected ? (
-                <Feather name="check-square" size={24} color={colors.primary} />
-              ) : (
-                <Feather name="square" size={24} color={colors.primary} />
+              ) : 
+              (
+                <Checkbox
+                  color={colors.primary}
+                  status={selected || selectAll ? 'checked' : 'unchecked'}
+                  onPress={() => {
+                    toggleSelect(item)
+                    setSelected((prev) => !prev)
+                  }}
+                  uncheckedColor={colors.primary}
+                />
               )}
             </View>
           </TouchableOpacity>
@@ -265,4 +285,4 @@ export default function FileItemCommon({
       </View>
     </View>
   );
-}
+})

@@ -28,11 +28,11 @@ export const renameFiles = createAsyncThunk(
 );
 
 export const removeFileToTrash = async (
-  filestoBeDeleted?: ReadDirItem[]
+  filestoBeDeleted?: string[]
 ) => {
   try {
     const promises = filestoBeDeleted.map((file) => {
-      return moveFileToTrash(file.path);
+      return moveFileToTrash(file);
     });
 
     const filestoBeDeletedRes = await Promise.all(promises);
