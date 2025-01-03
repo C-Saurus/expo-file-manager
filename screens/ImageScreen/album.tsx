@@ -60,28 +60,6 @@ export const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
       getAlbums();
     }, []);
 
-    const toggleSelect = (item: ExtendedAsset) => {
-      if (fileType === 'audio') {
-        navigation.push('AudioPlayer', {
-          folderName: item.filename,
-          prevDir: '',
-          uriValue: item.uri,
-        });
-      } else if (fileType === 'video') {
-        navigation.push('VideoPlayer', {
-          folderName: '',
-          prevDir: '',
-          uriValue: item.uri,
-        });
-      } else {
-        navigation.push('ImageGalleryView', {
-          folderName: item.filename,
-          prevDir: '',
-          uriValue: item.uri,
-        });
-      }
-    };
-
     // const unSelectAll = () => {
     //   setAssets(
     //     assets.map((i) => {
@@ -150,7 +128,6 @@ export const PhotosByAlbum: React.FC<{ fileType: string }> = React.memo(
             <AssetList
               fileType={fileType}
               albumId={selectedAlbum.id}
-              toggleSelect={toggleSelect}
             />
           )}
         </View>

@@ -24,6 +24,7 @@ import { bytesToMB } from '../../utils/Filesize';
 import { getCategoryByExtension } from '../../utils/getFileByCategory';
 import { useAppSelector } from '../../hooks/reduxHooks';
 import { Item } from './item';
+import { deleteFilePermanently } from '../../utils/Constants';
 
 const getFileExtension = (fileName: string): string => {
   const ext = fileName.split('.').pop();
@@ -37,7 +38,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
   const [duplicateFiles, setDuplicateFiles] = useState<FileItem[]>([]);
   const [selected, setSelected] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState(false);
-  const selectedFile = useRef<string[]>([]);
+  const selectedFile = useRef<FileItem[]>([]);
 
   useEffect(() => {
     try {
@@ -78,7 +79,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
       for (const item of items) {
         if (item.isFile()) {
           const stats = await RNFS.stat(item?.path);
-          if (stats && stats?.size >= 1024 * 1024) {
+          if (stats && stats?.size >= 1024) {
             // 50MB
             setLargeFiles((prev) => [
               ...prev,
@@ -186,12 +187,12 @@ const LargeFilesScanner = ({ route, navigation }) => {
   };
 
   const handleSelectFile = useCallback((file: FileItem) => {
-    if (selectedFile.current.includes(file.path)) {
+    if (selectedFile.current.includes(file)) {
       selectedFile.current = selectedFile.current.filter(
-        (f) => f !== file.path
+        (f) => f.path !== file.path
       );
     } else {
-      selectedFile.current.push(file.path);
+      selectedFile.current.push(file);
     }
     console.log('selectedFile.current', selectedFile.current);
     if (selectedFile.current.length > 0) {
@@ -202,51 +203,44 @@ const LargeFilesScanner = ({ route, navigation }) => {
   }, []);
 
   const handleDeleteSelectedFiles = async (): Promise<void> => {
-    Alert.alert('Xóa tệp tin', 'Bạn có chắc chắn muốn xóa các tệp đã chọn?', [
-      { text: 'Hủy', style: 'cancel' },
+    Alert.alert('Delete file', 'Are you sure to delete selected file?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Xóa',
+        text: 'Delete',
         onPress: async () => {
-          try {
-            console.log('listtttttttttttt', selectedFile.current);
-            const { FileDeletionNativeModule } = NativeModules;
-            await Promise.all(
-              selectedFile.current.map(async (file) => {
-                try {
-                  const result = await FileDeletionNativeModule.deleteMediaFile(
-                    file,
-                    (res: any) => {
-                      console.log('res FileDeletionNativeModule', res);
-                    }
-                  );
-                  console.log(
-                    `Deleted successfully: ${file} with result: ${result}`
-                  );
-                  if (result) {
-                    Alert.alert('Thành công', 'Các tệp đã được xóa.');
+          console.log('listtttttttttttt', selectedFile.current);
+          const { FileDeletionNativeModule } = NativeModules;
+          const responseList = [];
+          console.log('X');
+          selectedFile.current.forEach(async (file) => {
+            try {
+              console.log('i', file);
+              await FileDeletionNativeModule.deleteFileMedia(
+                file.path,
+                file.type,
+                (res: any) => {
+                  console.log('Ressssssssss', res);
+                  if (res) {
+                    Alert.alert('Success', 'File deleted.');
+                    responseList.push(file.path);
                   } else {
-                    Alert.alert('Lỗi', 'Không thể xóa các tệp');
+                    Alert.alert('Error', 'File deleted error: ' + file.name);
                   }
-                } catch (error) {
-                  console.error(`Failed to delete: ${file} - ${error.message}`);
                 }
-              })
-            );
+              );
+            } catch (error) {
+              console.error(
+                `Failed to delete: ${file.name} - ${error.message}`
+              );
+              Alert.alert('Error', 'File deleted error: ' + error.message);
+            }
+          });
+          const updatedLargeFiles = largeFiles.filter(
+            (file) => !responseList.includes(file.path)
+          );
 
-            const updatedLargeFiles = largeFiles.filter(
-              (file) =>
-                !selectedFile.current.some(
-                  (selectedFilePath) => selectedFilePath === file.path
-                )
-            );
-
-            setLargeFiles(updatedLargeFiles);
-            selectedFile.current = [];
-
-            Alert.alert('Thành công', 'Các tệp đã được xóa.');
-          } catch (error) {
-            Alert.alert('Lỗi', 'Không thể xóa các tệp: ' + error.message);
-          }
+          setLargeFiles(updatedLargeFiles);
+          selectedFile.current = [];
         },
       },
     ]);

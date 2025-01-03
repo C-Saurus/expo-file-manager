@@ -48,10 +48,8 @@ export default function Main() {
     const hasPassCode = await SecureStore.getItemAsync('hasPassCode');
     if (JSON.parse(hasPassCode)) {
       setLocked(true);
-      return true;
     } else {
       setLocked(false);
-      return false;
     }
   };
 
@@ -89,38 +87,12 @@ export default function Main() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  useEffect(() => {
-    getPassCodeStatus();
-  }, []);
-
-  if (locked && fontsLoaded) {
+  if (locked) {
     return <LockScreen setLocked={setLocked} />;
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      {/* <Snackbar
-        visible={true}
-        style={{ backgroundColor: theme.colors.background3 }}
-        theme={{
-          colors: { surface: theme.colors.text },
-        }}
-        onDismiss={() => dispatch(hideSnack())}
-        duration={2000}
-        action={
-          snackLabel
-            ? {
-                label: snackLabel,
-                onPress: () => {},
-              }
-            : {
-              label: 'snackLabel',
-              onPress: () => {},
-            }
-        }
-      >
-        {snackMessage}
-      </Snackbar> */}
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
       <NavigationContainer theme={theme.dark ? DarkTheme : DefaultTheme}>
         <MainNavigator />

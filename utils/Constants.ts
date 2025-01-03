@@ -1,4 +1,4 @@
-import { Dimensions } from 'react-native';
+import { Dimensions, NativeModules } from 'react-native';
 
 export const { width: SIZE, height: HEIGHT } = Dimensions.get('window');
 
@@ -6,8 +6,9 @@ export const reExt = new RegExp(/(?:\.([^.]+))?$/);
 export const base64reg = /data:image\/[^;]+;base64,/;
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
+import { FileItem } from '../constants/interface';
 
-export const LOCAL_FOLDER = RNFS.DocumentDirectoryPath
+export const LOCAL_FOLDER = RNFS.DocumentDirectoryPath;
 export const TRASH_FOLDER = `${RNFS.DocumentDirectoryPath}/Trash`;
 export const IMAGE_FOLDER = `${RNFS.DocumentDirectoryPath}/Image`;
 export const VIDEO_FOLDER = `${RNFS.DocumentDirectoryPath}/Video`;
@@ -46,8 +47,8 @@ const saveOriginalPath = async (fileName, originalPath) => {
 
 export const checkExistFile = async (file: string) => {
   const exists = await RNFS.exists(file);
-  return exists
-}
+  return exists;
+};
 
 export const ensureTrashFolderExists = async () => {
   const exists = await RNFS.exists(TRASH_FOLDER);
@@ -86,10 +87,10 @@ export const moveFileToTrash = async (filePath: string) => {
     await ensureTrashFolderExists();
     const fileName = filePath.split('/').pop();
     const destination = `${TRASH_FOLDER}/${fileName}`;
-    console.log("filePath", filePath);
-    console.log("destination", destination);
+    console.log('filePath', filePath);
+    console.log('destination', destination);
     await RNFS.moveFile(filePath, destination);
-    return filePath
+    return filePath;
   } catch (error) {
     console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);
     return undefined;
@@ -104,9 +105,9 @@ export const moveFileToCustomeFolder = async (
     await ensureTrashFolderExists();
     const fileName = filePath.split('/').pop();
     const destination = `${folder}/${fileName}`;
-    console.log("new", destination)
+    console.log('new', destination);
     await RNFS.moveFile(filePath, destination);
-    return filePath
+    return filePath;
   } catch (error) {
     console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);
     return undefined;
@@ -122,7 +123,7 @@ export const copyFileToCustomeFolder = async (
     const fileName = filePath.split('/').pop();
     const destination = `${folder}/${fileName}`;
     await RNFS.copyFile(filePath, destination);
-    return filePath
+    return filePath;
   } catch (error) {
     console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);
     return undefined;
@@ -158,6 +159,32 @@ export const getLocalFileSize = async (uri: string) => {
     console.error('Error fetching local file size:', error);
     return null;
   }
+};
+
+export const deleteFilePermanently = async (
+  selectedFile: FileItem[]
+) => {
+  const { FileDeletionNativeModule } = NativeModules;
+  const res = await Promise.all(
+    selectedFile.map(async (file) => {
+      try {
+        await FileDeletionNativeModule.deleteFileMedia(
+          file.path,
+          file.type,
+          (res: any) => {
+            if (res) {
+              return file.path
+            }
+            return undefined
+          }
+        );
+      } catch (error) {
+        console.error(`Failed to delete: ${file} - ${error.message}`);
+        return undefined
+      }
+    })
+  );
+  return res;
 };
 
 export const fileIcons = {
