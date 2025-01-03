@@ -92,10 +92,7 @@ export const PhotosByDate: React.FC<{
           console.log('deleteFile', deleteFile);
           const res = await removeFileToTrash(
             deleteFile.map((item) => {
-              return {
-                ...item,
-                path: item.uri.slice(7),
-              };
+              return item.uri.slice(7)
             })
           );
           console.log('res', res);
@@ -176,8 +173,8 @@ export const PhotosByDate: React.FC<{
     ) => {
       const transferPromises = selectedFiles.map((file) => {
         if (moveOrCopy === 'Copy')
-          return moveFileToCustomeFolder(file.uri, destination);
-        else return copyFileToCustomeFolder(file.uri, destination);
+          return moveFileToCustomeFolder(file.uri.slice(7), destination);
+        else return copyFileToCustomeFolder(file.uri.slice(7), destination);
       });
       const res = await Promise.all(transferPromises);
       const filesAfterDelete =
@@ -254,7 +251,7 @@ export const PhotosByDate: React.FC<{
     const toggleSelect = useCallback(
       (item: ExtendedAsset, multiSelectEmit?: boolean) => {
         console.log('==toggleSelect==1');
-        if (multiSelect) {
+        if (multiSelectEmit) {
           setMultiSelect(true);
           console.log('==toggleSelect==2');
         }
@@ -270,19 +267,17 @@ export const PhotosByDate: React.FC<{
       []
     );
 
-    const renderPhotoItem = useCallback(
-      ({ item }) =>
-        item?.id ? (
-          <AssetItem
-            item={item}
-            toggleSelect={toggleSelect}
-            itemType={fileType}
-          />
-        ) : (
-          <View style={styles.emptyItem}></View>
-        ),
-      [assets, fileType]
-    );
+    const renderPhotoItem = ({ item }) =>
+      item?.id ? (
+        <AssetItem
+          item={item}
+          selectAll={selectAll}
+          toggleSelect={toggleSelect}
+          itemType={fileType}
+        />
+      ) : (
+        <View style={styles.emptyItem}></View>
+      );
 
     const renderGroup = ({ item: { date, photos } }) => (
       <View style={styles.dateGroup}>
@@ -297,19 +292,19 @@ export const PhotosByDate: React.FC<{
     );
 
     const renderFileItemMedia = ({ item }: { item: ExtendedAsset }) => (
-      <FileItemMedia
-        item={item}
-        selectAll={selectAll}
-        toggleSelect={toggleSelect}
-        multiSelect={multiSelect}
-        setTransferDialog={setDestinationDialogVisible}
-        setMoveOrCopy={setMoveOrCopy}
-        deleteSelectedFiles={deleteSelectedFiles}
-        setRenamingFile={setRenamingFile}
-        setRenameDialogVisible={setRenameDialogVisible}
-        setNewFileName={setNewFileName}
-      ></FileItemMedia>
-    );
+        <FileItemMedia
+          item={item}
+          selectAll={selectAll}
+          toggleSelect={toggleSelect}
+          multiSelect={multiSelect}
+          setTransferDialog={setDestinationDialogVisible}
+          setMoveOrCopy={setMoveOrCopy}
+          deleteSelectedFiles={deleteSelectedFiles}
+          setRenamingFile={setRenamingFile}
+          setRenameDialogVisible={setRenameDialogVisible}
+          setNewFileName={setNewFileName}
+        ></FileItemMedia>
+      )
 
     const renderEmptyComponent = useCallback(
       () => (

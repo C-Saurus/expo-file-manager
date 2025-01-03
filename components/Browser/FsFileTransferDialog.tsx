@@ -38,26 +38,18 @@ export const FsFileTransferDialog = ({
   moveOrCopy,
   setMoveOrCopy,
 }: FsFileTransferDialogProps) => {
-  const fileTypeMap = {
-    image: `${FileSystem.documentDirectory}Image`,
-		video: `${FileSystem.documentDirectory}Video`,
-		audio: `${FileSystem.documentDirectory}Audio`,
-		doc: `${FileSystem.documentDirectory}Doc`,
-		txt: `${FileSystem.documentDirectory}Txt`,
-		pdf: `${FileSystem.documentDirectory}Pdf`,
-		csvExcel: `${FileSystem.documentDirectory}Excel-Csv`,
-  };
-  let targetDir =
-    fileTypeMap[fileType] ?? `${FileSystem.documentDirectory}Image`;
-
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [currentFolders, setCurrentFolders] = useState<string[]>([]);
 
   async function getFolders() {
-    const folders = await FileSystem.readDirectoryAsync(targetDir + moveDir);
-    const folderPromises = folders.map((folder) =>
-      FileSystem.getInfoAsync(targetDir + moveDir + `/${folder}`)
+    const folders = await FileSystem.readDirectoryAsync(
+      FileSystem.documentDirectory + moveDir
     );
+    const folderPromises = folders
+      .filter((folder) => folder.toLowerCase().includes(fileType))
+      .map((folder) =>
+        FileSystem.getInfoAsync(FileSystem.documentDirectory + moveDir + `/${folder}`)
+      );
     Promise.all(folderPromises).then((values) => {
       const folderItems = values
         .filter((item) => item.isDirectory)
@@ -76,8 +68,8 @@ export const FsFileTransferDialog = ({
 
   useEffect(() => {
     if (isVisible) {
-			getFolders();
-		}
+      getFolders();
+    }
   }, [isVisible, moveDir]);
 
   const handleModalClose = () => {
@@ -87,7 +79,7 @@ export const FsFileTransferDialog = ({
   };
 
   const navigateUpFolder = () => {
-    const path = targetDir + moveDir;
+    const path = FileSystem.documentDirectory + moveDir;
     let pathSplit = path.split('/');
     if (
       path.endsWith('expo-file-manager/') ||
@@ -154,7 +146,7 @@ export const FsFileTransferDialog = ({
           <TouchableOpacity
             style={styles.folderUpButton}
             onPress={() => {
-              moveSelectedFiles(targetDir + moveDir);
+              moveSelectedFiles(FileSystem.documentDirectory + moveDir);
             }}
           >
             <Ionicons

@@ -90,6 +90,7 @@ export default function PickImages({
   }
 
   const toggleSelect = (item: ExtendedAsset) => {
+    console.log("CME")
     const isSelected =
       selectedAssets.findIndex((asset) => asset.id === item.id) !== -1;
     if (!isSelected) setSelectedAssets((prev) => [...prev, item]);
@@ -107,7 +108,7 @@ export default function PickImages({
     );
   };
 
-  const handleImport = () => {
+  const handleImport = (selectedAssets) => {
     onClose();
     onMultiSelectSubmit(selectedAssets);
     return selectedAssets;
@@ -203,29 +204,6 @@ export default function PickImages({
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background2 }}>
       <View style={styles.header}>
-        <View style={styles.confirmButton}>
-          {isSelecting && (
-            <TouchableOpacity
-              style={styles.handleImport}
-              onPress={handleImport}
-            >
-              <MaterialCommunityIcons
-                name="file-import-outline"
-                size={30}
-                color={colors.primary}
-              />
-              <Text
-                style={{
-                  fontFamily: 'Poppins_500Medium',
-                  fontSize: 18,
-                  color: colors.primary,
-                }}
-              >
-                {selectedAssets.length}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
         <Text style={{ ...styles.title, color: colors.primary }}>
           {selectedAlbum?.title || 'Albums'}
         </Text>
@@ -249,13 +227,8 @@ export default function PickImages({
         )}
         {selectedAlbum && (
           <AssetList
-            assets={assets}
             albumId={selectedAlbum.id}
-            getAlbumAssets={getAlbumAssets}
-            hasNextPage={hasNextPage}
-            endCursor={endCursor}
-            toggleSelect={toggleSelect}
-            isSelecting={isSelecting}
+            handleImport={handleImport}
           />
         )}
       </View>

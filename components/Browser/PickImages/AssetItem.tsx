@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Image, TouchableOpacity, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZE } from '../../../utils/Constants';
@@ -11,95 +11,114 @@ const ITEM_SIZE = SIZE / 3;
 type AssetProps = {
   item: ExtendedAsset;
   itemType?: string;
-  toggleSelect: (asset: ExtendedAsset, multiSelect?: boolean) => void;
+  selectAll?: boolean;
+  toggleSelect: (arg0: ExtendedAsset, arg1?: boolean) => void;
 };
 
-export const AssetItem = ({
-  item: asset,
-  itemType,
-  toggleSelect,
-}: AssetProps) => {
-  const navigation = useNavigation<any>();
-  const onPressHandler = (item) => {
-    if (itemType === 'image') {
-      navigation.push('ImageGalleryView', {
-        folderName: item.filename,
-        prevDir: ``,
-        uriValue: item.uri,
-      });
-    } else if (itemType === 'video') {
-      navigation.push('VideoPlayer', {
-        folderName: item.filename,
-        prevDir: ``,
-        uriValue: item.uri,
-      });
-    } else if (itemType === 'audio') {
-      navigation.push('AudioPlayer', {
-        folderName: item.filename,
-        prevDir: ``,
-        uriValue: item.uri,
-      });
-    }
-  };
-  return (
-    <View style={styles.thumbnailContainer}>
-      <TouchableOpacity
-        key={asset.id}
-        style={styles.assetContainer}
-        activeOpacity={0.8}
-        onPress={() => onPressHandler(asset)}
-      >
-        <View>
-          <Image
-            style={styles.assetImage}
-            source={
-              asset.mediaType === MediaType.audio
-                ? audioThumbnails
-                : { uri: asset.uri }
-            }
-          />
-          {asset.mediaType === MediaType.audio && (
-            <Text
-              style={{
-                display: 'flex',
-                alignContent: 'center',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              numberOfLines={1}
-            >
-              {asset.filename}
-            </Text>
-          )}
-        </View>
+export const AssetItem: React.FC<AssetProps> = React.memo(
+  ({
+    item: asset,
+    itemType,
+    selectAll,
+    toggleSelect,
+  }) => {
+    const navigation = useNavigation<any>();
+    const [selected, setSelected] = useState(false)
 
-        {asset.mediaType === MediaType.video && (
-          <View style={styles.playButton}>
-            <View style={styles.playIcon} />
+    useEffect(() => {
+      console.log("selectAll")
+      if (!selectAll) {
+        setSelected(false)
+      }
+    }, [selectAll])
+
+    const onPressHandler = (item) => {
+      if (itemType === 'image') {
+        navigation.push('ImageGalleryView', {
+          folderName: item.filename,
+          prevDir: ``,
+          uriValue: item.uri,
+        });
+      } else if (itemType === 'video') {
+        navigation.push('VideoPlayer', {
+          folderName: item.filename,
+          prevDir: ``,
+          uriValue: item.uri,
+        });
+      } else if (itemType === 'audio') {
+        navigation.push('AudioPlayer', {
+          folderName: item.filename,
+          prevDir: ``,
+          uriValue: item.uri,
+        });
+      }
+    };
+    return (
+      <View style={styles.thumbnailContainer}>
+        <TouchableOpacity
+          key={asset.id}
+          style={styles.assetContainer}
+          activeOpacity={0.8}
+          onPress={() => onPressHandler(asset)}
+        >
+          <View>
+            <Image
+              style={styles.assetImage}
+              source={
+                asset.mediaType === MediaType.audio
+                  ? audioThumbnails
+                  : { uri: asset.uri }
+              }
+            />
+            {asset.mediaType === MediaType.audio && (
+              <Text
+                style={{
+                  display: 'flex',
+                  alignContent: 'center',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                numberOfLines={1}
+              >
+                {asset.filename}
+              </Text>
+            )}
           </View>
-        )}
-        <View style={styles.checkCircleContainer}>
-          <TouchableOpacity onPress={() => toggleSelect(asset, true)}>
-            <View
-              style={[
-                styles.checkCircleBG,
-                { backgroundColor: asset.selected ? '#0595F5' : 'gray', opacity: asset.selected ? 1 : 0.5 },
-              ]}
-            >
-              {asset.selected && (
-                <Ionicons
-                  name="checkmark-done-outline"
-                  size={20}
-                  color="blue"
-                />
-              )}
+
+          {asset.mediaType === MediaType.video && (
+            <View style={styles.playButton}>
+              <View style={styles.playIcon} />
             </View>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-};
+          )}
+          <View style={styles.checkCircleContainer}>
+            <TouchableOpacity onPress={() => {
+              toggleSelect(asset, true)
+              setSelected((prev) => !prev)
+            }}>
+              <View
+                style={[
+                  styles.checkCircleBG,
+                  {
+                    backgroundColor: (selected || selectAll) ? '#0595F5' : 'gray',
+                    opacity: (selected || selectAll) ? 1 : 0.5,
+                  },
+                ]}
+              >
+                {(selected || selectAll) && (
+                  <Ionicons
+                    name="checkmark-done-outline"
+                    size={20}
+                    color="blue"
+                  />
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   assetContainer: {

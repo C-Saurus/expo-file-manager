@@ -30,7 +30,6 @@ import { Checkbox } from 'react-native-paper';
 
 type Props = {
   item: ExtendedAsset;
-  currentDir?: string;
   multiSelect: boolean;
   selectAll: boolean;
   toggleSelect: (arg0: ExtendedAsset, arg1?: boolean) => void;
@@ -42,250 +41,254 @@ type Props = {
   setNewFileName: (arg0: string) => void;
 };
 
-export const FileItemMedia: React.FC<Props> = ({
-  item,
-  multiSelect,
-  selectAll,
-  toggleSelect,
-  setTransferDialog,
-  setMoveOrCopy,
-  deleteSelectedFiles,
-  setRenamingFile,
-  setRenameDialogVisible,
-  setNewFileName,
-}) => {
-  console.log('item', item.filename);
-  const { colors } = useAppSelector((state) => state.theme.theme);
-  const navigation = useNavigation<StackNavigationProp<any>>();
-  const [itemActionsOpen, setItemActionsOpen] = useState(false);
-  const [fileSize, setFileSize] = useState(0);
-  const [selected, setSelected] = useState(false)
-  const itemMime = mime.lookup(item.uri) || ' ';
-  const itemType: string = itemMime.split('/')[0];
-  const itemFormat: string = itemMime.split('/')[1];
-  
+export const FileItemMedia: React.FC<Props> = React.memo(
+  ({
+    item,
+    multiSelect,
+    selectAll,
+    toggleSelect,
+    setTransferDialog,
+    setMoveOrCopy,
+    deleteSelectedFiles,
+    setRenamingFile,
+    setRenameDialogVisible,
+    setNewFileName,
+  }) => {
+    const { colors } = useAppSelector((state) => state.theme.theme);
+    const navigation = useNavigation<StackNavigationProp<any>>();
+    const [itemActionsOpen, setItemActionsOpen] = useState(false);
+    const [fileSize, setFileSize] = useState(0);
+    const [selected, setSelected] = useState(false);
+    const itemMime = mime.lookup(item.uri) || ' ';
+    const itemType: string = itemMime.split('/')[0];
+    const itemFormat: string = itemMime.split('/')[1];
 
-  useEffect(() => {
-    console.log('COME');
-    getFileSize();
-  }, [item]);
-
-  const getFileSize = async () => {
-    const size = await getLocalFileSize(item.uri.slice(7));
-    console.log('size', size);
-    setFileSize(size);
-  };
-
-  const ThumbnailImage = useCallback(({ uri }) => {
-    return (
-      <Image
-        style={styles.image}
-        source={{
-          uri,
-        }}
-      />
-    );
-  }, [])
-
-  const ItemThumbnail = useCallback(
-    () => {
-        switch (itemType) {
-          case 'dir':
-            return <Feather name="folder" size={35} color={colors.primary} />;
-          case 'image':
-          case 'video':
-            return <ThumbnailImage uri={item.uri} />;
-          case 'audio':
-            return (
-              <FontAwesome5 name="file-audio" size={35} color={colors.primary} />
-            );
-          case 'font':
-            return <FontAwesome5 name="font" size={35} color={colors.primary} />;
-          case 'application':
-            return (
-              <MaterialCommunityIcons
-                name={fileIcons[itemFormat] || 'file-outline'}
-                size={35}
-                color={colors.primary}
-              />
-            );
-          case 'text':
-            return (
-              <MaterialCommunityIcons
-                name={fileIcons[itemFormat] || 'file-outline'}
-                size={35}
-                color={colors.primary}
-              />
-            );
-          default:
-            return <Feather name="file" size={35} color={colors.primary} />;
-        }
-      }, []
-  )
-
-  const onPressHandler = () => {
-    if (!multiSelect) {
-      if (itemType === 'image') {
-        navigation.push('ImageGalleryView', {
-          folderName: item.filename,
-          prevDir: ``,
-          uriValue: item.uri,
-        });
-      } else if (itemType === 'video') {
-        navigation.push('VideoPlayer', {
-          folderName: item.filename,
-          prevDir: ``,
-          uriValue: item.uri,
-        });
-      } else if (itemType === 'audio') {
-        navigation.push('AudioPlayer', {
-          folderName: item.filename,
-          prevDir: ``,
-          uriValue: item.uri,
-        });
+    useEffect(() => {
+      if (!selectAll) {
+        setSelected(false);
       }
-    } else {
-      toggleSelect(item);
-      setSelected((prev) => !prev)
-    }
-  };
+    }, [selectAll]);
 
-  return (
-    <View style={styles.container}>
-      <ActionSheet
-        title={
-          multiSelect
-            ? 'Choose an action for the selected items'
-            : decodeURI(item.filename)
+    useEffect(() => {
+      console.log('COME');
+      getFileSize();
+    }, [item]);
+
+    const getFileSize = useCallback(async () => {
+      const size = await getLocalFileSize(item.uri.slice(7));
+      console.log('size', size);
+      setFileSize(size);
+    }, [item]);
+
+    const ThumbnailImage = useCallback(({ uri }) => {
+      return (
+        <Image
+          style={styles.image}
+          source={{
+            uri,
+          }}
+        />
+      );
+    }, []);
+
+    const ItemThumbnail = useCallback(() => {
+      switch (itemType) {
+        case 'dir':
+          return <Feather name="folder" size={35} color={colors.primary} />;
+        case 'image':
+        case 'video':
+          return <ThumbnailImage uri={item.uri} />;
+        case 'audio':
+          return (
+            <FontAwesome5 name="file-audio" size={35} color={colors.primary} />
+          );
+        case 'font':
+          return <FontAwesome5 name="font" size={35} color={colors.primary} />;
+        case 'application':
+          return (
+            <MaterialCommunityIcons
+              name={fileIcons[itemFormat] || 'file-outline'}
+              size={35}
+              color={colors.primary}
+            />
+          );
+        case 'text':
+          return (
+            <MaterialCommunityIcons
+              name={fileIcons[itemFormat] || 'file-outline'}
+              size={35}
+              color={colors.primary}
+            />
+          );
+        default:
+          return <Feather name="file" size={35} color={colors.primary} />;
+      }
+    }, [colors]);
+
+    const onPressHandler = () => {
+      if (!multiSelect) {
+        if (itemType === 'image') {
+          navigation.push('ImageGalleryView', {
+            folderName: item.filename,
+            prevDir: ``,
+            uriValue: item.uri,
+          });
+        } else if (itemType === 'video') {
+          navigation.push('VideoPlayer', {
+            folderName: item.filename,
+            prevDir: ``,
+            uriValue: item.uri,
+          });
+        } else if (itemType === 'audio') {
+          navigation.push('AudioPlayer', {
+            folderName: item.filename,
+            prevDir: ``,
+            uriValue: item.uri,
+          });
         }
-        numberOfLinesTitle={multiSelect ? undefined : 1}
-        visible={itemActionsOpen}
-        actionItems={['Rename', 'Move', 'Copy', 'Share', 'Delete', 'Cancel']}
-        itemIcons={[
-          'edit',
-          'drive-file-move',
-          'file-copy',
-          'share',
-          'delete',
-          'close',
-        ]}
-        onClose={setItemActionsOpen}
-        onItemPressed={(buttonIndex) => {
-          if (buttonIndex === 4) {
-            setTimeout(() => {
-              Alert.alert(
-                'Confirm Delete',
-                `Are you sure you want to delete ${
-                  multiSelect ? 'selected files' : 'this file'
-                }?`,
-                [
-                  {
-                    text: 'Cancel',
-                    onPress: () => {},
-                    style: 'cancel',
-                  },
-                  {
-                    text: 'Delete',
-                    onPress: () => {
-                      if (!multiSelect) deleteSelectedFiles(item);
-                      else deleteSelectedFiles();
-                    },
-                  },
-                ]
-              );
-            }, 300);
-          } else if (buttonIndex === 3) {
-            Sharing.isAvailableAsync().then((canShare) => {
-              if (canShare) {
-                Sharing.shareAsync(item.uri);
-              }
-            });
-          } else if (buttonIndex === 2) {
-            if (!multiSelect) {
-                toggleSelect(item);
-                setSelected((prev) => !prev)
-              }
-            setMoveOrCopy('Copy');
-            setTransferDialog(true);
-          } else if (buttonIndex === 1) {
-            if (!multiSelect) {
-                toggleSelect(item);
-                setSelected((prev) => !prev)
-              }
-            setMoveOrCopy('Move');
-            setTransferDialog(true);
-          } else if (buttonIndex === 0) {
-            setRenamingFile(item);
-            setRenameDialogVisible(true);
-            setNewFileName(item.filename);
+      } else {
+        toggleSelect(item);
+        setSelected((prev) => !prev);
+      }
+    };
+
+    return (
+      <View style={styles.container}>
+        <ActionSheet
+          title={
+            multiSelect
+              ? 'Choose an action for the selected items'
+              : decodeURI(item.filename)
           }
-        }}
-        cancelButtonIndex={5}
-        modalStyle={{ backgroundColor: colors.background2 }}
-        itemTextStyle={{ color: colors.text }}
-        titleStyle={{ color: colors.secondary }}
-      />
-      <View style={styles.itemContainer}>
-        <TouchableOpacity
-          style={styles.itemLeft}
-          activeOpacity={0.5}
-          onPress={onPressHandler}
-          onLongPress={() => {
-            if (!multiSelect) {
-              toggleSelect(item, true);
-              setSelected(true)
+          numberOfLinesTitle={multiSelect ? undefined : 1}
+          visible={itemActionsOpen}
+          actionItems={['Rename', 'Move', 'Copy', 'Share', 'Delete', 'Cancel']}
+          itemIcons={[
+            'edit',
+            'drive-file-move',
+            'file-copy',
+            'share',
+            'delete',
+            'close',
+          ]}
+          onClose={setItemActionsOpen}
+          onItemPressed={(buttonIndex) => {
+            if (buttonIndex === 4) {
+              setTimeout(() => {
+                Alert.alert(
+                  'Confirm Delete',
+                  `Are you sure you want to delete ${
+                    multiSelect ? 'selected files' : 'this file'
+                  }?`,
+                  [
+                    {
+                      text: 'Cancel',
+                      onPress: () => {},
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'Delete',
+                      onPress: () => {
+                        if (!multiSelect) deleteSelectedFiles(item);
+                        else deleteSelectedFiles();
+                      },
+                    },
+                  ]
+                );
+              }, 300);
+            } else if (buttonIndex === 3) {
+              Sharing.isAvailableAsync().then((canShare) => {
+                if (canShare) {
+                  Sharing.shareAsync(item.uri);
+                }
+              });
+            } else if (buttonIndex === 2) {
+              if (!multiSelect) {
+                toggleSelect(item);
+                setSelected((prev) => !prev);
+              }
+              setMoveOrCopy('Copy');
+              setTransferDialog(true);
+            } else if (buttonIndex === 1) {
+              if (!multiSelect) {
+                toggleSelect(item);
+                setSelected((prev) => !prev);
+              }
+              setMoveOrCopy('Move');
+              setTransferDialog(true);
+            } else if (buttonIndex === 0) {
+              setRenamingFile(item);
+              setRenameDialogVisible(true);
+              setNewFileName(item.filename);
             }
           }}
-        >
-          <View style={styles.itemThumbnail}>
-            {itemType && <ItemThumbnail />}
-          </View>
-          <View style={styles.itemDetails}>
-            <Text
-              numberOfLines={1}
-              style={{ ...styles.fileName, color: colors.primary }}
-            >
-              {decodeURI(item.filename)}
-            </Text>
-            <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
-              {humanFileSize(fileSize) ?? '0MB'}
-            </Text>
-          </View>
-        </TouchableOpacity>
-        {/**Item Action Button */}
-        <View
-          style={{
-            ...styles.itemActionButton,
-            backgroundColor: colors.background,
-          }}
-        >
+          cancelButtonIndex={5}
+          modalStyle={{ backgroundColor: colors.background2 }}
+          itemTextStyle={{ color: colors.text }}
+          titleStyle={{ color: colors.secondary }}
+        />
+        <View style={styles.itemContainer}>
           <TouchableOpacity
-            onPress={() =>
-              !multiSelect && setItemActionsOpen(true)
-            }
+            style={styles.itemLeft}
+            activeOpacity={0.5}
+            onPress={onPressHandler}
+            onLongPress={() => {
+              if (!multiSelect) {
+                toggleSelect(item, true);
+                setSelected(true);
+              }
+            }}
           >
-            <View style={styles.fileMenu}>
-              {!multiSelect ? (
-                <Feather
-                  name="more-horizontal"
-                  size={24}
-                  color={colors.primary}
-                />
-              ) : (
-                <Checkbox
-                  color={colors.primary}
-                  status={selected || selectAll ? 'checked' : 'unchecked'}
-                  onPress={() => {
-                    toggleSelect(item)
-                    setSelected((prev) => !prev)
-                  }}
-                  uncheckedColor={colors.primary}
-                />
-              )}
+            <View style={styles.itemThumbnail}>
+              {itemType && <ItemThumbnail />}
+            </View>
+            <View style={styles.itemDetails}>
+              <Text
+                numberOfLines={1}
+                style={{ ...styles.fileName, color: colors.primary }}
+              >
+                {decodeURI(item.filename)}
+              </Text>
+              <Text
+                style={{ ...styles.fileDetailText, color: colors.secondary }}
+              >
+                {humanFileSize(fileSize) ?? '0MB'}
+              </Text>
             </View>
           </TouchableOpacity>
+          {/**Item Action Button */}
+          <View
+            style={{
+              ...styles.itemActionButton,
+              backgroundColor: colors.background,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => !multiSelect && setItemActionsOpen(true)}
+            >
+              <View style={styles.fileMenu}>
+                {!multiSelect ? (
+                  <Feather
+                    name="more-horizontal"
+                    size={24}
+                    color={colors.primary}
+                  />
+                ) : (
+                  <Checkbox
+                    color={colors.primary}
+                    status={selected || selectAll ? 'checked' : 'unchecked'}
+                    onPress={() => {
+                      toggleSelect(item);
+                      setSelected((prev) => !prev);
+                    }}
+                    uncheckedColor={colors.primary}
+                  />
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
-  );
-}
+    );
+  }
+);
