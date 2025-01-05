@@ -62,7 +62,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     justifyContent: 'center',
-    width: '86%',
+    width: '84%',
     overflow: 'hidden',
     marginHorizontal: 10,
   },

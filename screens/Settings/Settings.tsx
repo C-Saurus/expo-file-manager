@@ -29,6 +29,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import useBiometrics from '../../hooks/useBiometrics';
 import { setSnack } from '../../features/files/snackbarSlice';
+import Toast from 'react-native-toast-message';
+import { LOCK_TYPE } from '../../constants/const';
 
 function Settings() {
   const navigation = useNavigation<StackNavigationProp<any>>();
@@ -39,7 +41,7 @@ function Settings() {
   const [modalConfirmVisible, setModalConfirmVisible] = useState(false);
   const [verificationCode, setVerificationCode] = useState(null);
   const [error, setError] = useState('');
-  const { pinActive } = useLock();
+  const { lockType } = useLock();
   const [loading, setLoading] = useState(false);
   const { biometricsActive, hasHardware, isEnrolled, handleBiometricsStatus } =
     useBiometrics();
@@ -54,7 +56,6 @@ function Settings() {
     setLoading(true);
     const email = await isEmailVerified();
     if (email) {
-      setEmailVerified(email);
       navigation.navigate('SetPassCodeScreen');
     } else {
       setModalVisible(true);
@@ -121,7 +122,9 @@ function Settings() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       {/* Preferences Section */}
-      <View style={[styles.card, { backgroundColor: theme.colors.background2 }]}>
+      <View
+        style={[styles.card, { backgroundColor: theme.colors.background2 }]}
+      >
         <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
           THEME
         </Text>
@@ -132,10 +135,7 @@ function Settings() {
           ]}
         >
           <View style={styles.iconWrapper}>
-            <Feather
-              name={theme.dark ? 'moon' : 'sun'}
-              size={24}
-            />
+            <Feather name={theme.dark ? 'moon' : 'sun'} size={24} />
           </View>
           <Text
             style={[styles.sectionItemText, { color: theme.colors.primary }]}
@@ -163,7 +163,9 @@ function Settings() {
       </View>
 
       {/* Security Section */}
-      <View style={[styles.card, { backgroundColor: theme.colors.background2 }]}>
+      <View
+        style={[styles.card, { backgroundColor: theme.colors.background2 }]}
+      >
         <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
           SECURITY
         </Text>
@@ -176,7 +178,11 @@ function Settings() {
         >
           <View style={styles.iconWrapper}>
             <Feather
-              name={pinActive ? 'lock' : 'unlock'}
+              name={
+                lockType === LOCK_TYPE.PIN || lockType === LOCK_TYPE.BOTH
+                  ? 'lock'
+                  : 'unlock'
+              }
               size={24}
             />
           </View>
@@ -198,10 +204,7 @@ function Settings() {
           ]}
         >
           <View style={styles.iconWrapper}>
-            <FontAwesome5
-              name="fingerprint"
-              size={24}
-            />
+            <FontAwesome5 name="fingerprint" size={24} />
           </View>
           <Text
             style={[styles.sectionItemText, { color: theme.colors.primary }]}
@@ -220,7 +223,11 @@ function Settings() {
               if (hasHardware && isEnrolled) {
                 handleBiometricsStatus();
               } else if (hasHardware && !isEnrolled) {
-                dispatch(setSnack({ message: 'No biometrics enrolled!' }));
+                Toast.show({
+                  text1: 'No biometrics enrolled',
+                  type: 'info',
+                  visibilityTime: 3000,
+                });
               }
             }}
           />

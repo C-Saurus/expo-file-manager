@@ -21,14 +21,12 @@ const ImageGalleryView = ({ route }: Props) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const { prevDir, folderName, uriValue } = route.params;
   const { images } = useAppSelector((state) => state.images);
-  const [display, setDisplay] = useState(true);
+
   const initialImageIndex = useCallback(
     () =>
       images.findIndex((item) =>
       {
-        console.log("item", item.uri);
-        console.log("uriValue", uriValue);
-        return item.uri === (prevDir ? `${prevDir}/${folderName}}` : uriValue)
+        return item.uri === (prevDir ? `${prevDir}/${folderName}` : uriValue)
       }
       ),
     []

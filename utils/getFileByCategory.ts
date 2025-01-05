@@ -10,15 +10,12 @@ const fileExtensionCategorys = {
   zip: ['zip', 'rar'],
   image: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'tiff', 'ico'],
   video: ['mp4', 'mkv', 'avi', 'mov', 'wmv', 'flv', 'webm', '3gp', 'mpeg'],
-  audio: ['mp3', 'wav', 'aac', 'flac', 'ogg', 'm4a', 'wma', 'alac']
+  audio: ['mp3', 'wav', 'aac', 'flac', 'ogg', 'm4a', 'wma', 'alac'],
 };
 
 export const getCategoryByExtension = (extension: string) => {
-  for (const [category, extensions] of Object.entries(
-    fileExtensionCategorys
-  )) {
+  for (const [category, extensions] of Object.entries(fileExtensionCategorys)) {
     if (extensions.includes(extension.toLowerCase())) {
-      console.log("crete", category);
       return category;
     }
   }
@@ -39,7 +36,7 @@ export const getAllFiles = async () => {
     audioFile: [],
   };
 
-  const rootPath = RNFS.ExternalStorageDirectoryPath; // Thư mục gốc trên Android
+  const rootPath = RNFS.ExternalStorageDirectoryPath;
   const directoriesToScan = [rootPath];
 
   try {
@@ -97,26 +94,16 @@ export const getAllFiles = async () => {
               path: item.path,
               size: item.size,
             });
-          } else if (fileExtensionCategorys.image.includes(extension)) {
-            categorizedFiles.imageFile.push({
-              name: item.name,
-              path: item.path,
-              size: item.size,
-            });
-          } else if (fileExtensionCategorys.audio.includes(extension)) {
-            categorizedFiles.audioFile.push({
-              name: item.name,
-              path: item.path,
-              size: item.size,
-            });
-          } else if (fileExtensionCategorys.video.includes(extension)) {
-            categorizedFiles.videoFile.push({
-              name: item.name,
-              path: item.path,
-              size: item.size,
-            });
           }
-        } else if (item.isDirectory() && !item.path.includes(".AppCache")) {
+        } else if (
+          item.isDirectory() &&
+          !item.path.includes('.AppCache') &&
+          !item.path.includes('.Trash') &&
+          !item.path.includes('DCIM') &&
+          !item.path.includes('Movies') &&
+          !item.path.includes('Music') &&
+          !item.path.includes('Pictures')
+        ) {
           directoriesToScan.push(item.path);
         }
       }

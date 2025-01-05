@@ -4,13 +4,17 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.util.Log;
 
+import com.facebook.react.bridge.ActivityEventListener;
+import com.facebook.react.bridge.BaseActivityEventListener;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -22,9 +26,11 @@ import java.util.ArrayList;
 public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
 
     private static final String MODULE_NAME = "FileDeletionNativeModule";
-
+    private static final int DELETE_REQUEST_CODE = 1001;
+    private Callback deleteCallback;
     public FileDeletionNativeModule(ReactApplicationContext reactContext) {
         super(reactContext);
+        reactContext.addActivityEventListener(activityEventListener);
     }
 
     @Override
@@ -40,11 +46,12 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void deleteMediaFile(String filePath, Callback callback) {
         try {
+            deleteCallback = callback;
             File file = new File(filePath);
             Uri contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
             Long mediaId = getMediaId(file);
             if (mediaId == null) {
-                Log.d(getName(), "Không thể tìm thấy media ID cho file: " + filePath);
+                Log.d(getName(), "Can not found file id: " + filePath);
                 callback.invoke(false);
                 return;
             }
@@ -59,11 +66,11 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
                 Log.d(getName(), "Deleted successfully: " + filePath);
                 callback.invoke(true);
             } else {
-                Log.d(getName(), "Delete Error: Không thể xóa file: " + filePath);
+                Log.d(getName(), "Delete file error: " + filePath);
                 callback.invoke(false);
             }
         } catch (Exception e) {
-            Log.d(getName(), "Delete Error: Lỗi khi xóa file: " + e.getMessage());
+            Log.d(getName(), "Delete file error with exception: " + e.getMessage());
             callback.invoke(false);
         }
     }
@@ -98,8 +105,7 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
     public void deleteFileMedia(String filePath, String fileType, Callback callback) throws IntentSender.SendIntentException {
         File file = new File(filePath);
         Uri contentUri = null;
-
-        // Chọn URI phù hợp dựa trên loại file
+        deleteCallback = callback;
         switch (fileType) {
             case "image":
                 contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
@@ -117,7 +123,7 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
         // Lấy Media ID từ file
         Long mediaId = getMediaId(file);
         if (mediaId == null) {
-            Log.d(getName(), "Không thể tìm thấy media ID cho file: " + filePath);
+            Log.d(getName(), "Can not found file id: " + filePath);
             callback.invoke(false);
             return;
         }
@@ -128,7 +134,6 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
         try {
             PendingIntent pendingIntent = null;
 
-            // Xử lý quyền truy cập
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 ArrayList<Uri> collection = new ArrayList<>();
                 collection.add(itemUri);
@@ -137,7 +142,7 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
                 if (pendingIntent != null) {
                     Activity activity = getCurrentActivity();
                     if (activity != null) {
-                        Log.d(getName(), "Yêu cầu quyền truy cập xóa file: " + itemUri);
+                        Log.d(getName(), "Need permission to delete file: " + itemUri);
                         activity.startIntentSenderForResult(
                                 pendingIntent.getIntentSender(),
                                 1001, // Request code
@@ -146,22 +151,20 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
                                 0,
                                 0
                         );
-                        // Callback thành công sẽ xử lý sau khi người dùng xác nhận
-                        return;
                     } else {
                         Log.d(getName(), "Current activity is null: " + itemUri);
                     }
                 }
             }
-
-            // Thực hiện xóa file trực tiếp nếu không cần quyền đặc biệt
-            int rowsDeleted = contentResolver.delete(itemUri, null, null);
-            if (rowsDeleted > 0) {
-                Log.d(getName(), "Deleted successfully: " + filePath);
-                callback.invoke(true);
-            } else {
-                Log.d(getName(), "Delete Error: Không thể xóa file: " + filePath);
-                callback.invoke(false);
+            else {
+                int rowsDeleted = contentResolver.delete(itemUri, null, null);
+                if (rowsDeleted > 0) {
+                    Log.d(getName(), "Deleted successfully: " + filePath);
+                    callback.invoke(true);
+                } else {
+                    Log.d(getName(), "Delete file error: " + filePath);
+                    callback.invoke(false);
+                }
             }
         } catch (SecurityException e) {
             PendingIntent pendingIntent = null;
@@ -189,10 +192,30 @@ public class FileDeletionNativeModule extends ReactContextBaseJavaModule {
                     Log.d(getName(), "Action require to delete file: " + itemUri);
                 }
             } else {
-                Log.d(getName(), "SecurityException không thể khắc phục: " + e.getMessage());
+                Log.d(getName(), "SecurityException can not resolve: " + e.getMessage());
                 callback.invoke(false);
             }
         }
     }
+
+    private final ActivityEventListener activityEventListener = new BaseActivityEventListener() {
+        @Override
+        public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+            if (requestCode == DELETE_REQUEST_CODE) {
+                if (resultCode == Activity.RESULT_OK) {
+                    Log.d(getName(), "Permission granted.");
+                    if (deleteCallback != null) {
+                        deleteCallback.invoke(true);
+                    }
+                } else {
+                    Log.d(getName(), "Permission denied.");
+                    if (deleteCallback != null) {
+                        deleteCallback.invoke(false);
+                    }
+                }
+                deleteCallback = null;
+            }
+        }
+    };
 
 }

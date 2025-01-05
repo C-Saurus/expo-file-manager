@@ -55,14 +55,14 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
-    marginTop: 10
+    marginTop: 12
   },
   toolTitle: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
-    marginTop: 16
+    marginTop: 4
   },
   size: {
     fontSize: 12,
@@ -89,7 +89,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderRadius: 15,
-    marginVertical: 2
+    marginVertical: 3
   },
   listItemContainerFolder: {
 

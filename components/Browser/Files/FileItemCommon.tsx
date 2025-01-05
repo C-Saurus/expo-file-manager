@@ -58,22 +58,22 @@ export const FileItemCommon: React.FC<Props> = React.memo(({
   const ItemThumbnail = useCallback(() => {
     switch (itemType) {
       case 'dir':
-        return <Feather name="folder" size={35} color={colors.primary} />;
+        return <Feather name="folder" size={35} color={colors.text} />;
       case 'image':
       case 'video':
         return <ThumbnailImage uri={item.path} />;
       case 'audio':
         return (
-          <FontAwesome5 name="file-audio" size={35} color={colors.primary} />
+          <FontAwesome5 name="file-audio" size={35} color={colors.text} />
         );
       case 'font':
-        return <FontAwesome5 name="font" size={35} color={colors.primary} />;
+        return <FontAwesome5 name="font" size={35} color={colors.text} />;
       case 'application':
         return (
           <MaterialCommunityIcons
             name={fileIcons[itemFormat] || 'file-outline'}
             size={35}
-            color={colors.primary}
+            color={colors.text}
           />
         );
       case 'text':
@@ -81,11 +81,11 @@ export const FileItemCommon: React.FC<Props> = React.memo(({
           <MaterialCommunityIcons
             name={fileIcons[itemFormat] || 'file-outline'}
             size={35}
-            color={colors.primary}
+            color={colors.text}
           />
         );
       default:
-        return <Feather name="file" size={35} color={colors.primary} />;
+        return <Feather name="file" size={35} color={colors.text} />;
     }
   }, [colors])
 
@@ -139,11 +139,11 @@ export const FileItemCommon: React.FC<Props> = React.memo(({
         <View style={styles.itemDetails}>
           <Text
             numberOfLines={1}
-            style={{ ...styles.fileName, color: colors.primary }}
+            style={{ ...styles.fileName, color: colors.text }}
           >
             {decodeURI(item.name)}
           </Text>
-          <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
+          <Text style={{ ...styles.fileDetailText, color: colors.primary }}>
             {humanFileSize(item.size)}
           </Text>
         </View>
@@ -241,7 +241,7 @@ export const FileItemCommon: React.FC<Props> = React.memo(({
             setNewFileName(item.name);
           }
         }}
-        cancelButtonIndex={5}
+        cancelButtonIndex={6}
         modalStyle={{ backgroundColor: colors.background2 }}
         itemTextStyle={{ color: colors.text }}
         titleStyle={{ color: colors.secondary }}

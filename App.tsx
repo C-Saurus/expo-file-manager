@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React, { useEffect, useRef, useState } from 'react';
-import { LogBox, Permission, PermissionsAndroid, Platform } from 'react-native';
+import { LogBox, NativeModules, Permission, PermissionsAndroid, Platform } from 'react-native';
 import { Provider } from 'react-redux';
 import Main from './screens/Main';
 import { Text } from 'react-native-paper';
@@ -12,6 +12,8 @@ LogBox.ignoreLogs(['componentWillMount', 'componentWillReceiveProps']);
 
 const App = () => {
   const [permissionsAllow, setPermissionAllow] = useState(false)
+  const [manageFileAllow, setManageFileAllow] = useState(false)
+
   async function requestStoragePermission() {
     if (Platform.OS === 'android') {
       try {
@@ -19,6 +21,7 @@ const App = () => {
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE],
         );
+        console.log("granded", granted)
         return true;
       } catch (err) {
         console.warn(err);
@@ -29,15 +32,32 @@ const App = () => {
     }
   }
 
+  const handleOpenSettings = () => {
+    const { IntentLauncherModules } = NativeModules;
+    if (Platform.OS === 'android') {
+      try {
+        IntentLauncherModules.openManageAllFilesAccess();
+        setManageFileAllow(true)
+      } catch (error) {
+        console.error('Error opening settings:', error);
+      }
+    } else {
+      console.warn('This functionality is only available on Android');
+    }
+  };
+
   const setUpApp = async () => {
     const storagePermission =  await requestStoragePermission()
+    if (!manageFileAllow) {
+      handleOpenSettings()
+    }
     setPermissionAllow(storagePermission)
     await createFolders()
   }
 
   useEffect(() => {
     setUpApp()
-  }, [])
+  }, [manageFileAllow])
 
   useEffect(() => {
     const clearFileTrashInterval = setInterval(() => {

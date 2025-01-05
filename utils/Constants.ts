@@ -32,6 +32,15 @@ export const createInAppFolder = async () => {
   });
 };
 
+export const renameFile = async (oldPath: string, newPath: string) => {
+  try {
+    await RNFS.moveFile(oldPath, newPath);
+    return { oldPath, newPath };
+  } catch (error) {
+    return undefined;
+  }
+};
+
 const saveOriginalPath = async (fileName, originalPath) => {
   try {
     const trashData = await AsyncStorage.getItem('trashData');
@@ -90,6 +99,7 @@ export const moveFileToTrash = async (filePath: string) => {
     console.log('filePath', filePath);
     console.log('destination', destination);
     await RNFS.moveFile(filePath, destination);
+    await saveOriginalPath(fileName, filePath)
     return filePath;
   } catch (error) {
     console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);
@@ -102,7 +112,6 @@ export const moveFileToCustomeFolder = async (
   folder: string
 ) => {
   try {
-    await ensureTrashFolderExists();
     const fileName = filePath.split('/').pop();
     const destination = `${folder}/${fileName}`;
     console.log('new', destination);
@@ -119,8 +128,10 @@ export const copyFileToCustomeFolder = async (
   folder: string
 ) => {
   try {
-    await ensureTrashFolderExists();
     const fileName = filePath.split('/').pop();
+    console.log("fileName", fileName)
+    console.log("filePath", filePath)
+    console.log("folder", folder)
     const destination = `${folder}/${fileName}`;
     await RNFS.copyFile(filePath, destination);
     return filePath;

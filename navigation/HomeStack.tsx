@@ -1,9 +1,7 @@
 import React from 'react';
 
 import { createStackNavigator } from '@react-navigation/stack';
-import { ImageScreen } from '../screens/ImageScreen';
 import VideoPlayer from '../screens/VideoPlayer';
-import Browser from '../screens/Browser';
 import LargeFilesScanner from '../screens/ScanLargeFile';
 import { Home } from '../screens/Home';
 import PDFScreen from '../screens/PDFScreen';
@@ -17,6 +15,8 @@ import ZipScreen from '../screens/Zip';
 import TxtScreen from '../screens/Txt';
 import ImageGalleryView from '../screens/ImageGalleryView';
 import AIFileSummarize from '../screens/AIFileAssume';
+import FullScreenImageScreen from '../screens/FullScreenView';
+import { ImageScreen } from '../screens/ImageScreen';
 
 type HomeStackParamList = {
   HomeMain: any;
@@ -34,6 +34,7 @@ type HomeStackParamList = {
   ImageScreen: { fileType: string };
   LargeFilesScanner: { mode: number };
   AIFileSummarize: { filePath: string };
+  FullScreenImageScreen: { uri: string }
 };
 
 const HomeStack = createStackNavigator<HomeStackParamList>();
@@ -111,13 +112,7 @@ export const HomeStackNavigator1: React.FC = () => {
         component={ImageScreen}
         options={({ route }) => ({
           headerShown: false,
-          title:
-            route.params.fileType === 'video'
-              ? 'Video'
-              : route.params.fileType === 'audio'
-              ? 'Audio'
-              : 'Image',
-          animationTypeForReplace: 'pop',
+          presentation: 'transparentModal',
         })}
       />
       <HomeStack.Screen
@@ -145,6 +140,14 @@ export const HomeStackNavigator1: React.FC = () => {
           presentation: 'transparentModal',
         })}
         component={ImageGalleryView}
+      />
+      <HomeStack.Screen
+        name="FullScreenImageScreen"
+        options={({ route }) => ({
+          headerShown: false,
+          presentation: 'transparentModal',
+        })}
+        component={FullScreenImageScreen}
       />
       <HomeStack.Screen
         name="DocumentScreen"

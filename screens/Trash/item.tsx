@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAppSelector } from '../../hooks/reduxHooks';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { styles } from './style';
+import { fileIcons } from '../../utils/Constants';
 
 export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
@@ -26,10 +27,10 @@ export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
   const onPressHandler = (item) => {
     console.log('itemmmmm', item.type);
     if (item.type === 'image') {
-      navigation.push('ImageGalleryView', {
+      navigation.push('FullScreenImageScreen', {
         folderName: item.name,
         prevDir: ``,
-        uriValue: `file://${item.path}`,
+        uri: `file://${item.path}`,
       });
     } else if (item.type === 'video') {
       navigation.push('VideoPlayer', {
@@ -65,12 +66,12 @@ export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
         );
       case 'font':
         return <FontAwesome5 name="font" size={35} color={colors.primary} />;
-      case 'application':
+      case 'pdf':
         return (
           <MaterialCommunityIcons
-            name={'file-outline'}
+            name={'file-pdf-box'}
             size={35}
-            color={colors.primary}
+            color={colors.text}
           />
         );
       case 'text':
@@ -78,16 +79,16 @@ export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
           <MaterialCommunityIcons
             name={'file-outline'}
             size={35}
-            color={colors.primary}
+            color={colors.text}
           />
         );
       default:
-        return <Feather name="file" size={35} color={colors.primary} />;
+        return <Feather name="file" size={35} color={colors.text} />;
     }
   }, []);
 
   return (
-    <View style={styles.itemContainer}>
+    <View style={[styles.itemContainer]}>
       <TouchableOpacity
         style={{ flex: 1, flexDirection: 'row' }}
         onPress={() => onPressHandler(item)}
@@ -97,13 +98,13 @@ export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
         </View>
         <View style={styles.itemDetails}>
           <Text
-            style={[styles.fileName, { color: colors.secondary }]}
+            style={[styles.fileName, { color: colors.text }]}
           >{`${item.name}`}</Text>
-          <Text style={{ fontSize: 10, color: colors.secondary }}>{`${bytesToMB(
+          <Text style={{ fontSize: 10, color: colors.text }}>{`${bytesToMB(
             item.size
           )} MB`}</Text>
           <Text
-            style={{ fontSize: 10, color: colors.secondary }}
+            style={{ fontSize: 10, color: colors.text }}
           >{`${item.timeLeft} to delete`}</Text>
         </View>
       </TouchableOpacity>

@@ -27,3 +27,10 @@ export const DATA_FOLDER = [
   { id: '3', title: 'PDF', icon: 'picture-as-pdf' },
   { id: '4', title: 'Các tài liệu', icon: 'description' },
 ];
+
+export enum LOCK_TYPE {
+  NONE,
+  PIN,
+  BIOMETRIC,
+  BOTH
+}

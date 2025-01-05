@@ -1,35 +1,23 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
 import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
   TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
+import { TabBar, TabView } from 'react-native-tab-view';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import {
   Entypo,
-  Feather,
-  Ionicons,
-  MaterialCommunityIcons,
-  MaterialIcons,
 } from '@expo/vector-icons';
 import { fetchFiles } from '../../stores/document/action';
-import { ActivityIndicator } from 'react-native-paper';
 import { TabDocFiles } from './list';
 import { sortByOption } from '../../stores/document/reducer';
-import { styles } from './style';
 import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
-import { useHeaderHeight } from '@react-navigation/elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Header from '../../components/Header';
 import { SIZE } from '../../utils/Constants';

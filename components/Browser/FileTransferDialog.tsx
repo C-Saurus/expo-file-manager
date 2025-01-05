@@ -100,10 +100,10 @@ export const FileTransferDialog = ({
     >
       <View style={styles.fileRow}>
         <View style={styles.fileRowLeft}>
-          <Feather name="folder" size={35} color={colors.primary} />
+          <Feather name="folder" size={35} color={colors.text} />
         </View>
         <View style={styles.fileRowRight}>
-          <Text style={{ ...styles.fileTitleText, color: colors.primary }}>
+          <Text style={{ ...styles.fileTitleText, color: colors.text }}>
             {decodeURI(item)}
           </Text>
         </View>
@@ -121,17 +121,17 @@ export const FileTransferDialog = ({
         style={{ ...styles.modalBody, backgroundColor: colors.background2 }}
       >
         <Text
-          style={{ ...styles.actionTitle, color: colors.primary }}
+          style={{ ...styles.actionTitle, color: colors.text }}
         >{`${moveOrCopy} Files`}</Text>
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.folderUpButton}
             onPress={navigateUpFolder}
           >
-            <Ionicons name="return-up-back" size={32} color={colors.primary} />
+            <Ionicons name="return-up-back" size={32} color={colors.text} />
           </TouchableOpacity>
           <Text
-            style={{ ...styles.folderName, color: colors.primary }}
+            style={{ ...styles.folderName, color: colors.text }}
             ellipsizeMode="head"
             numberOfLines={1}
           >
@@ -146,7 +146,7 @@ export const FileTransferDialog = ({
             <Ionicons
               name="md-checkmark-done-sharp"
               size={32}
-              color={colors.primary}
+              color={colors.text}
             />
           </TouchableOpacity>
         </View>

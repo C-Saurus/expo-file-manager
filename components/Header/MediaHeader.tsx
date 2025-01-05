@@ -35,7 +35,7 @@ const MediaHeader = ({
           ]}
         >
           <TextInput
-            style={[styles.searchInput, { color: colors.background3 }]}
+            style={[styles.searchInput, { color: colors.primary }]}
             placeholder="Search files..."
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -49,6 +49,7 @@ const MediaHeader = ({
             onPress={() => {
               setIsSearching(false);
               setSearchQuery(''); // Reset thanh search
+              handleSearch('')
             }}
           >
             <Text style={[styles.cancelText]}>Cancel</Text>
@@ -64,13 +65,13 @@ const MediaHeader = ({
           {/* Nút Back */}
           <View style={styles.leftSection}>
             <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color={colors.primary} />
+              <Ionicons name="arrow-back" size={24} color={colors.header} />
             </TouchableOpacity>
           </View>
 
           {/* Tiêu đề hoặc khoảng trống */}
           <View style={styles.centerSection}>
-            <Text style={[styles.title, { color: colors.primary }]}>
+            <Text style={[styles.title, { color: colors.header }]}>
               {capitalizeFirstLetter(headerTitle)}
             </Text>
           </View>
@@ -86,13 +87,13 @@ const MediaHeader = ({
               style={{ paddingRight: 16 }}
               onPress={() => setIsSearching(true)}
             >
-              <Ionicons name="search" size={24} color={colors.primary} />
+              <Ionicons name="search" size={24} color={colors.header} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleChooseMode}>
               <FontAwesome
                 name={viewMode ? 'th' : 'th-list'}
                 size={24}
-                color={colors.primary}
+                color={colors.header}
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -102,7 +103,7 @@ const MediaHeader = ({
               <Entypo
                 name="dots-three-vertical"
                 size={24}
-                color={colors.primary}
+                color={colors.header}
               />
             </TouchableOpacity>
           </View>

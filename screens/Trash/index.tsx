@@ -3,12 +3,10 @@ import {
   View,
   Text,
   FlatList,
-  StyleSheet,
   Image,
   Button,
   Alert,
   NativeModules,
-  TouchableOpacity,
 } from 'react-native';
 import RNFS from 'react-native-fs';
 import {
@@ -17,22 +15,13 @@ import {
   restoreFile,
   TRASH_FOLDER,
 } from '../../utils/Constants';
-import {
-  setSnack,
-  snackActionPayload,
-} from '../../features/files/snackbarSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import { bytesToGB, bytesToMB } from '../../utils/Filesize';
+import { bytesToGB } from '../../utils/Filesize';
 import { getCategoryByExtension } from '../../utils/getFileByCategory';
-import {
-  Feather,
-  FontAwesome5,
-  MaterialCommunityIcons,
-} from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import { Item } from './item';
 import { FileItem } from '../../constants/interface';
 import { styles } from './style';
+import Toast from 'react-native-toast-message';
 
 const getFileExtension = (fileName: string): string => {
   const ext = fileName.split('.').pop();
@@ -40,34 +29,32 @@ const getFileExtension = (fileName: string): string => {
 };
 
 const TrashScreen = () => {
-  const dispatch = useAppDispatch();
   const [files, setFiles] = useState([]);
   const [selected, setSelected] = useState<boolean>(false);
   const selectedFile = useRef<string[]>([]);
 
   const { colors } = useAppSelector((state) => state.theme.theme);
-
+  const loadTrashFiles = async () => {
+    try {
+      await ensureTrashFolderExists();
+      await cleanOldFiles();
+      const trashFiles = await RNFS.readDir(TRASH_FOLDER);
+      console.log('trashFiles', trashFiles);
+      setFiles(
+        trashFiles.map((file) => ({
+          path: file.path,
+          name: file.name,
+          size: bytesToGB(file.size),
+          timeLeft: calculateDaysLeft(file.mtime),
+          selected: false,
+          type: getFileExtension(file.path),
+        }))
+      );
+    } catch (error) {
+      console.error('[ERROR] failed to load trash folder', error);
+    }
+  };
   useEffect(() => {
-    const loadTrashFiles = async () => {
-      try {
-        await ensureTrashFolderExists();
-        await cleanOldFiles();
-        const trashFiles = await RNFS.readDir(TRASH_FOLDER);
-        console.log('trashFiles', trashFiles);
-        setFiles(
-          trashFiles.map((file) => ({
-            path: file.path,
-            name: file.name,
-            size: bytesToGB(file.size),
-            timeLeft: calculateDaysLeft(file.mtime),
-            selected: false,
-            type: getFileExtension(file.path),
-          }))
-        );
-      } catch (error) {
-        console.error('[ERROR] failed to load trash folder', error);
-      }
-    };
     loadTrashFiles();
   }, []);
 
@@ -98,26 +85,23 @@ const TrashScreen = () => {
     }
   }, []);
 
-  const handleSetSnack = (data: snackActionPayload) => {
-    dispatch(setSnack(data));
-  };
-
   const restoreSelectedFiles = async (selectedFileNames) => {
     try {
-      const promises = selectedFileNames.map((fileName) =>
-        restoreFile(fileName)
+      const promises = selectedFileNames.map(async (fileName) =>
+        await restoreFile(fileName)
       );
       await Promise.all(promises);
-
-      handleSetSnack({
-        message: 'Selected files restored!',
-      });
+      Toast.show({
+        text1: 'Delete selected files success!',
+        type: 'info'
+      })
+      loadTrashFiles()
     } catch (error) {
       console.error('Lỗi khi khôi phục nhiều file:', error);
-      handleSetSnack({
-        message: 'Failed to restore selected files!',
-        label: 'error',
-      });
+      Toast.show({
+        text1: 'Failed to restore selected files!',
+        type: 'info'
+      })
     }
   };
 
@@ -166,6 +150,7 @@ const TrashScreen = () => {
             setFiles(updatedLargeFiles);
 
             Alert.alert('Thành công', 'Các tệp đã được xóa.');
+            loadTrashFiles()
           } catch (error) {
             Alert.alert('Lỗi', 'Không thể xóa các tệp: ' + error.message);
           }
@@ -189,7 +174,7 @@ const TrashScreen = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background2 }]}>
       <FlatList
         data={files}
         keyExtractor={(item) => item.path}

@@ -14,12 +14,16 @@ export const imagesSlice = createSlice({
   initialState,
   reducers: {
     setImages: (state, action: PayloadAction<{uri: string}[]>) => {
+      console.log(action.payload.length)
       state.images = action.payload;
     },
+    resetImage: (state) => {
+      state.images = []
+    }
   },
 });
 
-export const { setImages } = imagesSlice.actions;
+export const { setImages, resetImage } = imagesSlice.actions;
 
 export const selectImages = (state: RootState) => state.images.images;
 

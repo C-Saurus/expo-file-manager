@@ -91,7 +91,11 @@ const LargeFilesScanner = ({ route, navigation }) => {
               },
             ]);
           }
-        } else if (item.isDirectory()) {
+        } else if (
+          item.isDirectory() &&
+          !item.path.includes('.AppCache') &&
+          !item.path.includes('.Trash')
+        ) {
           await scanLargeFiles(item.path);
         }
       }
@@ -120,7 +124,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
         };
         console.log('file', file);
         files.push(file);
-      } else if (item.isDirectory()) {
+      } else if (item.isDirectory() && !item.path.includes('.Trash')) {
         console.log('xxx');
         const subFiles = await scanAllFiles(item.path);
         files = [...files, ...subFiles];
@@ -252,7 +256,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
 
   if (isScanning) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, {backgroundColor: colors.background2}]}>
         <ActivityIndicator size="large" color="#0000ff" />
         <Text>Đang dọn dẹp...</Text>
       </View>
@@ -269,7 +273,7 @@ const LargeFilesScanner = ({ route, navigation }) => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background2 }]}>
       <FlatList
         data={sortedFiles()}
         keyExtractor={(item) => item.path}

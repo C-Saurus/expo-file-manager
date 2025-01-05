@@ -43,15 +43,15 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { ExtendedAsset, fileItem } from '../types';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { setImages } from '../features/files/imagesSlice';
+import { resetImage, setImages } from '../features/files/imagesSlice';
 import { setSnack, snackActionPayload } from '../features/files/snackbarSlice';
 import { HEIGHT, imageFormats, reExt, SIZE } from '../utils/Constants';
 import CustomHeader from '../components/Header/CommondHeader';
 import { getCategoryByExtension } from '../utils/getFileByCategory';
 import Toast from 'react-native-toast-message';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DisplayOptionModal } from '../components/Modals/DisplayOptionModal';
 import { FileItem } from '../components/Browser/Files/FileItem';
+import { MultiSelect } from '../components/Modals/MultiSelectModal';
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -61,7 +61,6 @@ type IBrowserProps = StackScreenProps<BrowserParamList, 'Browser'>;
 
 const Browser = ({ route }: IBrowserProps) => {
   const dispatch = useAppDispatch();
-  const { top } = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { colors } = useAppSelector((state) => state.theme.theme);
   const currentDir = route?.params?.prevDir;
@@ -83,6 +82,7 @@ const Browser = ({ route }: IBrowserProps) => {
   const [multiSelect, setMultiSelect] = useState(false);
   const [openOption, setOpenOption] = useState(false);
   const [selectedSize, setSelectedSize] = useState(0);
+  const currentData = useRef<fileItem[]>([]);
   const listSelected = useRef([]);
 
   useEffect(() => {
@@ -175,6 +175,7 @@ const Browser = ({ route }: IBrowserProps) => {
   };
 
   const getFiles = async () => {
+    dispatch(resetImage());
     FileSystem.readDirectoryAsync(currentDir)
       .then((dirFiles) => {
         const filteredFiles = dirFiles.filter(
@@ -197,6 +198,7 @@ const Browser = ({ route }: IBrowserProps) => {
             });
           });
           setFiles(tempfiles);
+          currentData.current = tempfiles;
           if (currentDir.includes('Image')) {
             const tempImageFiles = results.filter((file) => {
               let fileExtension = file.uri
@@ -300,7 +302,7 @@ const Browser = ({ route }: IBrowserProps) => {
     if (result.type === 'success') {
       const ext = result.mimeType.split('/')[1];
       const category = getCategoryByExtension(ext);
-      if (category !== route.params.folderName.toLowerCase()) {
+      if (category !== route.params.folderName.toLowerCase() && route.params.folderName.toLowerCase() !== 'custom') {
         Toast.show({
           type: 'error',
           text1: `Please choose ${route.params.folderName.toLowerCase()} file`,
@@ -419,14 +421,20 @@ const Browser = ({ route }: IBrowserProps) => {
     );
     Promise.all(deleteProms)
       .then((_) => {
-        console.log('deleteProms');
+        Toast.show({
+          text1: 'Delete file/folder success.',
+          type: 'success'
+        })
+        getFiles();
       })
       .catch((err) => {
-        console.log('ERRR');
+        Toast.show({
+          text1: 'Delete file/folder error.',
+          type: 'error'
+        })
         console.log(err);
       })
       .finally(() => {
-        getFiles();
         cancelMultiSelect();
       });
   }, []);
@@ -452,9 +460,10 @@ const Browser = ({ route }: IBrowserProps) => {
       .join('/');
     FileSystem.getInfoAsync(fileFolderPath + '/' + newFileName).then((res) => {
       if (res.exists)
-        handleSetSnack({
-          message: 'A folder or file with the same name already exists.',
-        });
+        Toast.show({
+          text1: 'A folder or file with the same name already exists.',
+          type: 'error'
+        })
       else
         FileSystem.moveAsync({
           from: renamingFile.uri,
@@ -462,11 +471,13 @@ const Browser = ({ route }: IBrowserProps) => {
         })
           .then(() => {
             setRenameDialogVisible(false);
+            setNewFileName('')
             getFiles();
           })
           .catch((_) =>
-            handleSetSnack({
-              message: 'Error renaming the file/folder',
+            Toast.show({
+              text1: 'Error renaming the file/folder',
+              type: 'error'
             })
           );
     });
@@ -509,7 +520,12 @@ const Browser = ({ route }: IBrowserProps) => {
     setOpenOption(false);
   };
 
-  const handleSearch = () => {};
+  const handleSearch = (value: string) => {
+    const filterAsset = currentData.current.filter((asset) =>
+      asset.name.includes(value.toLowerCase())
+    );
+    setFiles(filterAsset);
+  };
 
   const onAddFilePress = () => {
     setNewFileActionSheet(true);
@@ -682,47 +698,17 @@ const Browser = ({ route }: IBrowserProps) => {
         colors={colors}
         headerTitle={route.params.folderName}
       />
-      {multiSelect && (
-        <View style={[styles.nav]}>
-          <View style={styles.navFirst}>
-            <Text style={styles.count}>
-              {selectedSize} / {files?.length}
-            </Text>
-            <Text style={styles.count}>Multiple Select</Text>
-            <TouchableOpacity onPress={() => cancelMultiSelect()}>
-              <Ionicons name="close" size={24} color="black" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.line}></View>
-          <View style={styles.navFirst}>
-            <TouchableOpacity onPress={handleMoveFile}>
-              <MaterialCommunityIcons
-                name="file-move-outline"
-                size={24}
-                color="black"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleCopyFile}>
-              <Ionicons name="copy-outline" size={24} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleDeleteFile}>
-              <MaterialCommunityIcons
-                name="delete-outline"
-                size={24}
-                color="black"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleSelectAll}>
-              <Feather
-                style={{ marginLeft: 10 }}
-                name={selectAll ? 'check-square' : 'square'}
-                size={24}
-                color={colors.primary}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      <MultiSelect
+        multiSelect={multiSelect}
+        displaySelectedSize={`${selectedSize} / ${files?.length}`}
+        colors={colors}
+        selectAll={selectAll}
+        cancelMultiSelect={cancelMultiSelect}
+        handleCopyFile={handleCopyFile}
+        handleDeleteFile={handleDeleteFile}
+        handleMoveFile={handleMoveFile}
+        toggleSelectAll={toggleSelectAll}
+      />
       <View style={{ ...styles.fileList }}>
         <FlatList
           data={files}

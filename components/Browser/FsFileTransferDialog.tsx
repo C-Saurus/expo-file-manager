@@ -26,6 +26,7 @@ type FsFileTransferDialogProps = {
   moveSelectedFiles: (destination: string) => void;
   moveOrCopy: string;
   setMoveOrCopy: (value: string) => void;
+  loading?: boolean
 };
 
 export const FsFileTransferDialog = ({
@@ -37,6 +38,7 @@ export const FsFileTransferDialog = ({
   moveSelectedFiles,
   moveOrCopy,
   setMoveOrCopy,
+  loading
 }: FsFileTransferDialogProps) => {
   const { colors } = useAppSelector((state) => state.theme.theme);
   const [currentFolders, setCurrentFolders] = useState<string[]>([]);
@@ -45,10 +47,20 @@ export const FsFileTransferDialog = ({
     const folders = await FileSystem.readDirectoryAsync(
       FileSystem.documentDirectory + moveDir
     );
+    console.log('folder', folders);
+    console.log('fileType', fileType);
     const folderPromises = folders
-      .filter((folder) => folder.toLowerCase().includes(fileType))
+      .filter(
+        (folder) =>
+          folder
+            .toLowerCase()
+            .includes(fileType === 'photo' ? 'image' : fileType) ||
+          folder.includes('Custom')
+      )
       .map((folder) =>
-        FileSystem.getInfoAsync(FileSystem.documentDirectory + moveDir + `/${folder}`)
+        FileSystem.getInfoAsync(
+          FileSystem.documentDirectory + moveDir + `/${folder}`
+        )
       );
     Promise.all(folderPromises).then((values) => {
       const folderItems = values
@@ -62,6 +74,7 @@ export const FsFileTransferDialog = ({
             : item.uri.split('/').pop();
           return folderName;
         });
+      console.log("folderItems", folderItems)
       setCurrentFolders(folderItems);
     });
   }
@@ -101,15 +114,16 @@ export const FsFileTransferDialog = ({
         let pathAppend = moveDir.endsWith('/')
           ? moveDir + item
           : moveDir + '/' + item;
+        console.log("pathAppend", pathAppend)
         setMoveDir(pathAppend);
       }}
     >
       <View style={styles.fileRow}>
         <View style={styles.fileRowLeft}>
-          <Feather name="folder" size={35} color={colors.primary} />
+          <Feather name="folder" size={35} color={colors.text} />
         </View>
         <View style={styles.fileRowRight}>
-          <Text style={{ ...styles.fileTitleText, color: colors.primary }}>
+          <Text style={{ ...styles.fileTitleText, color: colors.text }}>
             {decodeURI(item)}
           </Text>
         </View>
@@ -134,10 +148,10 @@ export const FsFileTransferDialog = ({
             style={styles.folderUpButton}
             onPress={navigateUpFolder}
           >
-            <Ionicons name="return-up-back" size={32} color={colors.primary} />
+            <Ionicons name="return-up-back" size={32} color={colors.text} />
           </TouchableOpacity>
           <Text
-            style={{ ...styles.folderName, color: colors.primary }}
+            style={{ ...styles.folderName, color: colors.text }}
             ellipsizeMode="head"
             numberOfLines={1}
           >
@@ -146,13 +160,13 @@ export const FsFileTransferDialog = ({
           <TouchableOpacity
             style={styles.folderUpButton}
             onPress={() => {
-              moveSelectedFiles(FileSystem.documentDirectory + moveDir);
+              moveSelectedFiles(FileSystem.documentDirectory + moveDir.slice(1));
             }}
           >
             <Ionicons
               name="md-checkmark-done-sharp"
               size={32}
-              color={colors.primary}
+              color={colors.text}
             />
           </TouchableOpacity>
         </View>

@@ -27,7 +27,7 @@ const Header = ({
         // Thanh search
         <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
           <TextInput
-            style={[styles.searchInput, { color: colors.background3 }]}
+            style={[styles.searchInput, { color: colors.primary }]}
             placeholder="Search files..."
             value={searchQuery}   
             onChangeText={setSearchQuery}
@@ -37,7 +37,8 @@ const Header = ({
             style={[styles.cancelButton, { backgroundColor: colors.background }]}
             onPress={() => {
               setIsSearching(false);
-              setSearchQuery(''); // Reset thanh search
+              setSearchQuery('');
+              handleSearch('')
             }}
           >
             <Text style={[styles.cancelText]}>Cancel</Text>
@@ -49,13 +50,13 @@ const Header = ({
           {/* Nút Back */}
           <View style={styles.leftSection}>
             <TouchableOpacity onPress={onBackPress} style={styles.backButton} >
-              <Ionicons name="arrow-back" size={24} color={colors.primary} />
+              <Ionicons name="arrow-back" size={24} color={colors.header} />
             </TouchableOpacity>
           </View>
 
           {/* Tiêu đề hoặc khoảng trống */}
           <View style={styles.centerSection}>
-            <Text style={[styles.title, { color: colors.primary }]}>
+            <Text style={[styles.title, { color: colors.header }]}>
               {capitalizeFirstLetter(headerTitle)}
             </Text>
           </View>
@@ -66,10 +67,10 @@ const Header = ({
               style={{ paddingRight: 10 }}
               onPress={() => setIsSearching(true)}
             >
-              <Ionicons name="search" size={24} color={colors.primary} />
+              <Ionicons name="search" size={24} color={colors.header} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleChooseOption}>
-              <Entypo name="dots-three-vertical" size={24} color={colors.primary} />
+              <Entypo name="dots-three-vertical" size={24} color={colors.header} />
             </TouchableOpacity>
           </View>
         </View>
@@ -116,6 +117,7 @@ export const styles = StyleSheet.create({
   },
   iconButton: {
     marginLeft: 15,
+    marginRight: 10,
   },
   searchButton: {
     padding: 5,

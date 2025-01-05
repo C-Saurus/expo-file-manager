@@ -37,31 +37,18 @@ LogBox.ignoreLogs([
 ]);
 
 export default function Main() {
-
   const hasFetchFile = useRef(false);
-  const { locked, setLocked } = useLock();
+  const { locked, setLocked, lockType } = useLock();
   const { theme } = useAppSelector((state) => state.theme);
   const colorScheme = useColorScheme();
   const dispatch = useAppDispatch();
 
-  const getPassCodeStatus = async () => {
-    const hasPassCode = await SecureStore.getItemAsync('hasPassCode');
-    if (JSON.parse(hasPassCode)) {
-      setLocked(true);
-    } else {
-      setLocked(false);
-    }
-  };
-
   useEffect(() => {
-    if (hasFetchFile.current) return;
+    console.log("lockkkkkkkkkkkkk", locked)
+    if (hasFetchFile.current || locked) return;
     dispatch(fetchFiles());
     hasFetchFile.current = true;
-  }, [dispatch]);
-
-  useEffect(() => {
-    getPassCodeStatus();
-  }, []);
+  }, [locked, dispatch]);
 
   useEffect(() => {
     const setColorScheme = async () => {
@@ -84,11 +71,15 @@ export default function Main() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
+    if (fontsLoaded) {
+      setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 1000)
+    }
   }, [fontsLoaded]);
 
   if (locked) {
-    return <LockScreen setLocked={setLocked} />;
+    return <LockScreen setLocked={setLocked} lockType={lockType} />;
   }
 
   return (
@@ -97,11 +88,7 @@ export default function Main() {
       <NavigationContainer theme={theme.dark ? DarkTheme : DefaultTheme}>
         <MainNavigator />
       </NavigationContainer>
-      <Toast 
-        position='bottom'
-        autoHide
-        bottomOffset={20}
-      />
+      <Toast position="bottom" autoHide visibilityTime={3000} bottomOffset={20} />
     </View>
   );
 }

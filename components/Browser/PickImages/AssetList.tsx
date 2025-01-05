@@ -251,7 +251,29 @@ export const AssetList = ({
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.confirmButton}>
         {multiSelect && !fileType && (
-          <TouchableOpacity
+          <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text
+              style={{
+                fontFamily: 'Poppins_500Medium',
+                fontSize: 18,
+                color: colors.primary,
+              }}
+            >
+              Selected files:
+            </Text>
+            <Text
+              style={{
+                fontFamily: 'Poppins_500Medium',
+                fontSize: 18,
+                color: colors.primary,
+                paddingLeft: 10
+              }}
+            >
+              {selectedSize}
+            </Text>
+            </View>
+            <TouchableOpacity
             style={styles.handleImport}
             onPress={() => handleImport(listSelected.current)}
           >
@@ -260,16 +282,9 @@ export const AssetList = ({
               size={30}
               color={colors.primary}
             />
-            <Text
-              style={{
-                fontFamily: 'Poppins_500Medium',
-                fontSize: 18,
-                color: colors.primary,
-              }}
-            >
-              {selectedSize}
-            </Text>
           </TouchableOpacity>
+          </View>
+
         )}
       </View>
       <FlatList

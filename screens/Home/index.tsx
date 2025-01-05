@@ -146,11 +146,11 @@ export const Home = () => {
   const renderIcon = (item) => {
     switch (item.iconLib) {
       case 'MaterialIcons':
-        return <MaterialIcons name={item.icon} size={40} color={item.color} />;
+        return <MaterialIcons name={item.icon} size={42} color={item.color} />;
       case 'FontAwesome5':
-        return <FontAwesome5 name={item.icon} size={40} color={item.color} />;
+        return <FontAwesome5 name={item.icon} size={42} color={item.color} />;
       case 'Ionicons':
-        return <Ionicons name={item.icon} size={40} color={item.color} />;
+        return <Ionicons name={item.icon} size={42} color={item.color} />;
       default:
         return null;
     }

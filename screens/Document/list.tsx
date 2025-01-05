@@ -23,10 +23,12 @@ import {
   copyFileToCustomeFolder,
   getCustomeFileByFolder,
   moveFileToCustomeFolder,
+  renameFile,
 } from '../../utils/Constants';
 import { DisplayOptionModal } from '../../components/Modals/DisplayOptionModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FileItemCommon } from '../../components/Browser/Files/FileItemCommon';
+import Toast from 'react-native-toast-message';
 
 type TabDocFilesProps = {
   data: ReadDirItem[];
@@ -55,18 +57,10 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
     const [loading, setLoading] = useState(false);
     const [openOption, setOpenOption] = useState(false);
     const renameInputRef = useRef<TextInput>(null);
-    const [files, setFiles] = useState<
-      (ReadDirItem & { selected?: boolean })[]
-    >(
-      data.map((file) => {
-        return {
-          ...file,
-          selected: false,
-        };
-      })
-    );
+    const currentData = useRef<ReadDirItem[]>(data);
+    const [files, setFiles] = useState<ReadDirItem[]>(data);
     const listSelected = useRef([]);
-    const [selectedSize, setSelectedSize] = useState(0)
+    const [selectedSize, setSelectedSize] = useState(0);
 
     useEffect(() => {
       console.log('TabDocFiles');
@@ -80,17 +74,11 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
           : [item.path];
         console.log('deleteFile', deleteFile);
         const res = await removeFileToTrash(deleteFile);
-        console.log('res', res);
-        setFiles((prev) =>
-          prev
-            .filter((file) => !res.includes(file.path))
-            .map((file) => {
-              return {
-                ...file,
-                selected: false,
-              };
-            })
+        currentData.current = currentData.current.filter(
+          (file) => !res.includes(file.path)
         );
+        setFiles(currentData.current);
+
         cancelMultiSelect();
       } catch (error) {
         console.error('Lỗi khi di chuyển file:', error);
@@ -181,7 +169,7 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         listSelected.current = [];
       }
       setSelectAll((prev) => !prev);
-      setSelectedSize(listSelected.current.length)
+      setSelectedSize(listSelected.current.length);
     };
 
     const executeTransfer = async (
@@ -199,14 +187,8 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
           ? files
           : files.filter((file) => !res.includes(file.path));
 
-      setFiles(
-        filesAfterDelete.map((file) => {
-          return {
-            ...file,
-            selected: false,
-          };
-        })
-      );
+      setFiles(filesAfterDelete);
+      currentData.current = filesAfterDelete;
       cancelMultiSelect();
       setDestinationDialogVisible(false);
       setMoveDir('');
@@ -265,12 +247,17 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         } else {
           listSelected.current.push(item.path);
         }
-        setSelectedSize(listSelected.current.length)
+        setSelectedSize(listSelected.current.length);
       },
       []
     );
 
-    const handleSearch = () => {};
+    const handleSearch = (value: string) => {
+      const filterAsset = currentData.current.filter((asset) =>
+        asset.name.includes(value.toLowerCase())
+      );
+      setFiles(filterAsset);
+    };
 
     useEffect(() => {
       if (renameDialogVisible && Platform.OS === 'android') {
@@ -290,18 +277,29 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
         renamingFile.path.lastIndexOf('/')
       );
       const newPath = `${directoryPath}/${newFileName}`;
-      setFiles((prev) =>
-        prev.map((file) => {
+      const res = renameFile(renamingFile.path, newPath)
+      if (res) {
+        currentData.current = currentData.current.map((file) => {
           if (file.path === renamingFile.path) {
             return {
               ...file,
               name: newFileName,
-              path: newPath
-            }
+              path: newPath,
+            };
           }
-          return file
+          return file;
+        });
+        setFiles(currentData.current);
+        Toast.show({
+          text1: "Rename success!",
+          type: 'success'
         })
-      );
+      } else {
+        Toast.show({
+          text1: "Rename failed!",
+          type: 'error'
+        })
+      }
       setRenamingFile(undefined);
     };
 
@@ -342,12 +340,31 @@ export const TabDocFiles: React.FC<TabDocFilesProps> = React.memo(
       return (
         <View
           style={{
-            ...styles.container,
-            backgroundColor: colors.background2,
-            width: '100%',
+            backgroundColor: colors.background,
+            flex: 1,
+            paddingTop: ['pdf', 'txt', 'zip', 'apk'].includes(fileType)
+              ? top
+              : 0,
           }}
         >
-          <ActivityIndicator size="large" color={colors.primary} />
+          {['pdf', 'txt', 'zip', 'apk'].includes(fileType) && (
+            <Header
+              colors={colors}
+              handleChooseOption={handleChooseOption}
+              headerTitle={fileType}
+              onBackPress={onBackPress}
+              handleSearch={handleSearch}
+            />
+          )}
+          <View
+            style={{
+              ...styles.container,
+              backgroundColor: colors.background,
+              width: '100%',
+            }}
+          >
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
         </View>
       );
     }

@@ -8,7 +8,6 @@ import HomeStackNavigator from './HomeStackNavigator';
 import SettingsStackNavigator from './SettingsStackNavigator';
 
 import Web from '../screens/Web';
-import FileTransfer from '../screens/FileTransfer';
 
 import { useAppSelector } from '../hooks/reduxHooks';
 import HomeStackNavigator1 from './HomeStack';

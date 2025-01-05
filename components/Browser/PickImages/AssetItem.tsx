@@ -12,28 +12,32 @@ type AssetProps = {
   item: ExtendedAsset;
   itemType?: string;
   selectAll?: boolean;
+  multiSelect?: boolean;
   toggleSelect: (arg0: ExtendedAsset, arg1?: boolean) => void;
 };
 
 export const AssetItem: React.FC<AssetProps> = React.memo(
-  ({
-    item: asset,
-    itemType,
-    selectAll,
-    toggleSelect,
-  }) => {
+  ({ item: asset, itemType, selectAll, multiSelect, toggleSelect }) => {
     const navigation = useNavigation<any>();
-    const [selected, setSelected] = useState(false)
+    const [selected, setSelected] = useState(false);
 
     useEffect(() => {
-      console.log("selectAll")
+      console.log('selectAll');
       if (!selectAll) {
-        setSelected(false)
+        setSelected(false);
       }
-    }, [selectAll])
+    }, [selectAll]);
+
+    useEffect(() => {
+      console.log('multiSelect');
+      if (!multiSelect) {
+        setSelected(false);
+      }
+    }, [multiSelect]);
 
     const onPressHandler = (item) => {
-      if (itemType === 'image') {
+      console.log("XXXX", item)
+      if (itemType === 'photo') {
         navigation.push('ImageGalleryView', {
           folderName: item.filename,
           prevDir: ``,
@@ -90,31 +94,33 @@ export const AssetItem: React.FC<AssetProps> = React.memo(
               <View style={styles.playIcon} />
             </View>
           )}
-          <View style={styles.checkCircleContainer}>
-            <TouchableOpacity onPress={() => {
-              toggleSelect(asset, true)
-              setSelected((prev) => !prev)
-            }}>
-              <View
-                style={[
-                  styles.checkCircleBG,
-                  {
-                    backgroundColor: (selected || selectAll) ? '#0595F5' : 'gray',
-                    opacity: (selected || selectAll) ? 1 : 0.5,
-                  },
-                ]}
-              >
-                {(selected || selectAll) && (
-                  <Ionicons
-                    name="checkmark-done-outline"
-                    size={20}
-                    color="blue"
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
         </TouchableOpacity>
+        <View style={styles.checkCircleContainer}>
+          <TouchableOpacity
+            onPress={() => {
+              toggleSelect(asset, true);
+              setSelected((prev) => !prev);
+            }}
+          >
+            <View
+              style={[
+                styles.checkCircleBG,
+                {
+                  backgroundColor: selected || selectAll ? '#0595F5' : 'gray',
+                  opacity: selected || selectAll ? 1 : 0.5,
+                },
+              ]}
+            >
+              {(selected || selectAll) && (
+                <Ionicons
+                  name="checkmark-done-outline"
+                  size={20}
+                  color="blue"
+                />
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }

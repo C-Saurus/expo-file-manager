@@ -34,11 +34,11 @@ const CustomHeader = ({
           ]}
         >
           <TextInput
-            style={[styles.searchInput, { color: colors.background3 }]}
+            style={[styles.searchInput, { color: colors.primary }]}
             placeholder="Search files..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            onSubmitEditing={() => handleSearch(searchQuery)} // Kích hoạt tìm kiếm khi nhấn Enter
+            onSubmitEditing={() => handleSearch(searchQuery)}
           />
           <TouchableOpacity
             style={[
@@ -47,7 +47,8 @@ const CustomHeader = ({
             ]}
             onPress={() => {
               setIsSearching(false);
-              setSearchQuery(''); // Reset thanh search
+              setSearchQuery('');
+              handleSearch('');
             }}
           >
             <Text style={[styles.cancelText]}>Cancel</Text>
@@ -63,30 +64,34 @@ const CustomHeader = ({
           {/* Nút Back */}
           <View style={styles.leftSection}>
             <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color={colors.primary} />
+              <Ionicons name="arrow-back" size={24} color={colors.header} />
             </TouchableOpacity>
           </View>
 
           {/* Tiêu đề hoặc khoảng trống */}
           <View style={styles.centerSection}>
-            <Text style={[styles.title, { color: colors.primary }]}>
-              {headerTitle}
+            <Text style={[styles.title, { color: colors.header }]}>
+              {capitalizeFirstLetter(headerTitle)}
             </Text>
           </View>
 
           {/* Biểu tượng ở bên phải */}
           <View style={styles.rightSection}>
             <TouchableOpacity onPress={() => setIsSearching(true)}>
-              <Ionicons name="search" size={24} color={colors.primary} />
+              <Ionicons name="search" size={24} color={colors.header} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={onAddFolderPress}
-              style={styles.iconButton}
+              style={[styles.iconButton]}
             >
-              <Feather name="folder-plus" size={26} color={colors.primary} />
+              <Feather name="folder-plus" size={26} color={colors.header} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleChooseOption}>
-              <Entypo name="dots-three-vertical" size={23} color={colors.primary} />
+              <Entypo
+                name="dots-three-vertical"
+                size={23}
+                color={colors.header}
+              />
             </TouchableOpacity>
           </View>
         </View>

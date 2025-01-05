@@ -25,10 +25,10 @@ export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
   const onPressHandler = (item) => {
     console.log('itemmmmm', item.type);
     if (item.type === 'image') {
-      navigation.push('ImageGalleryView', {
+      navigation.push('FullScreenImageScreen', {
         folderName: item.name,
         prevDir: ``,
-        uriValue: `file://${item.path}`,
+        uri: `file://${item.path}`,
       });
     } else if (item.type === 'video') {
       navigation.push('VideoPlayer', {
@@ -60,16 +60,18 @@ export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
         return <ThumbnailImage uri={item.path} />;
       case 'audio':
         return (
-          <FontAwesome5 name="file-audio" size={35} color={colors.primary} />
+          <FontAwesome5 name="file-audio" size={35} color={colors.text} />
         );
       case 'font':
-        return <FontAwesome5 name="font" size={35} color={colors.primary} />;
-      case 'application':
+        return <FontAwesome5 name="font" size={35} color={colors.text} />;
+      case 'audio':
+        return <FontAwesome5 name="audio" size={35} color={colors.text} />;
+      case 'pdf':
         return (
           <MaterialCommunityIcons
-            name={'file-outline'}
+            name={'file-pdf-box'}
             size={35}
-            color={colors.primary}
+            color={colors.text}
           />
         );
       case 'text':
@@ -77,11 +79,11 @@ export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
           <MaterialCommunityIcons
             name={'file-outline'}
             size={35}
-            color={colors.primary}
+            color={colors.text}
           />
         );
       default:
-        return <Feather name="file" size={35} color={colors.primary} />;
+        return <Feather name="file" size={35} color={colors.text} />;
     }
   }, [])
 
@@ -97,11 +99,11 @@ export const Item: React.FC<any> = React.memo(({ item, handleSelectFile }) => {
         <View style={[styles.itemDetails]}>
           <Text
             numberOfLines={2}
-            style={[styles.fileName, { color: colors.primary }]}
+            style={[styles.fileName, { color: colors.text }]}
           >
             {item.path}
           </Text>
-          <Text style={{ fontSize: 10, color: colors.primary }}>{`${bytesToMB(
+          <Text style={{ fontSize: 10, color: colors.text }}>{`${bytesToMB(
             item.size
           )} MB`}</Text>
         </View>

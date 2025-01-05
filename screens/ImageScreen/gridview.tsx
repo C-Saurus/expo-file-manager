@@ -9,6 +9,7 @@ import {
   copyFileToCustomeFolder,
   getCustomeFileByFolder,
   moveFileToCustomeFolder,
+  renameFile,
   SIZE,
 } from '../../utils/Constants';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +20,7 @@ import { FsFileTransferDialog } from '../../components/Browser/FsFileTransferDia
 import Dialog from 'react-native-dialog';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FileItemMedia } from '../../components/Browser/Files/FileItemMedia';
+import Toast from 'react-native-toast-message';
 
 export const PhotosByDate: React.FC<{
   fileType: string;
@@ -29,7 +31,6 @@ export const PhotosByDate: React.FC<{
   getAlbumAssets: () => void;
 }> = React.memo(
   ({ fileType, viewMode, assets, setAssets, setLoading, getAlbumAssets }) => {
-    const navigation = useNavigation<StackNavigationProp<any>>();
     const { colors } = useAppSelector((state) => state.theme.theme);
     const [multiSelect, setMultiSelect] = useState<boolean>(false);
     const [groupedPhotos, setGroupedPhotos] = useState<{
@@ -65,21 +66,46 @@ export const PhotosByDate: React.FC<{
     }, [renameDialogVisible]);
 
     const onRename = async () => {
+      setLoading(true)
       const filePathSplit = renamingFile.uri.split('/');
       const fileFolderPath = filePathSplit
         .slice(0, filePathSplit.length - 1)
         .join('/');
       console.log('filePath', fileFolderPath + '/' + newFileName);
-      const filesAfterDelete = assets
-        .filter((file) => file.uri === renamingFile.uri)
-        .map((file) => {
-          return {
-            ...file,
-            name: fileFolderPath + '/' + newFileName,
-          };
+      const res = renameFile(
+        renamingFile.uri.slice(7),
+        fileFolderPath.slice(7) + '/' + newFileName
+      );
+      if (res) {
+        const filesAfterDelete = assets
+          .map((file) => {
+            if (file.uri === renamingFile.uri) {
+              return {
+                ...file,
+                uri: fileFolderPath + '/' + newFileName,
+                filename: newFileName,
+              };
+            } else {
+              return file
+            }
+            
+          });
+        setAssets(filesAfterDelete);
+
+        Toast.show({
+          text1: 'Rename success!',
+          type: 'success',
         });
-      setAssets(filesAfterDelete);
+      } else {
+        Toast.show({
+          text1: 'Rename failed!',
+          type: 'error',
+        });
+      }
+      setRenameDialogVisible(false)
       setRenamingFile(undefined);
+      setNewFileName('')
+      setLoading(false)
     };
 
     const deleteSelectedFiles = useCallback(
@@ -88,16 +114,16 @@ export const PhotosByDate: React.FC<{
           setLoading(true);
           const deleteFile = listSelected.current.length
             ? listSelected.current
-            : [item.uri];
+            : [item];
           console.log('deleteFile', deleteFile);
           const res = await removeFileToTrash(
             deleteFile.map((item) => {
-              return item.uri.slice(7)
+              return item.uri.slice(7);
             })
           );
           console.log('res', res);
           const filesAfterDelete = assets
-            .filter((file) => !res.includes(file.uri))
+            .filter((file) => !res.includes(file.uri.slice(7)))
             .map((file) => {
               return {
                 ...file,
@@ -171,36 +197,37 @@ export const PhotosByDate: React.FC<{
       selectedFiles: ExtendedAsset[],
       destination: string
     ) => {
-      const transferPromises = selectedFiles.map((file) => {
-        if (moveOrCopy === 'Copy')
-          return moveFileToCustomeFolder(file.uri.slice(7), destination);
-        else return copyFileToCustomeFolder(file.uri.slice(7), destination);
-      });
-      const res = await Promise.all(transferPromises);
-      const filesAfterDelete =
-        moveOrCopy === 'Copy'
-          ? assets
-          : assets.filter((file) => !res.includes(file.uri));
-
-      setAssets(
-        filesAfterDelete.map((file) => {
-          return {
-            ...file,
-            selected: false,
-          };
-        })
-      );
-      cancelMultiSelect();
+      setLoading(true)
       setDestinationDialogVisible(false);
-      setMoveDir('');
-      setMoveOrCopy('');
+      const transferPromises = selectedFiles.map((file) => {
+        console.log("file", file.uri)
+        if (moveOrCopy === 'Copy')
+          return copyFileToCustomeFolder(file.uri.slice(7), destination);
+        else return moveFileToCustomeFolder(file.uri.slice(7), destination);
+      });
+      try {
+        const res = await Promise.all(transferPromises);
+        const filesAfterDelete =
+          moveOrCopy === 'Copy'
+            ? assets
+            : assets.filter((file) => !res.includes(file.uri.slice(7)));
+
+        setAssets(filesAfterDelete);
+        cancelMultiSelect();
+        setMoveDir('');
+        setMoveOrCopy('');
+      } catch (error) {
+        setDestinationDialogVisible(true);
+      }
+      setLoading(false)
     };
 
     const moveSelectedFiles = async (destination: string) => {
       const selectedFiles = listSelected.current;
-      console.log('destination', destination.slice(7));
+      const filePath = destination.slice(7)
+      console.log('destination', filePath);
       const destinationFolderFiles = await getCustomeFileByFolder(
-        destination.slice(7)
+        filePath
       );
       const conflictingFiles = selectedFiles.filter(
         (file) =>
@@ -223,14 +250,14 @@ export const PhotosByDate: React.FC<{
             {
               text: 'Replace the files',
               onPress: () => {
-                executeTransfer(selectedFiles, destination.slice(7));
+                executeTransfer(selectedFiles, filePath);
               },
               style: 'default',
             },
           ]
         );
       } else {
-        executeTransfer(selectedFiles, destination.slice(7));
+        executeTransfer(selectedFiles, filePath);
       }
     };
 
@@ -255,12 +282,12 @@ export const PhotosByDate: React.FC<{
           setMultiSelect(true);
           console.log('==toggleSelect==2');
         }
-        if (listSelected.current.includes(item.uri)) {
+        if (listSelected.current.includes(item)) {
           listSelected.current = listSelected.current.filter(
-            (f) => f !== item.uri
+            (f) => f.uri !== item.uri
           );
         } else {
-          listSelected.current.push(item.uri);
+          listSelected.current.push(item);
         }
         setSelectedSize(listSelected.current.length);
       },
@@ -274,6 +301,7 @@ export const PhotosByDate: React.FC<{
           selectAll={selectAll}
           toggleSelect={toggleSelect}
           itemType={fileType}
+          multiSelect={multiSelect}
         />
       ) : (
         <View style={styles.emptyItem}></View>
@@ -292,19 +320,19 @@ export const PhotosByDate: React.FC<{
     );
 
     const renderFileItemMedia = ({ item }: { item: ExtendedAsset }) => (
-        <FileItemMedia
-          item={item}
-          selectAll={selectAll}
-          toggleSelect={toggleSelect}
-          multiSelect={multiSelect}
-          setTransferDialog={setDestinationDialogVisible}
-          setMoveOrCopy={setMoveOrCopy}
-          deleteSelectedFiles={deleteSelectedFiles}
-          setRenamingFile={setRenamingFile}
-          setRenameDialogVisible={setRenameDialogVisible}
-          setNewFileName={setNewFileName}
-        ></FileItemMedia>
-      )
+      <FileItemMedia
+        item={item}
+        selectAll={selectAll}
+        toggleSelect={toggleSelect}
+        multiSelect={multiSelect}
+        setTransferDialog={setDestinationDialogVisible}
+        setMoveOrCopy={setMoveOrCopy}
+        deleteSelectedFiles={deleteSelectedFiles}
+        setRenamingFile={setRenamingFile}
+        setRenameDialogVisible={setRenameDialogVisible}
+        setNewFileName={setNewFileName}
+      ></FileItemMedia>
+    );
 
     const renderEmptyComponent = useCallback(
       () => (

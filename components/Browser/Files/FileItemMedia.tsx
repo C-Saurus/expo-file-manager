@@ -94,22 +94,22 @@ export const FileItemMedia: React.FC<Props> = React.memo(
     const ItemThumbnail = useCallback(() => {
       switch (itemType) {
         case 'dir':
-          return <Feather name="folder" size={35} color={colors.primary} />;
+          return <Feather name="folder" size={35} color={colors.text} />;
         case 'image':
         case 'video':
           return <ThumbnailImage uri={item.uri} />;
         case 'audio':
           return (
-            <FontAwesome5 name="file-audio" size={35} color={colors.primary} />
+            <FontAwesome5 name="file-audio" size={35} color={colors.text} />
           );
         case 'font':
-          return <FontAwesome5 name="font" size={35} color={colors.primary} />;
+          return <FontAwesome5 name="font" size={35} color={colors.text} />;
         case 'application':
           return (
             <MaterialCommunityIcons
               name={fileIcons[itemFormat] || 'file-outline'}
               size={35}
-              color={colors.primary}
+              color={colors.text}
             />
           );
         case 'text':
@@ -117,11 +117,11 @@ export const FileItemMedia: React.FC<Props> = React.memo(
             <MaterialCommunityIcons
               name={fileIcons[itemFormat] || 'file-outline'}
               size={35}
-              color={colors.primary}
+              color={colors.text}
             />
           );
         default:
-          return <Feather name="file" size={35} color={colors.primary} />;
+          return <Feather name="file" size={35} color={colors.text} />;
       }
     }, [colors]);
 
@@ -245,7 +245,7 @@ export const FileItemMedia: React.FC<Props> = React.memo(
             <View style={styles.itemDetails}>
               <Text
                 numberOfLines={1}
-                style={{ ...styles.fileName, color: colors.primary }}
+                style={{ ...styles.fileName, color: colors.text }}
               >
                 {decodeURI(item.filename)}
               </Text>

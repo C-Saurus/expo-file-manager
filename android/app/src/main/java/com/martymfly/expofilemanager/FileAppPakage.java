@@ -8,6 +8,7 @@ import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.martymfly.expofilemanager.nativemodules.FileDeletionNativeModule;
+import com.martymfly.expofilemanager.nativemodules.IntentLauncherModules;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +32,7 @@ public class FileAppPakage implements ReactPackage {
         FileAppPakage.reactContext = reactContext;
 
         modules.add(new FileDeletionNativeModule(reactContext));
+        modules.add(new IntentLauncherModules(reactContext));
 
         return modules;
     }

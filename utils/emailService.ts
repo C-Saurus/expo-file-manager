@@ -18,7 +18,9 @@ export const sendVerificationEmail = async (email) => {
   }
 };
 
-export const sendResetPasscodeEmail = async (email) => {
+export const sendResetPasscodeEmail = async () => {
+  const email = await isEmailVerified()
+  console.log("email", email)
   const templateParams = {
     email: email,
   };

@@ -131,7 +131,6 @@ export const FileItem: React.FC<Props> = React.memo(({
         navigation.push('AudioPlayer', {
           folderName: item.name,
           prevDir: `${docDir}`,
-          uriValue: '',
         });
       } else {
         navigation.push('MiscFileView', {
@@ -262,11 +261,11 @@ export const FileItem: React.FC<Props> = React.memo(({
           <View style={styles.itemDetails}>
             <Text
               numberOfLines={1}
-              style={{ ...styles.fileName, color: colors.primary }}
+              style={{ ...styles.fileName, color: colors.text }}
             >
               {decodeURI(item.name)}
             </Text>
-            <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
+            <Text style={{ ...styles.fileDetailText, color: colors.text }}>
               {humanFileSize(item.size)}
             </Text>
             <Text style={{ ...styles.fileDetailText, color: colors.secondary }}>
