@@ -52,6 +52,7 @@ import Toast from 'react-native-toast-message';
 import { DisplayOptionModal } from '../components/Modals/DisplayOptionModal';
 import { FileItem } from '../components/Browser/Files/FileItem';
 import { MultiSelect } from '../components/Modals/MultiSelectModal';
+import { removeFileToTrash } from '../stores/document/action';
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -87,6 +88,7 @@ const Browser = ({ route }: IBrowserProps) => {
 
   useEffect(() => {
     getFiles();
+    console.log('Ccccccccccc', currentDir);
   }, [currentDir]);
 
   useEffect(() => {
@@ -302,7 +304,10 @@ const Browser = ({ route }: IBrowserProps) => {
     if (result.type === 'success') {
       const ext = result.mimeType.split('/')[1];
       const category = getCategoryByExtension(ext);
-      if (category !== route.params.folderName.toLowerCase() && route.params.folderName.toLowerCase() !== 'custom') {
+      if (
+        category !== route.params.folderName.toLowerCase() &&
+        route.params.folderName.toLowerCase() !== 'custom'
+      ) {
         Toast.show({
           type: 'error',
           text1: `Please choose ${route.params.folderName.toLowerCase()} file`,
@@ -416,27 +421,24 @@ const Browser = ({ route }: IBrowserProps) => {
 
   const deleteSelectedFiles = useCallback(async (item?: fileItem) => {
     const deleteFile = multiSelect ? listSelected.current : [item.uri];
-    const deleteProms = deleteFile.map((file) =>
-      FileSystem.deleteAsync(file.uri)
+    const res = await removeFileToTrash(
+      deleteFile.map((item) => {
+        return item.slice(7);
+      })
     );
-    Promise.all(deleteProms)
-      .then((_) => {
-        Toast.show({
-          text1: 'Delete file/folder success.',
-          type: 'success'
-        })
-        getFiles();
-      })
-      .catch((err) => {
-        Toast.show({
-          text1: 'Delete file/folder error.',
-          type: 'error'
-        })
-        console.log(err);
-      })
-      .finally(() => {
-        cancelMultiSelect();
+    if (res) {
+      Toast.show({
+        text1: 'Delete file/folder success.',
+        type: 'success',
       });
+      getFiles();
+    } else {
+      Toast.show({
+        text1: 'Delete file/folder error.',
+        type: 'error',
+      });
+    }
+    cancelMultiSelect();
   }, []);
 
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
@@ -462,8 +464,8 @@ const Browser = ({ route }: IBrowserProps) => {
       if (res.exists)
         Toast.show({
           text1: 'A folder or file with the same name already exists.',
-          type: 'error'
-        })
+          type: 'error',
+        });
       else
         FileSystem.moveAsync({
           from: renamingFile.uri,
@@ -471,13 +473,13 @@ const Browser = ({ route }: IBrowserProps) => {
         })
           .then(() => {
             setRenameDialogVisible(false);
-            setNewFileName('')
+            setNewFileName('');
             getFiles();
           })
           .catch((_) =>
             Toast.show({
               text1: 'Error renaming the file/folder',
-              type: 'error'
+              type: 'error',
             })
           );
     });

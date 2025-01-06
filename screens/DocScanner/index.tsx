@@ -79,7 +79,7 @@ export const DocScanner = () => {
 
       setScannedImages([]);
       Toast.show({
-        text1: `File đã được lưu ở Pdf/${pdfName.trim()}.pdf`,
+        text1: `File save at folder custome Pdf with name ${pdfName.trim()}.pdf`,
         autoHide: true,
         type: 'success'
       })

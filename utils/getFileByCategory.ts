@@ -22,6 +22,52 @@ export const getCategoryByExtension = (extension: string) => {
   return 'others';
 };
 
+export const getFileByCategory = async (fileType: string) => {
+  const files = [];
+  const rootPath = RNFS.ExternalStorageDirectoryPath;
+  const directoriesToScan = [rootPath];
+
+  try {
+    while (directoriesToScan.length > 0) {
+      const currentDir = directoriesToScan.pop();
+      let items = [];
+      try {
+        items = await RNFS.readDir(currentDir);
+      } catch (error) {
+        console.warn(`Cannot read directory: ${currentDir}`, error);
+        continue;
+      }
+      for (const item of items) {
+        if (item.isFile()) {
+          const extension = item.name.split('.').pop().toLowerCase();
+          if (fileExtensionCategorys[fileType].includes(extension)) {
+            files.push({
+              name: item.name,
+              path: item.path,
+              size: item.size,
+            });
+          }
+        } else if (
+          item.isDirectory() &&
+          !item.path.includes('.AppCache') &&
+          !item.path.includes('.Trash') &&
+          !item.path.includes('DCIM') &&
+          !item.path.includes('Movies') &&
+          !item.path.includes('Music') &&
+          !item.path.includes('Pictures')
+        ) {
+          directoriesToScan.push(item.path);
+        }
+      }
+    }
+
+    return files;
+  } catch (error) {
+    console.error('Error while scanning files:', error);
+    return files;
+  }
+};
+
 export const getAllFiles = async () => {
   const categorizedFiles = {
     docFiles: [],

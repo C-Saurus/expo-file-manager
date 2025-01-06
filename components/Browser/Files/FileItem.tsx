@@ -238,7 +238,7 @@ export const FileItem: React.FC<Props> = React.memo(({
             setNewFileName(item.name);
           }
         }}
-        cancelButtonIndex={5}
+        cancelButtonIndex={6}
         modalStyle={{ backgroundColor: colors.background2 }}
         itemTextStyle={{ color: colors.text }}
         titleStyle={{ color: colors.secondary }}

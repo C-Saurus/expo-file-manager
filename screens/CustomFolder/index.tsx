@@ -36,7 +36,7 @@ const fileTypes = [
   },
   {
     id: '4',
-    type: 'PDF',
+    type: 'Pdf',
     icon: 'document-text-outline', // Icon văn bản cho PDF
     color: '#29B6F6', // Màu xanh dương, quen thuộc với PDF
     description: 'Manage PDF files',
@@ -50,7 +50,7 @@ const fileTypes = [
   },
   {
     id: '6',
-    type: 'Text',
+    type: 'Txt',
     icon: 'clipboard-outline', // Icon clipboard, tượng trưng cho text file
     color: '#546E7A', // Màu xám xanh, nhẹ nhàng và trung tính
     description: 'Handle text files',

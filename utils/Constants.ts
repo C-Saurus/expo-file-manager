@@ -37,6 +37,7 @@ export const renameFile = async (oldPath: string, newPath: string) => {
     await RNFS.moveFile(oldPath, newPath);
     return { oldPath, newPath };
   } catch (error) {
+    console.log("ERROR", error)
     return undefined;
   }
 };
