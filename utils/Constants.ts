@@ -41,12 +41,12 @@ export const renameFile = async (oldPath: string, newPath: string) => {
   }
 };
 
-const saveOriginalPath = async (fileName, originalPath) => {
+const saveOriginalPath = async (originalPath, newPath) => {
   try {
     const trashData = await AsyncStorage.getItem('trashData');
     const parsedData = trashData ? JSON.parse(trashData) : {};
 
-    parsedData[fileName] = originalPath;
+    parsedData[newPath] = originalPath;
 
     await AsyncStorage.setItem('trashData', JSON.stringify(parsedData));
   } catch (error) {
@@ -66,22 +66,22 @@ export const ensureTrashFolderExists = async () => {
   }
 };
 
-export const restoreFile = async (fileName) => {
+export const restoreFile = async (filePath: string) => {
   try {
     const trashData = await AsyncStorage.getItem('trashData');
+    console.log("JSON.parse(trashData)", JSON.parse(trashData));
     const parsedData = trashData ? JSON.parse(trashData) : {};
 
-    const originalPath = parsedData[fileName];
+    const originalPath = parsedData[filePath];
     if (!originalPath) {
-      console.warn(`Không tìm thấy đường dẫn gốc cho file ${fileName}`);
+      console.warn(`Không tìm thấy đường dẫn gốc cho file ${filePath}`);
       return false;
     }
-
-    const trashFilePath = `${TRASH_FOLDER}/${fileName}`;
-    await RNFS.moveFile(trashFilePath, originalPath);
+  
+    await RNFS.moveFile(filePath, originalPath);
 
     // Xóa thông tin file khỏi trashData sau khi khôi phục thành công
-    delete parsedData[fileName];
+    delete parsedData[filePath];
     await AsyncStorage.setItem('trashData', JSON.stringify(parsedData));
     return true;
   } catch (error) {
@@ -99,7 +99,7 @@ export const moveFileToTrash = async (filePath: string) => {
     console.log('filePath', filePath);
     console.log('destination', destination);
     await RNFS.moveFile(filePath, destination);
-    await saveOriginalPath(fileName, filePath)
+    await saveOriginalPath(filePath, destination)
     return filePath;
   } catch (error) {
     console.error(`[ERROR] remove file ${filePath} to trash failed:`, error);

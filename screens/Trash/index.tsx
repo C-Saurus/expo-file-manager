@@ -31,7 +31,7 @@ const getFileExtension = (fileName: string): string => {
 const TrashScreen = () => {
   const [files, setFiles] = useState([]);
   const [selected, setSelected] = useState<boolean>(false);
-  const selectedFile = useRef<string[]>([]);
+  const selectedFile = useRef<FileItem[]>([]);
 
   const { colors } = useAppSelector((state) => state.theme.theme);
   const loadTrashFiles = async () => {
@@ -44,7 +44,7 @@ const TrashScreen = () => {
         trashFiles.map((file) => ({
           path: file.path,
           name: file.name,
-          size: bytesToGB(file.size),
+          size: file.size,
           timeLeft: calculateDaysLeft(file.mtime),
           selected: false,
           type: getFileExtension(file.path),
@@ -70,12 +70,12 @@ const TrashScreen = () => {
   };
 
   const handleSelectFile = useCallback((file: FileItem) => {
-    if (selectedFile.current.includes(file.path)) {
+    if (selectedFile.current.includes(file)) {
       selectedFile.current = selectedFile.current.filter(
-        (f) => f !== file.path
+        (f) => f.path !== file.path
       );
     } else {
-      selectedFile.current.push(file.path);
+      selectedFile.current.push(file);
     }
     console.log('selectedFile.current', selectedFile.current);
     if (selectedFile.current.length > 0) {
@@ -85,75 +85,59 @@ const TrashScreen = () => {
     }
   }, []);
 
-  const restoreSelectedFiles = async (selectedFileNames) => {
-    try {
-      const promises = selectedFileNames.map(async (fileName) =>
-        await restoreFile(fileName)
-      );
-      await Promise.all(promises);
-      Toast.show({
-        text1: 'Delete selected files success!',
-        type: 'info'
-      })
-      loadTrashFiles()
-    } catch (error) {
-      console.error('Lỗi khi khôi phục nhiều file:', error);
-      Toast.show({
-        text1: 'Failed to restore selected files!',
-        type: 'info'
-      })
-    }
+  const restoreSelectedFiles = async () => {
+    Alert.alert('Recovery', 'Recovery selected file ?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Recovery',
+        onPress: async () => {
+          try {
+            const promises = selectedFile.current.map(
+              async (file) => await restoreFile(file.path)
+            );
+            await Promise.all(promises);
+            Alert.alert('Success', 'Recovery file success !');
+            loadTrashFiles();
+          } catch (error) {
+            console.error('Lỗi khi khôi phục nhiều file:', error);
+            Alert.alert(
+              'Error',
+              'Failed to recovery selected files !: ' + error.message
+            );
+          }
+        },
+      },
+    ]);
   };
 
   const handleDeleteSelectedFiles = async (): Promise<void> => {
-    Alert.alert('Xóa tệp tin', 'Bạn có chắc chắn muốn xóa các tệp đã chọn?', [
-      { text: 'Hủy', style: 'cancel' },
+    Alert.alert('Delete permanantly', 'Selected file will be remove ?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Xóa',
+        text: 'Delete',
         onPress: async () => {
-          try {
-            const { FileDeletionNativeModule } = NativeModules;
-            const selectedFiles = files.filter(
-              (item) => item.selected === true
-            );
-            await Promise.all(
-              selectedFiles.map(async (file) => {
-                try {
-                  console.log('DELETE TRASH', file.path);
-                  const result = await RNFS.unlink(file.path);
-                  await RNFS.scanFile(file.path);
-                  console.log(
-                    `Deleted successfully: ${file.path} with result: ${result}`
-                  );
-                } catch (error) {
-                  console.error(
-                    `Failed to delete: ${file.path} - ${error.message}`
-                  );
+          selectedFile.current.forEach(async (file) => {
+            RNFS.exists(file.path)
+              .then((result) => {
+                console.log('file exists: ', result);
+                if (result) {
+                  return RNFS.unlink(file.path)
+                    .then(() => {
+                      Alert.alert('Success', 'File deleted.');
+                      loadTrashFiles();
+                    })
+                    .catch((err) => {
+                      Alert.alert(
+                        'Error',
+                        'File deleted error: ' + err.message
+                      );
+                    });
                 }
               })
-            );
-
-            const updatedLargeFiles = files
-              .filter(
-                (file) =>
-                  !selectedFiles.some(
-                    (selectedFile) => selectedFile.path === file.path
-                  )
-              )
-              .map((item) => {
-                return {
-                  ...item,
-                  selected: false,
-                };
+              .catch((err) => {
+                Alert.alert('Error', 'File deleted error: ' + err.message);
               });
-
-            setFiles(updatedLargeFiles);
-
-            Alert.alert('Thành công', 'Các tệp đã được xóa.');
-            loadTrashFiles()
-          } catch (error) {
-            Alert.alert('Lỗi', 'Không thể xóa các tệp: ' + error.message);
-          }
+          });
         },
       },
     ]);

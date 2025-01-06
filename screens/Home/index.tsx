@@ -119,7 +119,7 @@ export const Home = () => {
     },
     {
       id: 1,
-      title: 'Duplicate file',
+      title: 'Duplicate',
       icon: 'filter',
       iconLib: 'MaterialIcons',
       background: theme.dark ? '#172020' : '#ebf7f7',
@@ -161,11 +161,13 @@ export const Home = () => {
         style={[styles.toolItemContainer, { backgroundColor: item.background }]}
       >
         {renderIcon(item)}
-        <Text
-          style={[styles.toolTitle, { color: theme.dark ? 'white' : 'black' }]}
-        >
-          {item.title}
-        </Text>
+        <View style={{ width: '120%' }}>
+          <Text
+            style={[styles.toolTitle, { color: theme.dark ? 'white' : 'black' }]}
+          >
+            {item.title}
+          </Text>
+        </View>
       </View>
     </TouchableOpacity>
   );

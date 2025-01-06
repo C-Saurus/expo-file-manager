@@ -83,19 +83,11 @@ export const styles = StyleSheet.create({
     borderRadius: 24,
   },
   toolItemContainer: {
-    display: 'flex',
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    margin: 3,
     borderRadius: 15,
-    marginVertical: 3
-  },
-  listItemContainerFolder: {
-
-    marginBottom: 30,
-    backgroundColor: '#999',
-    padding: 16,
-    borderRadius: 24,
   }
 });

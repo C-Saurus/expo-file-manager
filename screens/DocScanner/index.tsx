@@ -25,6 +25,7 @@ import { BarCodeScanner } from 'expo-barcode-scanner';
 import { useAppSelector } from '../../hooks/reduxHooks';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
+import RNFS from "react-native-fs"
 
 export const DocScanner = () => {
   const navigation = useNavigation<StackNavigationProp<any>>();
@@ -73,7 +74,7 @@ export const DocScanner = () => {
     try {
       createPdf({
         pages: scannedImages.map((imagePath) => ({ imagePath })),
-        outputPath: `${DocumentDirectoryPath}/Pdf/${pdfName.trim()}.pdf`,
+        outputPath: `${RNFS.DocumentDirectoryPath}/Pdf/${pdfName.trim()}.pdf`,
       });
 
       setScannedImages([]);
