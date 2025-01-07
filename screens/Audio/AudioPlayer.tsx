@@ -81,7 +81,7 @@ export default function AudioPlayer({ route }) {
       {/* Hình ảnh trung tâm */}
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/audio-player.png')}
+          source={require('../../assets/audio-player.webp')}
           style={styles.image}
         />
       </View>
