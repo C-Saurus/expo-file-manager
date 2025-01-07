@@ -6,7 +6,7 @@ import LargeFilesScanner from '../screens/ScanLargeFile';
 import { Home } from '../screens/Home';
 import PDFScreen from '../screens/PDFScreen';
 import MiscFileView from '../screens/MiscFileView';
-import AudioPlayer from '../screens/Audio/details';
+import AudioPlayer from '../screens/Audio/AudioPlayer';
 import { DocumentScreen } from '../screens/Document';
 import { DocScanner } from '../screens/DocScanner';
 import TrashScreen from '../screens/Trash';

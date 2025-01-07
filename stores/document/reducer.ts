@@ -12,9 +12,6 @@ export const documentSlice = createSlice({
     pdf: [],
     zip: [],
     apk: [],
-    image: [],
-    video: [],
-    audio: [],
     isMultiSelect: false,
     selectAll: false,
     selectedFile: [],
@@ -62,9 +59,6 @@ export const documentSlice = createSlice({
         state.pdf = action.payload.pdfFiles;
         state.apk = action.payload.apkFile;
         state.zip = action.payload.zipFiles;
-        state.image = action.payload.imageFile;
-        state.video = action.payload.videoFile;
-        state.audio = action.payload.audioFile;
         state.loading = false;
       })
       .addCase(fetchFiles.rejected, (state, action) => {
