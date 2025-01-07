@@ -17,21 +17,21 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    ...StyleSheet.absoluteFillObject, // Phủ toàn bộ màn hình
-    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Màu nền mờ
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10, // Đảm bảo overlay nằm trên cùng
+    zIndex: 10,
   },
   modalContainer: {
     position: 'absolute',
-    top: 10, // Điều chỉnh vị trí modal so với nút header
+    top: 10,
     right: 35,
-    backgroundColor: '#fff', // Màu nền modal
+    backgroundColor: '#fff',
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 15,
-    elevation: 5, // Tạo bóng mờ
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
@@ -40,11 +40,11 @@ export const styles = StyleSheet.create({
   modalItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#c7cecfdd', // Đường kẻ giữa các mục
+    borderBottomColor: '#c7cecfdd',
   },
   modalText: {
     fontSize: 16,
-    color: '#000', // Màu chữ trắng
+    color: '#000',
   },
   checkboxContainer: {
     flexDirection: 'row',

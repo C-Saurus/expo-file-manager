@@ -110,27 +110,27 @@ export const styles = StyleSheet.create({
   },
 
   itemContainer: {
-    width: SIZE, // Chiều rộng của mỗi phần tử bằng chiều rộng màn hình
-    height: HEIGHT, // Chiều cao của mỗi phần tử bằng chiều cao màn hình
+    width: SIZE,
+    height: HEIGHT,
   },
   thumbnail: {
-    width: '100%', // Chiếm toàn bộ chiều rộng
-    height: '100%', // Chiếm toàn bộ chiều cao
-    justifyContent: 'flex-end', // Đưa nội dung xuống phía dưới
+    width: '100%',
+    height: '100%',
+    justifyContent: 'flex-end',
   },
   bottomBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Nền mờ phía dưới
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 10,
   },
   backButton: {
     position: 'absolute',
-    top: 40, // Căn chỉnh khoảng cách từ trên cùng màn hình
-    left: 20, // Căn chỉnh khoảng cách từ bên trái màn hình
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Nền mờ để nổi bật
-    borderRadius: 20, // Góc bo tròn
+    top: 40, 
+    left: 20, 
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
     padding: 10,
   },
   overlay: {
@@ -140,10 +140,10 @@ export const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    ...StyleSheet.absoluteFillObject, // Phủ toàn bộ màn hình
-    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Màu nền mờ
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10, // Đảm bảo overlay nằm trên cùng
+    zIndex: 10,
   }
 });

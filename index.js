@@ -11,11 +11,11 @@ if (typeof global.Buffer === 'undefined') {
 }
 
 if (typeof global.TextDecoder === 'undefined') {
-  global.TextDecoder = TextDecoder; // Đặt TextDecoder trong global
+  global.TextDecoder = TextDecoder;
 }
 
 if (typeof global.TextEncoder === 'undefined') {
-  global.TextEncoder = TextEncoder; // Đặt TextEncoder trong global
+  global.TextEncoder = TextEncoder;
 }
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,
