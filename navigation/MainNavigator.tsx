@@ -1,17 +1,12 @@
 import React from 'react';
 
 import { Ionicons } from '@expo/vector-icons';
-
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
 import HomeStackNavigator from './HomeStackNavigator';
 import SettingsStackNavigator from './SettingsStackNavigator';
-
 import Web from '../screens/Web';
-
 import { useAppSelector } from '../hooks/reduxHooks';
 import HomeStackNavigator1 from './HomeStack';
-import Browser from '../screens/Browser';
 
 const Tab = createBottomTabNavigator();
 

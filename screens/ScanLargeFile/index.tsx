@@ -212,18 +212,14 @@ const LargeFilesScanner = ({ route, navigation }) => {
       {
         text: 'Delete',
         onPress: async () => {
-          console.log('listtttttttttttt', selectedFile.current);
           const { FileDeletionNativeModule } = NativeModules;
           const responseList = [];
-          console.log('X');
           selectedFile.current.forEach(async (file) => {
             try {
-              console.log('i', file);
               await FileDeletionNativeModule.deleteFileMedia(
                 file.path,
                 file.type,
                 (res: any) => {
-                  console.log('Ressssssssss', res);
                   if (res) {
                     Alert.alert('Success', 'File deleted.');
                     responseList.push(file.path);

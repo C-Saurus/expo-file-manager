@@ -7,7 +7,7 @@ import MiscFileView from '../screens/MiscFileView';
 import Browser from '../screens/Browser';
 import VideoPlayer from '../screens/VideoPlayer';
 import MenuScreen from '../screens/CustomFolder';
-import AudioPlayer from '../screens/Audio/details';
+import AudioPlayer from '../screens/Audio/AudioPlayer';
 
 type HomeStackParamList = {
   MenuScreen: { folderName: string; prevDir: string };
